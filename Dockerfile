@@ -8,6 +8,8 @@ ENV GOARCH=amd64
 RUN set -ex \
         && apk add --no-cache --virtual .build-deps git \
         && go get github.com/andreimarcu/linx-server \
+        && go get github.com/andreimarcu/linx-server/linx-cleanup \
+        && go get github.com/andreimarcu/linx-server/linx-genkey \
         && apk del .build-deps \
         && mkdir -p /data/files \
         && mkdir -p /data/meta \
