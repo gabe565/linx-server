@@ -12,8 +12,8 @@ FROM alpine:3.21
 
 COPY --from=build /app/linx-server /usr/local/bin/linx-server
 
-COPY static /go/src/github.com/andreimarcu/linx-server/static/
-COPY templates /go/src/github.com/andreimarcu/linx-server/templates/
+COPY assets/static /go/src/github.com/andreimarcu/linx-server/static/
+COPY assets/templates /go/src/github.com/andreimarcu/linx-server/templates/
 
 RUN mkdir -p /data/files && mkdir -p /data/meta && chown -R 65534:65534 /data
 

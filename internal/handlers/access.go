@@ -1,0 +1,150 @@
+package handlers
+
+import (
+	"encoding/json"
+	"errors"
+	"log"
+	"net/http"
+	"net/url"
+	"path"
+	"regexp"
+	"strings"
+	"time"
+
+	"github.com/andreimarcu/linx-server/internal/backends"
+	"github.com/andreimarcu/linx-server/internal/config"
+	"github.com/andreimarcu/linx-server/internal/headers"
+	"github.com/andreimarcu/linx-server/internal/templates"
+	"github.com/flosch/pongo2"
+	"github.com/zenazn/goji/web"
+)
+
+type AccessKeySource int
+
+const (
+	AccessKeySourceNone AccessKeySource = iota
+	AccessKeySourceCookie
+	AccessKeySourceHeader
+	AccessKeySourceForm
+	AccessKeySourceQuery
+)
+
+const HeaderName = "Linx-Access-Key"
+const ParamName = "access_key"
+
+var (
+	errInvalidAccessKey = errors.New("invalid access key")
+
+	cliUserAgentRe = regexp.MustCompile("(?i)(lib)?curl|wget")
+)
+
+func CheckAccessKey(r *http.Request, metadata *backends.Metadata) (AccessKeySource, error) {
+	key := metadata.AccessKey
+	if key == "" {
+		return AccessKeySourceNone, nil
+	}
+
+	cookieKey, err := r.Cookie(HeaderName)
+	if err == nil {
+		if cookieKey.Value == key {
+			return AccessKeySourceCookie, nil
+		}
+		return AccessKeySourceCookie, errInvalidAccessKey
+	}
+
+	headerKey := r.Header.Get(HeaderName)
+	if headerKey == key {
+		return AccessKeySourceHeader, nil
+	} else if headerKey != "" {
+		return AccessKeySourceHeader, errInvalidAccessKey
+	}
+
+	formKey := r.PostFormValue(ParamName)
+	if formKey == key {
+		return AccessKeySourceForm, nil
+	} else if formKey != "" {
+		return AccessKeySourceForm, errInvalidAccessKey
+	}
+
+	queryKey := r.URL.Query().Get(ParamName)
+	if queryKey == key {
+		return AccessKeySourceQuery, nil
+	} else if formKey != "" {
+		return AccessKeySourceQuery, errInvalidAccessKey
+	}
+
+	return AccessKeySourceNone, errInvalidAccessKey
+}
+
+func SetAccessKeyCookies(w http.ResponseWriter, siteURL, fileName, value string, expires time.Time) {
+	u, err := url.Parse(siteURL)
+	if err != nil {
+		log.Printf("cant parse siteURL (%v): %v", siteURL, err)
+		return
+	}
+
+	cookie := http.Cookie{
+		Name:     HeaderName,
+		Value:    value,
+		HttpOnly: true,
+		Domain:   u.Hostname(),
+		Expires:  expires,
+	}
+
+	cookie.Path = path.Join(u.Path, fileName)
+	http.SetCookie(w, &cookie)
+
+	cookie.Path = path.Join(u.Path, config.Default.SelifPath, fileName)
+	http.SetCookie(w, &cookie)
+}
+
+func FileAccessHeader(c web.C, w http.ResponseWriter, r *http.Request) {
+	if !config.Default.NoDirectAgents && cliUserAgentRe.MatchString(r.Header.Get("User-Agent")) && !strings.EqualFold("application/json", r.Header.Get("Accept")) {
+		FileServeHandler(c, w, r)
+		return
+	}
+
+	fileName := c.URLParams["name"]
+
+	metadata, err := CheckFile(fileName)
+	if err == backends.NotFoundErr {
+		NotFound(c, w, r)
+		return
+	} else if err != nil {
+		Oops(c, w, r, RespAUTO, "Corrupt metadata.")
+		return
+	}
+
+	if src, err := CheckAccessKey(r, &metadata); err != nil {
+		// remove invalid cookie
+		if src == AccessKeySourceCookie {
+			SetAccessKeyCookies(w, headers.GetSiteURL(r), fileName, "", time.Unix(0, 0))
+		}
+
+		if strings.EqualFold("application/json", r.Header.Get("Accept")) {
+			dec := json.NewEncoder(w)
+			_ = dec.Encode(map[string]string{
+				"error": errInvalidAccessKey.Error(),
+			})
+
+			return
+		}
+
+		_ = templates.Render(config.Templates["access.html"], pongo2.Context{
+			"filename":   fileName,
+			"accesspath": fileName,
+		}, r, w)
+
+		return
+	}
+
+	if metadata.AccessKey != "" {
+		var expiry time.Time
+		if config.Default.AccessKeyCookieExpiry != 0 {
+			expiry = time.Now().Add(time.Duration(config.Default.AccessKeyCookieExpiry) * time.Second)
+		}
+		SetAccessKeyCookies(w, headers.GetSiteURL(r), fileName, metadata.AccessKey, expiry)
+	}
+
+	FileDisplay(c, w, r, fileName, metadata)
+}

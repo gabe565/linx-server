@@ -3,10 +3,8 @@ package main
 import (
 	"bytes"
 	"io"
-	"net/http"
 	"path"
 	"path/filepath"
-	"strings"
 
 	rice "github.com/GeertJohan/go.rice"
 	"github.com/flosch/pongo2"
@@ -19,7 +17,7 @@ type Pongo2Loader struct {
 func NewPongo2TemplatesLoader() (*Pongo2Loader, error) {
 	fs := &Pongo2Loader{}
 
-	p2l, err := rice.FindBox("templates")
+	p2l, err := rice.FindBox("assets/templates")
 	if err != nil {
 		return nil, err
 	}
@@ -42,7 +40,7 @@ func (fs *Pongo2Loader) Abs(base, name string) string {
 	return me
 }
 
-func populateTemplatesMap(tSet *pongo2.TemplateSet, tMap map[string]*pongo2.Template) error {
+func PopulateTemplatesMap(tSet *pongo2.TemplateSet, tMap map[string]*pongo2.Template) error {
 	templates := []string{
 		"index.html",
 		"paste.html",
@@ -74,29 +72,4 @@ func populateTemplatesMap(tSet *pongo2.TemplateSet, tMap map[string]*pongo2.Temp
 	}
 
 	return nil
-}
-
-func renderTemplate(tpl *pongo2.Template, context pongo2.Context, r *http.Request, writer io.Writer) error {
-	if Config.siteName == "" {
-		parts := strings.Split(r.Host, ":")
-		context["sitename"] = parts[0]
-	} else {
-		context["sitename"] = Config.siteName
-	}
-
-	context["sitepath"] = Config.sitePath
-	context["selifpath"] = Config.selifPath
-	context["custom_pages_names"] = customPagesNames
-
-	var a string
-	if Config.authFile == "" {
-		a = "none"
-	} else if Config.basicAuth {
-		a = "basic"
-	} else {
-		a = "header"
-	}
-	context["auth"] = a
-
-	return tpl.ExecuteWriter(context, writer)
 }
