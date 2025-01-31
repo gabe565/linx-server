@@ -5,7 +5,7 @@ COPY . .
 
 RUN set -ex \
         && apk add --no-cache --virtual .build-deps git \
-        && go build . \
+        && go build -ldflags='-w -s' . \
         && apk del .build-deps
 
 FROM alpine:3.21
