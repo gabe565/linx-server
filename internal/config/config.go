@@ -4,7 +4,6 @@ import (
 	"strings"
 	"time"
 
-	rice "github.com/GeertJohan/go.rice"
 	"github.com/andreimarcu/linx-server/internal/backends"
 	"github.com/flosch/pongo2"
 )
@@ -60,7 +59,6 @@ type Config struct {
 var (
 	Default            Config
 	StorageBackend     backends.StorageBackend
-	StaticBox          *rice.Box
 	Templates          = make(map[string]*pongo2.Template)
 	TemplateSet        *pongo2.TemplateSet
 	TimeStarted        time.Time

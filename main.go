@@ -15,7 +15,6 @@ import (
 	"syscall"
 	"time"
 
-	rice "github.com/GeertJohan/go.rice"
 	"github.com/andreimarcu/linx-server/internal/auth/apikeys"
 	"github.com/andreimarcu/linx-server/internal/backends/localfs"
 	"github.com/andreimarcu/linx-server/internal/backends/s3"
@@ -120,7 +119,6 @@ func setup() *web.Mux {
 		log.Fatal("Error: could not load templates", err)
 	}
 
-	config.StaticBox = rice.MustFindBox("assets/static")
 	config.TimeStarted = time.Now()
 	config.TimeStartedStr = strconv.FormatInt(config.TimeStarted.Unix(), 10)
 

@@ -2,12 +2,14 @@ package handlers
 
 import (
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/andreimarcu/linx-server/assets"
 	"github.com/andreimarcu/linx-server/internal/backends"
 	"github.com/andreimarcu/linx-server/internal/config"
 	"github.com/andreimarcu/linx-server/internal/csrf"
@@ -83,7 +85,7 @@ func StaticHandler(c web.C, w http.ResponseWriter, r *http.Request) {
 		}
 
 		filePath := strings.TrimPrefix(path, config.Default.SitePath+"static/")
-		file, err := config.StaticBox.Open(filePath)
+		file, err := assets.Static.Open(filePath)
 		if err != nil {
 			NotFound(c, w, r)
 			return
@@ -91,7 +93,7 @@ func StaticHandler(c web.C, w http.ResponseWriter, r *http.Request) {
 
 		w.Header().Set("Etag", fmt.Sprintf("\"%s\"", config.TimeStartedStr))
 		w.Header().Set("Cache-Control", "public, max-age=86400")
-		http.ServeContent(w, r, filePath, config.TimeStarted, file)
+		http.ServeContent(w, r, filePath, config.TimeStarted, file.(io.ReadSeeker))
 		return
 	}
 }
