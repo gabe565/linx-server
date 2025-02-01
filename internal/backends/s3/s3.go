@@ -16,12 +16,12 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 )
 
-type S3Backend struct {
+type Backend struct {
 	bucket string
 	svc    *s3.S3
 }
 
-func (b S3Backend) Delete(key string) error {
+func (b Backend) Delete(key string) error {
 	_, err := b.svc.DeleteObject(&s3.DeleteObjectInput{
 		Bucket: aws.String(b.bucket),
 		Key:    aws.String(key),
@@ -32,7 +32,7 @@ func (b S3Backend) Delete(key string) error {
 	return nil
 }
 
-func (b S3Backend) Exists(key string) (bool, error) {
+func (b Backend) Exists(key string) (bool, error) {
 	_, err := b.svc.HeadObject(&s3.HeadObjectInput{
 		Bucket: aws.String(b.bucket),
 		Key:    aws.String(key),
@@ -40,47 +40,50 @@ func (b S3Backend) Exists(key string) (bool, error) {
 	return err == nil, err
 }
 
-func (b S3Backend) Head(key string) (metadata backends.Metadata, err error) {
-	var result *s3.HeadObjectOutput
-	result, err = b.svc.HeadObject(&s3.HeadObjectInput{
+const CodeNotFound = "NotFound"
+
+func (b Backend) Head(key string) (backends.Metadata, error) {
+	var metadata backends.Metadata
+	result, err := b.svc.HeadObject(&s3.HeadObjectInput{
 		Bucket: aws.String(b.bucket),
 		Key:    aws.String(key),
 	})
 	if err != nil {
-		if aerr, ok := err.(awserr.Error); ok {
-			if aerr.Code() == s3.ErrCodeNoSuchKey || aerr.Code() == "NotFound" {
-				err = backends.NotFoundErr
+		if aerr, ok := err.(awserr.Error); ok { //nolint:errorlint
+			if aerr.Code() == s3.ErrCodeNoSuchKey || aerr.Code() == CodeNotFound {
+				err = backends.ErrNotFound
 			}
 		}
-		return
+		return metadata, err
 	}
 
-	metadata, err = unmapMetadata(result.Metadata)
-	return
+	return unmapMetadata(result.Metadata)
 }
 
-func (b S3Backend) Get(key string) (metadata backends.Metadata, r io.ReadCloser, err error) {
-	var result *s3.GetObjectOutput
-	result, err = b.svc.GetObject(&s3.GetObjectInput{
+func (b Backend) Get(key string) (backends.Metadata, io.ReadCloser, error) {
+	var metadata backends.Metadata
+	result, err := b.svc.GetObject(&s3.GetObjectInput{
 		Bucket: aws.String(b.bucket),
 		Key:    aws.String(key),
 	})
 	if err != nil {
-		if aerr, ok := err.(awserr.Error); ok {
-			if aerr.Code() == s3.ErrCodeNoSuchKey || aerr.Code() == "NotFound" {
-				err = backends.NotFoundErr
+		if aerr, ok := err.(awserr.Error); ok { //nolint:errorlint
+			if aerr.Code() == s3.ErrCodeNoSuchKey || aerr.Code() == CodeNotFound {
+				err = backends.ErrNotFound
 			}
 		}
-		return
+		return metadata, nil, err
 	}
 
-	metadata, err = unmapMetadata(result.Metadata)
-	r = result.Body
-	return
+	if metadata, err = unmapMetadata(result.Metadata); err != nil {
+		return metadata, nil, err
+	}
+	return metadata, result.Body, nil
 }
 
-func (b S3Backend) ServeFile(key string, w http.ResponseWriter, r *http.Request) (err error) {
+func (b Backend) ServeFile(key string, w http.ResponseWriter, r *http.Request) error {
 	var result *s3.GetObjectOutput
+	var err error
 
 	if r.Header.Get("Range") != "" {
 		result, err = b.svc.GetObject(&s3.GetObjectInput{
@@ -89,31 +92,29 @@ func (b S3Backend) ServeFile(key string, w http.ResponseWriter, r *http.Request)
 			Range:  aws.String(r.Header.Get("Range")),
 		})
 
-		w.WriteHeader(206)
+		w.WriteHeader(http.StatusPartialContent)
 		w.Header().Set("Content-Range", *result.ContentRange)
 		w.Header().Set("Content-Length", strconv.FormatInt(*result.ContentLength, 10))
 		w.Header().Set("Accept-Ranges", "bytes")
-
 	} else {
 		result, err = b.svc.GetObject(&s3.GetObjectInput{
 			Bucket: aws.String(b.bucket),
 			Key:    aws.String(key),
 		})
-
 	}
 
 	if err != nil {
-		if aerr, ok := err.(awserr.Error); ok {
-			if aerr.Code() == s3.ErrCodeNoSuchKey || aerr.Code() == "NotFound" {
-				err = backends.NotFoundErr
+		if aerr, ok := err.(awserr.Error); ok { //nolint:errorlint
+			if aerr.Code() == s3.ErrCodeNoSuchKey || aerr.Code() == CodeNotFound {
+				err = backends.ErrNotFound
 			}
 		}
-		return
+		return err
 	}
 
 	_, err = io.Copy(w, result.Body)
 
-	return
+	return err
 }
 
 func mapMetadata(m backends.Metadata) map[string]*string {
@@ -127,7 +128,8 @@ func mapMetadata(m backends.Metadata) map[string]*string {
 	}
 }
 
-func unmapMetadata(input map[string]*string) (m backends.Metadata, err error) {
+func unmapMetadata(input map[string]*string) (backends.Metadata, error) {
+	var m backends.Metadata
 	expiry, err := strconv.ParseInt(aws.StringValue(input["Expiry"]), 10, 64)
 	if err != nil {
 		return m, err
@@ -136,7 +138,7 @@ func unmapMetadata(input map[string]*string) (m backends.Metadata, err error) {
 
 	m.Size, err = strconv.ParseInt(aws.StringValue(input["Size"]), 10, 64)
 	if err != nil {
-		return
+		return m, err
 	}
 
 	m.DeleteKey = aws.StringValue(input["Deletekey"])
@@ -151,10 +153,11 @@ func unmapMetadata(input map[string]*string) (m backends.Metadata, err error) {
 		m.AccessKey = aws.StringValue(key)
 	}
 
-	return
+	return m, nil
 }
 
-func (b S3Backend) Put(key string, r io.Reader, expiry time.Time, deleteKey, accessKey string) (m backends.Metadata, err error) {
+func (b Backend) Put(key string, r io.Reader, expiry time.Time, deleteKey, accessKey string) (backends.Metadata, error) {
+	var m backends.Metadata
 	tmpDst, err := os.CreateTemp("", "linx-server-upload")
 	if err != nil {
 		return m, err
@@ -166,7 +169,7 @@ func (b S3Backend) Put(key string, r io.Reader, expiry time.Time, deleteKey, acc
 
 	bytes, err := io.Copy(tmpDst, r)
 	if bytes == 0 {
-		return m, backends.FileEmptyError
+		return m, backends.ErrFileEmpty
 	} else if err != nil {
 		return m, err
 	}
@@ -178,13 +181,13 @@ func (b S3Backend) Put(key string, r io.Reader, expiry time.Time, deleteKey, acc
 
 	m, err = helpers.GenerateMetadata(tmpDst)
 	if err != nil {
-		return
+		return m, err
 	}
 	m.Expiry = expiry
 	m.DeleteKey = deleteKey
 	m.AccessKey = accessKey
 	// XXX: we may not be able to write this to AWS easily
-	//m.ArchiveFiles, _ = helpers.ListArchiveFiles(m.Mimetype, m.Size, tmpDst)
+	// m.ArchiveFiles, _ = helpers.ListArchiveFiles(m.Mimetype, m.Size, tmpDst)
 
 	_, err = tmpDst.Seek(0, 0)
 	if err != nil {
@@ -200,28 +203,24 @@ func (b S3Backend) Put(key string, r io.Reader, expiry time.Time, deleteKey, acc
 	}
 	_, err = uploader.Upload(input)
 	if err != nil {
-		return
+		return m, err
 	}
 
-	return
+	return m, err
 }
 
-func (b S3Backend) PutMetadata(key string, m backends.Metadata) (err error) {
-	_, err = b.svc.CopyObject(&s3.CopyObjectInput{
+func (b Backend) PutMetadata(key string, m backends.Metadata) error {
+	_, err := b.svc.CopyObject(&s3.CopyObjectInput{
 		Bucket:            aws.String(b.bucket),
 		Key:               aws.String(key),
 		CopySource:        aws.String("/" + b.bucket + "/" + key),
 		Metadata:          mapMetadata(m),
 		MetadataDirective: aws.String("REPLACE"),
 	})
-	if err != nil {
-		return
-	}
-
-	return
+	return err
 }
 
-func (b S3Backend) Size(key string) (int64, error) {
+func (b Backend) Size(key string) (int64, error) {
 	input := &s3.HeadObjectInput{
 		Bucket: aws.String(b.bucket),
 		Key:    aws.String(key),
@@ -234,8 +233,7 @@ func (b S3Backend) Size(key string) (int64, error) {
 	return *result.ContentLength, nil
 }
 
-func (b S3Backend) List() ([]string, error) {
-	var output []string
+func (b Backend) List() ([]string, error) {
 	input := &s3.ListObjectsInput{
 		Bucket: aws.String(b.bucket),
 	}
@@ -245,6 +243,7 @@ func (b S3Backend) List() ([]string, error) {
 		return nil, err
 	}
 
+	output := make([]string, 0, len(results.Contents))
 	for _, object := range results.Contents {
 		output = append(output, *object.Key)
 	}
@@ -252,7 +251,7 @@ func (b S3Backend) List() ([]string, error) {
 	return output, nil
 }
 
-func NewS3Backend(bucket string, region string, endpoint string, forcePathStyle bool) S3Backend {
+func NewS3Backend(bucket string, region string, endpoint string, forcePathStyle bool) Backend {
 	awsConfig := &aws.Config{}
 	if region != "" {
 		awsConfig.Region = aws.String(region)
@@ -266,5 +265,5 @@ func NewS3Backend(bucket string, region string, endpoint string, forcePathStyle 
 
 	sess := session.Must(session.NewSession(awsConfig))
 	svc := s3.New(sess)
-	return S3Backend{bucket: bucket, svc: svc}
+	return Backend{bucket: bucket, svc: svc}
 }

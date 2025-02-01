@@ -86,8 +86,9 @@ func run(cmd *cobra.Command, _ []string) error {
 		})
 	} else {
 		srv := &http.Server{
-			Addr:    config.Default.Bind,
-			Handler: mux,
+			Addr:              config.Default.Bind,
+			Handler:           mux,
+			ReadHeaderTimeout: 3 * time.Second,
 		}
 
 		if config.Default.TLSCert != "" {

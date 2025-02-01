@@ -15,6 +15,6 @@ func (d *Duration) UnmarshalText(text []byte) error {
 	return nil
 }
 
-func (d Duration) MarshalText() (text []byte, err error) {
+func (d Duration) MarshalText() ([]byte, error) {
 	return []byte(d.Duration.String()), nil
 }

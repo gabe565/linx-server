@@ -61,7 +61,7 @@ func MakeCustomPage(fileName string) func(w http.ResponseWriter, r *http.Request
 		err := templates.Render("custom_page.html", map[string]any{
 			"SiteURL":     must.Must2(headers.GetSiteURL(r)).String(),
 			"ForceRandom": config.Default.ForceRandomFilename,
-			"Contents":    template.HTML(custompages.CustomPages[fileName]),
+			"Contents":    template.HTML(custompages.CustomPages[fileName]), //nolint:gosec
 			"FileName":    fileName,
 			"PageName":    custompages.Names[fileName],
 		}, r, w)
@@ -72,7 +72,7 @@ func MakeCustomPage(fileName string) func(w http.ResponseWriter, r *http.Request
 }
 
 func NotFound(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(404)
+	w.WriteHeader(http.StatusNotFound)
 	err := templates.Render("404.html", nil, r, w)
 	if err != nil {
 		Oops(w, r, RespHTML, "")
@@ -86,26 +86,26 @@ func Oops(w http.ResponseWriter, r *http.Request, rt RespType, msg string) {
 
 	const name = "oops.html"
 
-	if rt == RespHTML {
-		w.WriteHeader(500)
+	switch {
+	case rt == RespHTML:
+		w.WriteHeader(http.StatusInternalServerError)
 		if err := templates.Render(name, map[string]any{"Msg": msg}, r, w); err != nil {
 			slog.Error("Failed to render template", "template", name, "error", err)
 		}
 		return
-	} else if rt == RespPLAIN {
-		w.WriteHeader(500)
+	case rt == RespPLAIN:
+		w.WriteHeader(http.StatusInternalServerError)
 		_, _ = fmt.Fprintf(w, "%s", msg)
 		return
-	} else if rt == RespJSON {
+	case rt == RespJSON:
 		js, _ := json.Marshal(map[string]string{
 			"error": msg,
 		})
-
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-		w.WriteHeader(500)
+		w.WriteHeader(http.StatusInternalServerError)
 		_, _ = w.Write(js)
 		return
-	} else if rt == RespAUTO {
+	case rt == RespAUTO:
 		if strings.EqualFold("application/json", r.Header.Get("Accept")) {
 			Oops(w, r, RespJSON, msg)
 		} else {
@@ -115,27 +115,27 @@ func Oops(w http.ResponseWriter, r *http.Request, rt RespType, msg string) {
 }
 
 func BadRequest(w http.ResponseWriter, r *http.Request, rt RespType, msg string) {
-	if rt == RespHTML {
+	switch {
+	case rt == RespHTML:
 		w.WriteHeader(http.StatusBadRequest)
 		err := templates.Render("400.html", map[string]any{"Msg": msg}, r, w)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 		return
-	} else if rt == RespPLAIN {
+	case rt == RespPLAIN:
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprintf(w, "%s", msg)
 		return
-	} else if rt == RespJSON {
+	case rt == RespJSON:
 		js, _ := json.Marshal(map[string]string{
 			"error": msg,
 		})
-
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 		w.WriteHeader(http.StatusBadRequest)
 		_, _ = w.Write(js)
 		return
-	} else if rt == RespAUTO {
+	case rt == RespAUTO:
 		if strings.EqualFold("application/json", r.Header.Get("Accept")) {
 			BadRequest(w, r, RespJSON, msg)
 		} else {
@@ -145,7 +145,7 @@ func BadRequest(w http.ResponseWriter, r *http.Request, rt RespType, msg string)
 }
 
 func Unauthorized(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(401)
+	w.WriteHeader(http.StatusUnauthorized)
 	err := templates.Render("401.html", nil, r, w)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

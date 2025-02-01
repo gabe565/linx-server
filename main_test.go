@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"crypto/tls"
 	"encoding/json"
-	"fmt"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
@@ -23,15 +22,15 @@ import (
 )
 
 type RespOkJSON struct {
-	Filename   string
-	Url        string
-	Delete_Key string
-	Expiry     string
-	Size       string
+	Filename  string `json:"filename"`
+	URL       string `json:"url"`
+	DeleteKey string `json:"delete_key"`
+	Expiry    string `json:"expiry"`
+	Size      string `json:"size"`
 }
 
 type RespErrJSON struct {
-	Error string
+	Error string `json:"error"`
 }
 
 func setup(t *testing.T, preserveSiteURL bool) *chi.Mux {
@@ -54,7 +53,7 @@ func TestIndex(t *testing.T) {
 	r := setup(t, false)
 	w := httptest.NewRecorder()
 
-	req, err := http.NewRequest("GET", "/", nil)
+	req, err := http.NewRequest(http.MethodGet, "/", nil)
 	require.NoError(t, err)
 
 	r.ServeHTTP(w, req)
@@ -67,7 +66,7 @@ func TestIndexStandardMaxExpiry(t *testing.T) {
 
 	config.Default.MaxExpiry.Duration = 60
 
-	req, err := http.NewRequest("GET", "/", nil)
+	req, err := http.NewRequest(http.MethodGet, "/", nil)
 	require.NoError(t, err)
 
 	r.ServeHTTP(w, req)
@@ -80,7 +79,7 @@ func TestIndexWeirdMaxExpiry(t *testing.T) {
 
 	config.Default.MaxExpiry.Duration = 25 * time.Minute
 
-	req, err := http.NewRequest("GET", "/", nil)
+	req, err := http.NewRequest(http.MethodGet, "/", nil)
 	require.NoError(t, err)
 
 	r.ServeHTTP(w, req)
@@ -92,7 +91,7 @@ func TestAddHeader(t *testing.T) {
 	r := setup(t, false)
 	w := httptest.NewRecorder()
 
-	req, err := http.NewRequest("GET", "/", nil)
+	req, err := http.NewRequest(http.MethodGet, "/", nil)
 	require.NoError(t, err)
 
 	r.ServeHTTP(w, req)
@@ -106,7 +105,7 @@ func TestAuthKeys(t *testing.T) {
 	for _, v := range []string{"/", "/paste"} {
 		w := httptest.NewRecorder()
 
-		req, err := http.NewRequest("GET", v, nil)
+		req, err := http.NewRequest(http.MethodGet, v, nil)
 		require.NoError(t, err)
 
 		r.ServeHTTP(w, req)
@@ -115,7 +114,7 @@ func TestAuthKeys(t *testing.T) {
 
 	w := httptest.NewRecorder()
 
-	req, err := http.NewRequest("POST", "/paste", nil)
+	req, err := http.NewRequest(http.MethodPost, "/paste", nil)
 	require.NoError(t, err)
 
 	r.ServeHTTP(w, req)
@@ -126,7 +125,7 @@ func TestNotFound(t *testing.T) {
 	r := setup(t, false)
 	w := httptest.NewRecorder()
 
-	req, err := http.NewRequest("GET", "/url/should/not/exist", nil)
+	req, err := http.NewRequest(http.MethodGet, "/url/should/not/exist", nil)
 	require.NoError(t, err)
 
 	r.ServeHTTP(w, req)
@@ -139,7 +138,7 @@ func TestFileNotFound(t *testing.T) {
 
 	filename := upload.GenerateBarename()
 
-	req, err := http.NewRequest("GET", "/"+config.Default.SelifPath+filename, nil)
+	req, err := http.NewRequest(http.MethodGet, "/"+config.Default.SelifPath+filename, nil)
 	require.NoError(t, err)
 
 	r.ServeHTTP(w, req)
@@ -152,7 +151,7 @@ func TestDisplayNotFound(t *testing.T) {
 
 	filename := upload.GenerateBarename()
 
-	req, err := http.NewRequest("GET", "/"+filename, nil)
+	req, err := http.NewRequest(http.MethodGet, "/"+filename, nil)
 	require.NoError(t, err)
 
 	r.ServeHTTP(w, req)
@@ -160,19 +159,21 @@ func TestDisplayNotFound(t *testing.T) {
 	assert.Equal(t, http.StatusNotFound, w.Code)
 }
 
+const ExtTxt = "txt"
+
 func TestPostCodeUpload(t *testing.T) {
 	r := setup(t, false)
 	w := httptest.NewRecorder()
 
 	filename := upload.GenerateBarename()
-	extension := "txt"
+	extension := ExtTxt
 
 	form := url.Values{}
 	form.Add("content", "File content")
 	form.Add("filename", filename)
 	form.Add("extension", extension)
 
-	req, err := http.NewRequest("POST", "/upload", nil)
+	req, err := http.NewRequest(http.MethodPost, "/upload", nil)
 	require.NoError(t, err)
 	req.PostForm = form
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
@@ -189,14 +190,14 @@ func TestPostCodeUploadWhitelistedHeader(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	filename := upload.GenerateBarename()
-	extension := "txt"
+	extension := ExtTxt
 
 	form := url.Values{}
 	form.Add("content", "File content")
 	form.Add("filename", filename)
 	form.Add("extension", extension)
 
-	req, err := http.NewRequest("POST", "/upload", nil)
+	req, err := http.NewRequest(http.MethodPost, "/upload", nil)
 	require.NoError(t, err)
 	req.PostForm = form
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
@@ -212,14 +213,14 @@ func TestPostCodeUploadNoReferrer(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	filename := upload.GenerateBarename()
-	extension := "txt"
+	extension := ExtTxt
 
 	form := url.Values{}
 	form.Add("content", "File content")
 	form.Add("filename", filename)
 	form.Add("extension", extension)
 
-	req, err := http.NewRequest("POST", "/upload", nil)
+	req, err := http.NewRequest(http.MethodPost, "/upload", nil)
 	require.NoError(t, err)
 	req.PostForm = form
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
@@ -234,14 +235,14 @@ func TestPostCodeUploadBadOrigin(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	filename := upload.GenerateBarename()
-	extension := "txt"
+	extension := ExtTxt
 
 	form := url.Values{}
 	form.Add("content", "File content")
 	form.Add("filename", filename)
 	form.Add("extension", extension)
 
-	req, err := http.NewRequest("POST", "/upload", nil)
+	req, err := http.NewRequest(http.MethodPost, "/upload", nil)
 	require.NoError(t, err)
 	req.PostForm = form
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
@@ -261,7 +262,7 @@ func TestPostCodeExpiryJSONUpload(t *testing.T) {
 	form.Add("filename", "")
 	form.Add("expires", "60")
 
-	req, err := http.NewRequest("POST", "/upload", nil)
+	req, err := http.NewRequest(http.MethodPost, "/upload", nil)
 	require.NoError(t, err)
 	req.PostForm = form
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
@@ -298,7 +299,7 @@ func TestPostUpload(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, mw.Close())
 
-	req, err := http.NewRequest("POST", "/upload", &b)
+	req, err := http.NewRequest(http.MethodPost, "/upload", &b)
 	req.Header.Set("Content-Type", mw.FormDataContentType())
 	req.Header.Set("Referer", config.Default.SiteURL)
 	require.NoError(t, err)
@@ -325,7 +326,7 @@ func TestPostJSONUpload(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, mw.Close())
 
-	req, err := http.NewRequest("POST", "/upload", &b)
+	req, err := http.NewRequest(http.MethodPost, "/upload", &b)
 	req.Header.Set("Content-Type", mw.FormDataContentType())
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Referer", config.Default.SiteURL)
@@ -366,7 +367,7 @@ func TestPostJSONUploadMaxExpiry(t *testing.T) {
 		require.NoError(t, err)
 		require.NoError(t, mw.Close())
 
-		req, err := http.NewRequest("POST", "/upload", &b)
+		req, err := http.NewRequest(http.MethodPost, "/upload", &b)
 		req.Header.Set("Content-Type", mw.FormDataContentType())
 		req.Header.Set("Accept", "application/json")
 		req.Header.Set("Linx-Expiry", expiry)
@@ -409,7 +410,7 @@ func TestPostExpiresJSONUpload(t *testing.T) {
 
 	require.NoError(t, mw.Close())
 
-	req, err := http.NewRequest("POST", "/upload", &b)
+	req, err := http.NewRequest(http.MethodPost, "/upload", &b)
 	req.Header.Set("Content-Type", mw.FormDataContentType())
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Referer", config.Default.SiteURL)
@@ -451,7 +452,7 @@ func TestPostRandomizeJSONUpload(t *testing.T) {
 
 	require.NoError(t, mw.Close())
 
-	req, err := http.NewRequest("POST", "/upload", &b)
+	req, err := http.NewRequest(http.MethodPost, "/upload", &b)
 	req.Header.Set("Content-Type", mw.FormDataContentType())
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Referer", config.Default.SiteURL)
@@ -482,7 +483,7 @@ func TestPostEmptyUpload(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, mw.Close())
 
-	req, err := http.NewRequest("POST", "/upload", &b)
+	req, err := http.NewRequest(http.MethodPost, "/upload", &b)
 	req.Header.Set("Content-Type", mw.FormDataContentType())
 	req.Header.Set("Referer", config.Default.SiteURL)
 	require.NoError(t, err)
@@ -507,7 +508,7 @@ func TestPostTooLargeUpload(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, mw.Close())
 
-	req, err := http.NewRequest("POST", "/upload", &b)
+	req, err := http.NewRequest(http.MethodPost, "/upload", &b)
 	req.Header.Set("Content-Type", mw.FormDataContentType())
 	req.Header.Set("Referer", config.Default.SiteURL)
 	require.NoError(t, err)
@@ -531,7 +532,7 @@ func TestPostEmptyJSONUpload(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, mw.Close())
 
-	req, err := http.NewRequest("POST", "/upload", &b)
+	req, err := http.NewRequest(http.MethodPost, "/upload", &b)
 	req.Header.Set("Content-Type", mw.FormDataContentType())
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Referer", config.Default.SiteURL)
@@ -544,7 +545,7 @@ func TestPostEmptyJSONUpload(t *testing.T) {
 	err = json.Unmarshal(w.Body.Bytes(), &myjson)
 	require.NoError(t, err)
 
-	assert.Equal(t, "Empty file", myjson.Error)
+	assert.Equal(t, "empty file", myjson.Error)
 }
 
 func TestPutUpload(t *testing.T) {
@@ -553,12 +554,12 @@ func TestPutUpload(t *testing.T) {
 
 	filename := upload.GenerateBarename() + ".file"
 
-	req, err := http.NewRequest("PUT", "/upload/"+filename, strings.NewReader("File content"))
+	req, err := http.NewRequest(http.MethodPut, "/upload/"+filename, strings.NewReader("File content"))
 	require.NoError(t, err)
 
 	r.ServeHTTP(w, req)
 
-	assert.Equal(t, fmt.Sprintf("%s\n", config.Default.SiteURL+filename), w.Body.String())
+	assert.Equal(t, config.Default.SiteURL+filename+"\n", w.Body.String())
 }
 
 func TestPutRandomizedUpload(t *testing.T) {
@@ -567,7 +568,7 @@ func TestPutRandomizedUpload(t *testing.T) {
 
 	filename := upload.GenerateBarename() + ".file"
 
-	req, err := http.NewRequest("PUT", "/upload/"+filename, strings.NewReader("File content"))
+	req, err := http.NewRequest(http.MethodPut, "/upload/"+filename, strings.NewReader("File content"))
 	require.NoError(t, err)
 
 	req.Header.Set("Linx-Randomize", "yes")
@@ -583,7 +584,7 @@ func TestPutForceRandomUpload(t *testing.T) {
 	config.Default.ForceRandomFilename = true
 	filename := "randomizeme.file"
 
-	req, err := http.NewRequest("PUT", "/upload/"+filename, strings.NewReader("File content"))
+	req, err := http.NewRequest(http.MethodPut, "/upload/"+filename, strings.NewReader("File content"))
 	require.NoError(t, err)
 
 	// while this should also work without this header, let's try to force
@@ -600,7 +601,7 @@ func TestPutNoExtensionUpload(t *testing.T) {
 
 	filename := upload.GenerateBarename()
 
-	req, err := http.NewRequest("PUT", "/upload/"+filename, strings.NewReader("File content"))
+	req, err := http.NewRequest(http.MethodPut, "/upload/"+filename, strings.NewReader("File content"))
 	require.NoError(t, err)
 
 	req.Header.Set("Linx-Randomize", "yes")
@@ -615,7 +616,7 @@ func TestPutEmptyUpload(t *testing.T) {
 
 	filename := upload.GenerateBarename() + ".file"
 
-	req, err := http.NewRequest("PUT", "/upload/"+filename, strings.NewReader(""))
+	req, err := http.NewRequest(http.MethodPut, "/upload/"+filename, strings.NewReader(""))
 	require.NoError(t, err)
 
 	req.Header.Set("Linx-Randomize", "yes")
@@ -633,7 +634,7 @@ func TestPutTooLargeUpload(t *testing.T) {
 
 	filename := upload.GenerateBarename() + ".file"
 
-	req, err := http.NewRequest("PUT", "/upload/"+filename, strings.NewReader("File too big"))
+	req, err := http.NewRequest(http.MethodPut, "/upload/"+filename, strings.NewReader("File too big"))
 	require.NoError(t, err)
 
 	req.Header.Set("Linx-Randomize", "yes")
@@ -651,7 +652,7 @@ func TestPutJSONUpload(t *testing.T) {
 
 	filename := upload.GenerateBarename() + ".file"
 
-	req, err := http.NewRequest("PUT", "/upload/"+filename, strings.NewReader("File content"))
+	req, err := http.NewRequest(http.MethodPut, "/upload/"+filename, strings.NewReader("File content"))
 	require.NoError(t, err)
 
 	req.Header.Set("Accept", "application/json")
@@ -671,7 +672,7 @@ func TestPutRandomizedJSONUpload(t *testing.T) {
 
 	filename := upload.GenerateBarename() + ".file"
 
-	req, err := http.NewRequest("PUT", "/upload/"+filename, strings.NewReader("File content"))
+	req, err := http.NewRequest(http.MethodPut, "/upload/"+filename, strings.NewReader("File content"))
 	require.NoError(t, err)
 
 	req.Header.Set("Accept", "application/json")
@@ -692,7 +693,7 @@ func TestPutExpireJSONUpload(t *testing.T) {
 
 	filename := upload.GenerateBarename() + ".file"
 
-	req, err := http.NewRequest("PUT", "/upload/"+filename, strings.NewReader("File content"))
+	req, err := http.NewRequest(http.MethodPut, "/upload/"+filename, strings.NewReader("File content"))
 	require.NoError(t, err)
 
 	req.Header.Set("Accept", "application/json")
@@ -704,7 +705,7 @@ func TestPutExpireJSONUpload(t *testing.T) {
 	require.NoError(t, err)
 
 	expiry, err := strconv.Atoi(myjson.Expiry)
-	assert.Equal(t, nil, err)
+	require.NoError(t, err)
 	assert.NotZero(t, expiry)
 }
 
@@ -714,7 +715,7 @@ func TestPutAndDelete(t *testing.T) {
 	r := setup(t, false)
 	w := httptest.NewRecorder()
 
-	req, err := http.NewRequest("PUT", "/upload", strings.NewReader("File content"))
+	req, err := http.NewRequest(http.MethodPut, "/upload", strings.NewReader("File content"))
 	require.NoError(t, err)
 
 	req.Header.Set("Accept", "application/json")
@@ -726,16 +727,16 @@ func TestPutAndDelete(t *testing.T) {
 
 	// Delete it
 	w = httptest.NewRecorder()
-	req, err = http.NewRequest("DELETE", "/"+myjson.Filename, nil)
+	req, err = http.NewRequest(http.MethodDelete, "/"+myjson.Filename, nil)
 	require.NoError(t, err)
-	req.Header.Set("Linx-Delete-Key", myjson.Delete_Key)
+	req.Header.Set("Linx-Delete-Key", myjson.DeleteKey)
 	r.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusOK, w.Code)
 
 	// Make sure it's actually gone
 	w = httptest.NewRecorder()
-	req, err = http.NewRequest("GET", "/"+myjson.Filename, nil)
+	req, err = http.NewRequest(http.MethodGet, "/"+myjson.Filename, nil)
 	require.NoError(t, err)
 	r.ServeHTTP(w, req)
 
@@ -743,7 +744,7 @@ func TestPutAndDelete(t *testing.T) {
 
 	// Make sure torrent is also gone
 	w = httptest.NewRecorder()
-	req, err = http.NewRequest("GET", "/torrent/"+myjson.Filename, nil)
+	req, err = http.NewRequest(http.MethodGet, "/torrent/"+myjson.Filename, nil)
 	require.NoError(t, err)
 	r.ServeHTTP(w, req)
 
@@ -756,7 +757,7 @@ func TestPutAndOverwrite(t *testing.T) {
 	r := setup(t, false)
 	w := httptest.NewRecorder()
 
-	req, err := http.NewRequest("PUT", "/upload", strings.NewReader("File content"))
+	req, err := http.NewRequest(http.MethodPut, "/upload", strings.NewReader("File content"))
 	require.NoError(t, err)
 
 	req.Header.Set("Accept", "application/json")
@@ -768,16 +769,16 @@ func TestPutAndOverwrite(t *testing.T) {
 
 	// Overwrite it
 	w = httptest.NewRecorder()
-	req, err = http.NewRequest("PUT", "/upload/"+myjson.Filename, strings.NewReader("New file content"))
+	req, err = http.NewRequest(http.MethodPut, "/upload/"+myjson.Filename, strings.NewReader("New file content"))
 	require.NoError(t, err)
-	req.Header.Set("Linx-Delete-Key", myjson.Delete_Key)
+	req.Header.Set("Linx-Delete-Key", myjson.DeleteKey)
 	r.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusOK, w.Code)
 
 	// Make sure it's the new file
 	w = httptest.NewRecorder()
-	req, err = http.NewRequest("GET", "/"+config.Default.SelifPath+"/"+myjson.Filename, nil)
+	req, err = http.NewRequest(http.MethodGet, "/"+config.Default.SelifPath+"/"+myjson.Filename, nil)
 	require.NoError(t, err)
 	r.ServeHTTP(w, req)
 	assert.NotEqual(t, http.StatusNotFound, w.Code)
@@ -793,7 +794,7 @@ func TestPutAndOverwriteForceRandom(t *testing.T) {
 
 	config.Default.ForceRandomFilename = true
 
-	req, err := http.NewRequest("PUT", "/upload", strings.NewReader("File content"))
+	req, err := http.NewRequest(http.MethodPut, "/upload", strings.NewReader("File content"))
 	require.NoError(t, err)
 
 	req.Header.Set("Accept", "application/json")
@@ -805,16 +806,16 @@ func TestPutAndOverwriteForceRandom(t *testing.T) {
 
 	// Overwrite it
 	w = httptest.NewRecorder()
-	req, err = http.NewRequest("PUT", "/upload/"+myjson.Filename, strings.NewReader("New file content"))
+	req, err = http.NewRequest(http.MethodPut, "/upload/"+myjson.Filename, strings.NewReader("New file content"))
 	require.NoError(t, err)
-	req.Header.Set("Linx-Delete-Key", myjson.Delete_Key)
+	req.Header.Set("Linx-Delete-Key", myjson.DeleteKey)
 	r.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusOK, w.Code)
 
 	// Make sure it's the new file
 	w = httptest.NewRecorder()
-	req, err = http.NewRequest("GET", "/"+config.Default.SelifPath+"/"+myjson.Filename, nil)
+	req, err = http.NewRequest(http.MethodGet, "/"+config.Default.SelifPath+"/"+myjson.Filename, nil)
 	require.NoError(t, err)
 	r.ServeHTTP(w, req)
 	assert.NotEqual(t, http.StatusNotFound, w.Code)
@@ -828,7 +829,7 @@ func TestPutAndSpecificDelete(t *testing.T) {
 	r := setup(t, false)
 	w := httptest.NewRecorder()
 
-	req, err := http.NewRequest("PUT", "/upload", strings.NewReader("File content"))
+	req, err := http.NewRequest(http.MethodPut, "/upload", strings.NewReader("File content"))
 	require.NoError(t, err)
 
 	req.Header.Set("Accept", "application/json")
@@ -841,7 +842,7 @@ func TestPutAndSpecificDelete(t *testing.T) {
 
 	// Delete it
 	w = httptest.NewRecorder()
-	req, err = http.NewRequest("DELETE", "/"+myjson.Filename, nil)
+	req, err = http.NewRequest(http.MethodDelete, "/"+myjson.Filename, nil)
 	require.NoError(t, err)
 	req.Header.Set("Linx-Delete-Key", "supersecret")
 	r.ServeHTTP(w, req)
@@ -850,7 +851,7 @@ func TestPutAndSpecificDelete(t *testing.T) {
 
 	// Make sure it's actually gone
 	w = httptest.NewRecorder()
-	req, err = http.NewRequest("GET", "/"+myjson.Filename, nil)
+	req, err = http.NewRequest(http.MethodGet, "/"+myjson.Filename, nil)
 	require.NoError(t, err)
 	r.ServeHTTP(w, req)
 
@@ -858,7 +859,7 @@ func TestPutAndSpecificDelete(t *testing.T) {
 
 	// Make sure torrent is gone too
 	w = httptest.NewRecorder()
-	req, err = http.NewRequest("GET", "/torrent/"+myjson.Filename, nil)
+	req, err = http.NewRequest(http.MethodGet, "/torrent/"+myjson.Filename, nil)
 	require.NoError(t, err)
 	r.ServeHTTP(w, req)
 
@@ -882,7 +883,7 @@ func TestInferSiteURL(t *testing.T) {
 	r := setup(t, true)
 	w := httptest.NewRecorder()
 
-	req, err := http.NewRequest("GET", "/API", nil)
+	req, err := http.NewRequest(http.MethodGet, "/API", nil)
 	req.Host = "example.com:8080"
 	require.NoError(t, err)
 
@@ -896,7 +897,7 @@ func TestInferSiteURLProxied(t *testing.T) {
 	r := setup(t, true)
 	w := httptest.NewRecorder()
 
-	req, err := http.NewRequest("GET", "/API", nil)
+	req, err := http.NewRequest(http.MethodGet, "/API", nil)
 	req.Header.Add("X-Forwarded-Proto", "https")
 	req.Host = "example.com:8080"
 	require.NoError(t, err)
@@ -912,7 +913,7 @@ func TestInferSiteURLHTTPS(t *testing.T) {
 	r := setup(t, true)
 	w := httptest.NewRecorder()
 
-	req, err := http.NewRequest("GET", "/API", nil)
+	req, err := http.NewRequest(http.MethodGet, "/API", nil)
 	req.Host = "example.com"
 	require.NoError(t, err)
 
@@ -926,7 +927,7 @@ func TestInferSiteURLHTTPSFastCGI(t *testing.T) {
 	r := setup(t, true)
 	w := httptest.NewRecorder()
 
-	req, err := http.NewRequest("GET", "/API", nil)
+	req, err := http.NewRequest(http.MethodGet, "/API", nil)
 	req.Host = "example.com"
 	req.TLS = &tls.ConnectionState{HandshakeComplete: true}
 	require.NoError(t, err)
@@ -941,7 +942,7 @@ func TestPutAndGetCLI(t *testing.T) {
 
 	// upload file
 	w := httptest.NewRecorder()
-	req, err := http.NewRequest("PUT", "/upload", strings.NewReader("File content"))
+	req, err := http.NewRequest(http.MethodPut, "/upload", strings.NewReader("File content"))
 	require.NoError(t, err)
 	req.Header.Set("Accept", "application/json")
 	r.ServeHTTP(w, req)
@@ -951,7 +952,7 @@ func TestPutAndGetCLI(t *testing.T) {
 
 	// request file without wget user agent
 	w = httptest.NewRecorder()
-	req, err = http.NewRequest("GET", myjson.Url, nil)
+	req, err = http.NewRequest(http.MethodGet, myjson.URL, nil)
 	require.NoError(t, err)
 	r.ServeHTTP(w, req)
 
@@ -960,7 +961,7 @@ func TestPutAndGetCLI(t *testing.T) {
 
 	// request file with wget user agent
 	w = httptest.NewRecorder()
-	req, err = http.NewRequest("GET", myjson.Url, nil)
+	req, err = http.NewRequest(http.MethodGet, myjson.URL, nil)
 	req.Header.Set("User-Agent", "wget")
 	require.NoError(t, err)
 	r.ServeHTTP(w, req)

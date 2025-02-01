@@ -32,11 +32,11 @@ func TestCreateTorrent(t *testing.T) {
 	assert.Equal(t, "UTF-8", decoded.Encoding)
 	assert.Equal(t, filepath.Base(tmpFile), decoded.Info.Name)
 	assert.NotZero(t, decoded.Info.PieceLength, "expected a piece length")
-	assert.NotZero(t, len(decoded.Info.Pieces), "expected at least one piece")
+	assert.NotEmpty(t, decoded.Info.Pieces, "expected at least one piece")
 	assert.NotZero(t, decoded.Info.Length, "invalid length")
 
 	tracker := fmt.Sprintf("%s%s/%s", config.Default.SiteURL, config.Default.SelifPath, filepath.Base(tmpFile))
-	assert.Equal(t, tracker, decoded.UrlList[0])
+	assert.Equal(t, tracker, decoded.URLList[0])
 }
 
 func TestCreateTorrentWithImage(t *testing.T) {

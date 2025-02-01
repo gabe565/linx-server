@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"slices"
 
 	"golang.org/x/crypto/scrypt"
 )
@@ -27,7 +28,7 @@ type AuthOptions struct {
 	SitePath      string
 }
 
-type ApiKeysMiddleware struct {
+type Middleware struct {
 	successHandler http.Handler
 	authKeys       []string
 	o              AuthOptions
@@ -49,44 +50,42 @@ func ReadAuthKeys(authFile string) []string {
 
 	err = scanner.Err()
 	if err != nil {
-		log.Fatal("Scanner error while reading authfile: ", err)
+		log.Fatal("Scanner error while reading authfile: ", err) //nolint:gocritic
 	}
 
 	return authKeys
 }
 
-func CheckAuth(authKeys []string, key string) (result bool, err error) {
+func CheckAuth(authKeys []string, key string) (bool, error) {
 	checkKey, err := scrypt.Key([]byte(key), []byte(scryptSalt), scryptN, scryptr, scryptp, scryptKeyLen)
 	if err != nil {
-		return
+		return false, err
 	}
 
 	encodedKey := base64.StdEncoding.EncodeToString(checkKey)
 	for _, v := range authKeys {
 		if encodedKey == v {
-			result = true
-			return
+			return true, nil
 		}
 	}
 
-	result = false
-	return
+	return false, nil
 }
 
-func (a ApiKeysMiddleware) getSitePrefix() string {
+func (a Middleware) getSitePrefix() string {
 	prefix := a.o.SitePath
-	if len(prefix) <= 0 || prefix[0] != '/' {
+	if len(prefix) == 0 || prefix[0] != '/' {
 		prefix = "/" + prefix
 	}
 	return prefix
 }
 
-func (a ApiKeysMiddleware) goodAuthorizationHandler(w http.ResponseWriter, r *http.Request) {
+func (a Middleware) goodAuthorizationHandler(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set("Location", a.getSitePrefix())
 	w.WriteHeader(http.StatusFound)
 }
 
-func (a ApiKeysMiddleware) badAuthorizationHandler(w http.ResponseWriter, r *http.Request) {
+func (a Middleware) badAuthorizationHandler(w http.ResponseWriter, _ *http.Request) {
 	if a.o.BasicAuth {
 		rs := ""
 		if a.o.SiteName != "" {
@@ -97,7 +96,7 @@ func (a ApiKeysMiddleware) badAuthorizationHandler(w http.ResponseWriter, r *htt
 	http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 }
 
-func (a ApiKeysMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (a Middleware) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var successHandler http.Handler
 	prefix := a.getSitePrefix()
 
@@ -107,7 +106,7 @@ func (a ApiKeysMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		successHandler = a.successHandler
 	}
 
-	if sliceContains(a.o.UnauthMethods, r.Method) && r.URL.Path != prefix+"auth" {
+	if slices.Contains(a.o.UnauthMethods, r.Method) && r.URL.Path != prefix+"auth" {
 		// allow unauthenticated methods
 		successHandler.ServeHTTP(w, r)
 		return
@@ -130,22 +129,12 @@ func (a ApiKeysMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	successHandler.ServeHTTP(w, r)
 }
 
-func NewApiKeysMiddleware(o AuthOptions) func(http.Handler) http.Handler {
+func NewAPIKeysMiddleware(o AuthOptions) func(http.Handler) http.Handler {
 	return func(h http.Handler) http.Handler {
-		return ApiKeysMiddleware{
+		return Middleware{
 			successHandler: h,
 			authKeys:       ReadAuthKeys(o.AuthFile),
 			o:              o,
 		}
 	}
-}
-
-func sliceContains(slice []string, s string) bool {
-	for _, v := range slice {
-		if s == v {
-			return true
-		}
-	}
-
-	return false
 }

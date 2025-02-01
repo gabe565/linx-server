@@ -2,6 +2,7 @@ package localfs
 
 import (
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"os"
@@ -12,7 +13,7 @@ import (
 	"gabe565.com/linx-server/internal/helpers"
 )
 
-type LocalfsBackend struct {
+type Backend struct {
 	metaPath  string
 	filesPath string
 }
@@ -27,16 +28,14 @@ type MetadataJSON struct {
 	ArchiveFiles []string `json:"archive_files,omitempty"`
 }
 
-func (b LocalfsBackend) Delete(key string) (err error) {
-	err = os.Remove(path.Join(b.filesPath, key))
-	if err != nil {
-		return
-	}
-	err = os.Remove(path.Join(b.metaPath, key))
-	return
+func (b Backend) Delete(key string) error {
+	return errors.Join(
+		os.Remove(path.Join(b.filesPath, key)),
+		os.Remove(path.Join(b.metaPath, key)),
+	)
 }
 
-func (b LocalfsBackend) Exists(key string) (bool, error) {
+func (b Backend) Exists(key string) (bool, error) {
 	_, err := os.Stat(path.Join(b.filesPath, key))
 	exists := true
 	if err != nil && os.IsNotExist(err) {
@@ -46,12 +45,13 @@ func (b LocalfsBackend) Exists(key string) (bool, error) {
 	return exists, err
 }
 
-func (b LocalfsBackend) Head(key string) (metadata backends.Metadata, err error) {
+func (b Backend) Head(key string) (backends.Metadata, error) {
+	var metadata backends.Metadata
 	f, err := os.Open(path.Join(b.metaPath, key))
 	if os.IsNotExist(err) {
-		return metadata, backends.NotFoundErr
+		return metadata, backends.ErrNotFound
 	} else if err != nil {
-		return metadata, backends.BadMetadata
+		return metadata, backends.ErrBadMetadata
 	}
 	defer f.Close()
 
@@ -59,7 +59,7 @@ func (b LocalfsBackend) Head(key string) (metadata backends.Metadata, err error)
 
 	mjson := MetadataJSON{}
 	if err := decoder.Decode(&mjson); err != nil {
-		return metadata, backends.BadMetadata
+		return metadata, backends.ErrBadMetadata
 	}
 
 	metadata.DeleteKey = mjson.DeleteKey
@@ -70,36 +70,31 @@ func (b LocalfsBackend) Head(key string) (metadata backends.Metadata, err error)
 	metadata.Expiry = time.Unix(mjson.Expiry, 0)
 	metadata.Size = mjson.Size
 
-	return
+	return metadata, nil
 }
 
-func (b LocalfsBackend) Get(key string) (metadata backends.Metadata, f io.ReadCloser, err error) {
-	metadata, err = b.Head(key)
+func (b Backend) Get(key string) (backends.Metadata, io.ReadCloser, error) {
+	metadata, err := b.Head(key)
 	if err != nil {
-		return
+		return metadata, nil, err
 	}
 
-	f, err = os.Open(path.Join(b.filesPath, key))
-	if err != nil {
-		return
-	}
-
-	return
+	f, err := os.Open(path.Join(b.filesPath, key))
+	return metadata, f, err
 }
 
-func (b LocalfsBackend) ServeFile(key string, w http.ResponseWriter, r *http.Request) (err error) {
-	_, err = b.Head(key)
-	if err != nil {
-		return
+func (b Backend) ServeFile(key string, w http.ResponseWriter, r *http.Request) error {
+	if _, err := b.Head(key); err != nil {
+		return err
 	}
 
 	filePath := path.Join(b.filesPath, key)
 	http.ServeFile(w, r, filePath)
 
-	return
+	return nil
 }
 
-func (b LocalfsBackend) writeMetadata(key string, metadata backends.Metadata) error {
+func (b Backend) writeMetadata(key string, metadata backends.Metadata) error {
 	tmpPath := path.Join(b.metaPath, "."+key)
 
 	mjson := MetadataJSON{
@@ -132,7 +127,7 @@ func (b LocalfsBackend) writeMetadata(key string, metadata backends.Metadata) er
 	return os.Rename(tmpPath, path.Join(b.metaPath, key))
 }
 
-func (b LocalfsBackend) Put(key string, r io.Reader, expiry time.Time, deleteKey, accessKey string) (backends.Metadata, error) {
+func (b Backend) Put(key string, r io.Reader, expiry time.Time, deleteKey, accessKey string) (backends.Metadata, error) {
 	var m backends.Metadata
 	tmpPath := path.Join(b.filesPath, "."+key)
 
@@ -149,7 +144,7 @@ func (b LocalfsBackend) Put(key string, r io.Reader, expiry time.Time, deleteKey
 	if err != nil {
 		return m, err
 	} else if bytes == 0 {
-		return m, backends.FileEmptyError
+		return m, backends.ErrFileEmpty
 	}
 
 	if _, err := tmp.Seek(0, 0); err != nil {
@@ -180,11 +175,11 @@ func (b LocalfsBackend) Put(key string, r io.Reader, expiry time.Time, deleteKey
 	return m, os.Rename(tmpPath, path.Join(b.filesPath, key))
 }
 
-func (b LocalfsBackend) PutMetadata(key string, m backends.Metadata) error {
+func (b Backend) PutMetadata(key string, m backends.Metadata) error {
 	return b.writeMetadata(key, m)
 }
 
-func (b LocalfsBackend) Size(key string) (int64, error) {
+func (b Backend) Size(key string) (int64, error) {
 	fileInfo, err := os.Stat(path.Join(b.filesPath, key))
 	if err != nil {
 		return 0, err
@@ -192,14 +187,13 @@ func (b LocalfsBackend) Size(key string) (int64, error) {
 	return fileInfo.Size(), nil
 }
 
-func (b LocalfsBackend) List() ([]string, error) {
-	var output []string
-
+func (b Backend) List() ([]string, error) {
 	files, err := os.ReadDir(b.filesPath)
 	if err != nil {
 		return nil, err
 	}
 
+	output := make([]string, 0, len(files))
 	for _, file := range files {
 		output = append(output, file.Name())
 	}
@@ -207,8 +201,8 @@ func (b LocalfsBackend) List() ([]string, error) {
 	return output, nil
 }
 
-func NewLocalfsBackend(metaPath string, filesPath string) LocalfsBackend {
-	return LocalfsBackend{
+func NewLocalfsBackend(metaPath string, filesPath string) Backend {
+	return Backend{
 		metaPath:  metaPath,
 		filesPath: filesPath,
 	}

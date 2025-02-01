@@ -9,9 +9,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/Masterminds/sprig/v3"
 	"gabe565.com/linx-server/internal/config"
 	"gabe565.com/linx-server/internal/custompages"
+	"github.com/Masterminds/sprig/v3"
 )
 
 func Load(fsys fs.FS) (map[string]*template.Template, error) {

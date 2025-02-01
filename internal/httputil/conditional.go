@@ -16,7 +16,7 @@ import (
 // scanETag determines if a syntactically valid ETag is present at s. If so,
 // the ETag and remaining text after consuming ETag is returned. Otherwise,
 // it returns "", "".
-func scanETag(s string) (etag string, remain string) {
+func scanETag(s string) (string, string) {
 	s = textproto.TrimString(s)
 	start := 0
 	if strings.HasPrefix(s, "W/") {
@@ -139,7 +139,7 @@ func checkIfNoneMatch(w http.ResponseWriter, r *http.Request) condResult {
 }
 
 func checkIfModifiedSince(r *http.Request, modtime time.Time) condResult {
-	if r.Method != "GET" && r.Method != "HEAD" {
+	if r.Method != http.MethodGet && r.Method != http.MethodHead {
 		return condNone
 	}
 	ims := r.Header.Get("If-Modified-Since")
@@ -158,6 +158,7 @@ func checkIfModifiedSince(r *http.Request, modtime time.Time) condResult {
 	return condTrue
 }
 
+//nolint:gochecknoglobals
 var unixEpochTime = time.Unix(0, 0)
 
 // isZeroTime reports whether t is obviously unspecified (either zero or Unix()=0).
@@ -188,7 +189,7 @@ func writeNotModified(w http.ResponseWriter) {
 
 // CheckPreconditions evaluates request preconditions and reports whether a precondition
 // resulted in sending StatusNotModified or StatusPreconditionFailed.
-func CheckPreconditions(w http.ResponseWriter, r *http.Request, modtime time.Time) (done bool) {
+func CheckPreconditions(w http.ResponseWriter, r *http.Request, modtime time.Time) bool {
 	// This function carefully follows RFC 7232 section 6.
 	ch := checkIfMatch(w, r)
 	if ch == condNone {
@@ -200,7 +201,7 @@ func CheckPreconditions(w http.ResponseWriter, r *http.Request, modtime time.Tim
 	}
 	switch checkIfNoneMatch(w, r) {
 	case condFalse:
-		if r.Method == "GET" || r.Method == "HEAD" {
+		if r.Method == http.MethodGet || r.Method == http.MethodHead {
 			writeNotModified(w)
 			return true
 		} else {

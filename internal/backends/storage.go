@@ -23,5 +23,7 @@ type MetaStorageBackend interface {
 	List() ([]string, error)
 }
 
-var NotFoundErr = errors.New("File not found.")
-var FileEmptyError = errors.New("Empty file")
+var (
+	ErrNotFound  = errors.New("file not found")
+	ErrFileEmpty = errors.New("empty file")
+)

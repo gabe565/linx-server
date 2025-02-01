@@ -15,4 +15,4 @@ type Metadata struct {
 	ArchiveFiles []string
 }
 
-var BadMetadata = errors.New("Corrupted metadata.")
+var ErrBadMetadata = errors.New("corrupted metadata")

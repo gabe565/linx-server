@@ -62,7 +62,7 @@ type Config struct {
 
 	CustomPagesDir string `toml:"custom-pages-dir" comment:"Path to directory containing .md files to render as custom pages"`
 
-	RealIp                    bool       `toml:"real-ip" comment:"Use X-Real-IP/X-Forwarded-For headers"`
+	RealIP                    bool       `toml:"real-ip" comment:"Use X-Real-IP/X-Forwarded-For headers"`
 	AddHeaders                HeaderList `toml:"add-headers" comment:"Add arbitrary headers to the response"`
 	ContentSecurityPolicy     string     `toml:"content-security-policy" comment:"Value of default Content-Security-Policy header"`
 	FileContentSecurityPolicy string     `toml:"file-content-security-policy" comment:"Value of Content-Security-Policy header for file access"`
@@ -87,6 +87,7 @@ func New() *Config {
 	}
 }
 
+//nolint:gochecknoglobals
 var (
 	Default            = New()
 	StorageBackend     backends.StorageBackend

@@ -7,6 +7,7 @@ import (
 	"github.com/dustin/go-humanize"
 )
 
+//nolint:gochecknoglobals
 var defaultExpiryList = []time.Duration{
 	time.Minute,
 	5 * time.Minute,
@@ -29,7 +30,7 @@ func IsFileExpired(filename string) (bool, error) {
 		return false, err
 	}
 
-	return IsTsExpired(metadata.Expiry), nil
+	return IsTSExpired(metadata.Expiry), nil
 }
 
 // Return a list of expiration times and their humanized versions
@@ -66,10 +67,11 @@ func ListExpirationTimes() []ExpirationTime {
 	return expiryList
 }
 
+//nolint:gochecknoglobals
 var NeverExpire = time.Unix(0, 0)
 
 // Determine if a file with expiry set to "ts" has expired yet
-func IsTsExpired(ts time.Time) bool {
+func IsTSExpired(ts time.Time) bool {
 	now := time.Now()
 	return ts != NeverExpire && now.After(ts)
 }

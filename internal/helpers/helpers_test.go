@@ -31,7 +31,7 @@ func TestTextCharsets(t *testing.T) {
 	utf16LE[1] = 0xfe
 	utf16BE[0] = 0xfe
 	utf16BE[1] = 0xff
-	for i := 0; i < len(utf16); i++ {
+	for i := range utf16 {
 		lsb := utf16[i] & 0xff
 		msb := utf16[i] >> 8
 		utf16LE[i*2+2] = byte(lsb)

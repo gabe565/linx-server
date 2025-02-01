@@ -52,7 +52,7 @@ func GetSiteURL(r *http.Request) (*url.URL, error) {
 	return u, nil
 }
 
-func GetFileUrl(r *http.Request, filename string) (*url.URL, error) {
+func GetFileURL(r *http.Request, filename string) (*url.URL, error) {
 	u, err := GetSiteURL(r)
 	if err != nil {
 		return nil, err

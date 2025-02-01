@@ -11,6 +11,7 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -28,18 +29,21 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-var FileTooLargeError = errors.New("File too large.")
-var fileBlacklist = map[string]bool{
-	"favicon.ico":     true,
-	"index.htm":       true,
-	"index.html":      true,
-	"index.php":       true,
-	"robots.txt":      true,
-	"crossdomain.xml": true,
-}
+//nolint:gochecknoglobals
+var (
+	ErrFileTooLarge = errors.New("file too large")
+	fileDenylist    = map[string]bool{
+		"favicon.ico":     true,
+		"index.htm":       true,
+		"index.html":      true,
+		"index.php":       true,
+		"robots.txt":      true,
+		"crossdomain.xml": true,
+	}
+)
 
 // Describes metadata directly from the user request
-type UploadRequest struct {
+type Request struct {
 	src            io.Reader
 	size           int64
 	filename       string
@@ -62,7 +66,7 @@ func POSTHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	upReq := UploadRequest{}
+	upReq := Request{}
 	HeaderProcess(r, &upReq)
 
 	contentType := r.Header.Get("Content-Type")
@@ -105,7 +109,7 @@ func POSTHandler(w http.ResponseWriter, r *http.Request) {
 	upload, err := Process(upReq)
 
 	if strings.EqualFold("application/json", r.Header.Get("Accept")) {
-		if err == FileTooLargeError || err == backends.FileEmptyError {
+		if errors.Is(err, ErrFileTooLarge) || errors.Is(err, backends.ErrFileEmpty) {
 			handlers.BadRequest(w, r, handlers.RespJSON, err.Error())
 			return
 		} else if err != nil {
@@ -117,7 +121,7 @@ func POSTHandler(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 		_, _ = w.Write(js)
 	} else {
-		if err == FileTooLargeError || err == backends.FileEmptyError {
+		if errors.Is(err, ErrFileTooLarge) || errors.Is(err, backends.ErrFileEmpty) {
 			handlers.BadRequest(w, r, handlers.RespHTML, err.Error())
 			return
 		} else if err != nil {
@@ -125,12 +129,12 @@ func POSTHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		http.Redirect(w, r, config.Default.SitePath+upload.Filename, 303)
+		http.Redirect(w, r, config.Default.SitePath+upload.Filename, http.StatusSeeOther)
 	}
 }
 
 func PUTHandler(w http.ResponseWriter, r *http.Request) {
-	upReq := UploadRequest{}
+	upReq := Request{}
 	HeaderProcess(r, &upReq)
 
 	defer r.Body.Close()
@@ -140,7 +144,7 @@ func PUTHandler(w http.ResponseWriter, r *http.Request) {
 	upload, err := Process(upReq)
 
 	if strings.EqualFold("application/json", r.Header.Get("Accept")) {
-		if err == FileTooLargeError || err == backends.FileEmptyError {
+		if errors.Is(err, ErrFileTooLarge) || errors.Is(err, backends.ErrFileEmpty) {
 			handlers.BadRequest(w, r, handlers.RespJSON, err.Error())
 			return
 		} else if err != nil {
@@ -152,7 +156,7 @@ func PUTHandler(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 		_, _ = w.Write(js)
 	} else {
-		if err == FileTooLargeError || err == backends.FileEmptyError {
+		if errors.Is(err, ErrFileTooLarge) || errors.Is(err, backends.ErrFileEmpty) {
 			handlers.BadRequest(w, r, handlers.RespPLAIN, err.Error())
 			return
 		} else if err != nil {
@@ -160,9 +164,11 @@ func PUTHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		fmt.Fprintf(w, "%s\n", must.Must2(headers.GetFileUrl(r, upload.Filename)))
+		fmt.Fprintf(w, "%s\n", must.Must2(headers.GetFileURL(r, upload.Filename)))
 	}
 }
+
+const InputYes = "yes"
 
 func Remote(w http.ResponseWriter, r *http.Request) {
 	if config.Default.RemoteAuthFile != "" {
@@ -188,25 +194,38 @@ func Remote(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.FormValue("url") == "" {
-		http.Redirect(w, r, config.Default.SitePath, 303)
+		http.Redirect(w, r, config.Default.SitePath, http.StatusSeeOther)
 		return
 	}
 
-	upReq := UploadRequest{}
-	grabUrl, _ := url.Parse(r.FormValue("url"))
-	directURL := r.FormValue("direct_url") == "yes"
+	upReq := Request{}
+	grabURL, err := url.Parse(r.FormValue("url"))
+	if err != nil {
+		handlers.Oops(w, r, handlers.RespAUTO, "Invalid URL: "+err.Error())
+	}
+	directURL := r.FormValue("direct_url") == InputYes
 
-	resp, err := http.Get(grabUrl.String())
+	req, err := http.NewRequestWithContext(r.Context(), http.MethodGet, grabURL.String(), nil)
+	if err != nil {
+		handlers.Oops(w, r, handlers.RespAUTO, err.Error())
+		return
+	}
+
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		handlers.Oops(w, r, handlers.RespAUTO, "Could not retrieve URL")
 		return
 	}
+	defer func() {
+		_, _ = io.Copy(io.Discard, resp.Body)
+		_ = resp.Body.Close()
+	}()
 
-	upReq.filename = filepath.Base(grabUrl.Path)
+	upReq.filename = filepath.Base(grabURL.Path)
 	upReq.src = http.MaxBytesReader(w, resp.Body, int64(config.Default.MaxSize))
 	upReq.deleteKey = r.FormValue("deletekey")
 	upReq.accessKey = r.FormValue(handlers.ParamName)
-	upReq.randomBarename = r.FormValue("randomize") == "yes"
+	upReq.randomBarename = r.FormValue("randomize") == InputYes
 	upReq.expiry = ParseExpiry(r.FormValue("expiry"))
 
 	upload, err := Process(upReq)
@@ -227,15 +246,15 @@ func Remote(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if directURL {
-			http.Redirect(w, r, config.Default.SitePath+config.Default.SelifPath+upload.Filename, 303)
+			http.Redirect(w, r, config.Default.SitePath+config.Default.SelifPath+upload.Filename, http.StatusSeeOther)
 		} else {
-			http.Redirect(w, r, config.Default.SitePath+upload.Filename, 303)
+			http.Redirect(w, r, config.Default.SitePath+upload.Filename, http.StatusSeeOther)
 		}
 	}
 }
 
-func HeaderProcess(r *http.Request, upReq *UploadRequest) {
-	if r.Header.Get("Linx-Randomize") == "yes" {
+func HeaderProcess(r *http.Request, upReq *Request) {
+	if r.Header.Get("Linx-Randomize") == InputYes {
 		upReq.randomBarename = true
 	}
 
@@ -247,9 +266,12 @@ func HeaderProcess(r *http.Request, upReq *UploadRequest) {
 	upReq.expiry = ParseExpiry(expStr)
 }
 
-func Process(upReq UploadRequest) (upload Upload, err error) {
+var ErrProhibitedFilename = errors.New("prohibited filename")
+
+func Process(upReq Request) (Upload, error) {
+	var upload Upload
 	if upReq.size > int64(config.Default.MaxSize) {
-		return upload, FileTooLargeError
+		return upload, ErrFileTooLarge
 	}
 
 	// Determine the appropriate filename
@@ -268,7 +290,7 @@ func Process(upReq UploadRequest) (upload Upload, err error) {
 		header = make([]byte, 512)
 		n, _ := upReq.src.Read(header)
 		if n == 0 {
-			return upload, backends.FileEmptyError
+			return upload, backends.ErrFileEmpty
 		}
 		header = header[:n]
 
@@ -282,7 +304,7 @@ func Process(upReq UploadRequest) (upload Upload, err error) {
 	}
 
 	upload.Filename = strings.Join([]string{barename, extension}, ".")
-	upload.Filename = strings.Replace(upload.Filename, " ", "", -1)
+	upload.Filename = strings.ReplaceAll(upload.Filename, " ", "")
 
 	fileexists, err := config.StorageBackend.Exists(upload.Filename)
 	if err != nil {
@@ -317,21 +339,22 @@ func Process(upReq UploadRequest) (upload Upload, err error) {
 		} else {
 			counter, err := strconv.Atoi(string(barename[len(barename)-1]))
 			if err != nil {
-				barename = barename + "1"
+				barename += "1"
 			} else {
 				barename = barename[:len(barename)-1] + strconv.Itoa(counter+1)
 			}
 		}
 		upload.Filename = strings.Join([]string{barename, extension}, ".")
 
+		var err error
 		fileexists, err = config.StorageBackend.Exists(upload.Filename)
 		if err != nil {
 			return upload, err
 		}
 	}
 
-	if fileBlacklist[strings.ToLower(upload.Filename)] {
-		return upload, errors.New("Prohibited filename")
+	if fileDenylist[strings.ToLower(upload.Filename)] {
+		return upload, ErrProhibitedFilename
 	}
 
 	// Get the rest of the metadata needed for storage
@@ -351,7 +374,7 @@ func Process(upReq UploadRequest) (upload Upload, err error) {
 		return upload, err
 	}
 
-	return
+	return upload, err
 }
 
 func GenerateBarename() string {
@@ -360,7 +383,7 @@ func GenerateBarename() string {
 
 func GenerateJSONresponse(upload Upload, r *http.Request) []byte {
 	js, _ := json.Marshal(map[string]string{
-		"url":        must.Must2(headers.GetFileUrl(r, upload.Filename)).String(),
+		"url":        must.Must2(headers.GetFileURL(r, upload.Filename)).String(),
 		"direct_url": must.Must2(headers.GetSelifURL(r, upload.Filename)).String(),
 		"filename":   upload.Filename,
 		"delete_key": upload.Metadata.DeleteKey,
@@ -374,26 +397,31 @@ func GenerateJSONresponse(upload Upload, r *http.Request) []byte {
 	return js
 }
 
-var bareRe = regexp.MustCompile(`[^A-Za-z0-9\-]`)
-var extRe = regexp.MustCompile(`[^A-Za-z0-9\-\.]`)
-var compressedExts = map[string]bool{
-	".bz2": true,
-	".gz":  true,
-	".xz":  true,
-}
-var archiveExts = map[string]bool{
-	".tar": true,
-}
+//nolint:gochecknoglobals
+var (
+	bareRe = regexp.MustCompile(`[^A-Za-z0-9\-]`)
+	extRe  = regexp.MustCompile(`[^A-Za-z0-9\-\.]`)
 
-func BarePlusExt(filename string) (barename, extension string) {
+	compressedExts = []string{
+		".bz2",
+		".gz",
+		".xz",
+	}
+
+	archiveExts = []string{
+		".tar",
+	}
+)
+
+func BarePlusExt(filename string) (string, string) {
 	filename = strings.TrimSpace(filename)
 	filename = strings.ToLower(filename)
 
-	extension = path.Ext(filename)
-	barename = filename[:len(filename)-len(extension)]
-	if compressedExts[extension] {
+	extension := path.Ext(filename)
+	barename := filename[:len(filename)-len(extension)]
+	if slices.Contains(compressedExts, extension) {
 		ext2 := path.Ext(barename)
-		if archiveExts[ext2] {
+		if slices.Contains(archiveExts, ext2) {
 			barename = barename[:len(barename)-len(ext2)]
 			extension = ext2 + extension
 		}
@@ -405,21 +433,21 @@ func BarePlusExt(filename string) (barename, extension string) {
 	extension = strings.Trim(extension, "-.")
 	barename = strings.Trim(barename, "-")
 
-	return
+	return barename, extension
 }
 
 func ParseExpiry(expStr string) time.Duration {
 	if expStr == "" {
 		return config.Default.MaxExpiry.Duration
-	} else {
-		fileExpiry, err := strconv.ParseUint(expStr, 10, 64)
-		if err != nil {
-			return config.Default.MaxExpiry.Duration
-		} else {
-			if config.Default.MaxExpiry.Duration > 0 && (fileExpiry > config.Default.MaxExpirySeconds() || fileExpiry == 0) {
-				fileExpiry = config.Default.MaxExpirySeconds()
-			}
-			return time.Duration(fileExpiry) * time.Second
-		}
 	}
+
+	fileExpiry, err := strconv.ParseUint(expStr, 10, 64)
+	if err != nil {
+		return config.Default.MaxExpiry.Duration
+	}
+
+	if config.Default.MaxExpiry.Duration > 0 && (fileExpiry > config.Default.MaxExpirySeconds() || fileExpiry == 0) {
+		fileExpiry = config.Default.MaxExpirySeconds()
+	}
+	return time.Duration(fileExpiry) * time.Second //nolint:gosec
 }

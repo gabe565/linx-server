@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -23,7 +24,7 @@ func FileServeHandler(w http.ResponseWriter, r *http.Request) {
 	fileName := chi.URLParam(r, "name")
 
 	metadata, err := CheckFile(fileName)
-	if err == backends.NotFoundErr {
+	if errors.Is(err, backends.ErrNotFound) {
 		NotFound(w, r)
 		return
 	} else if err != nil {
@@ -46,7 +47,7 @@ func FileServeHandler(w http.ResponseWriter, r *http.Request) {
 		u, _ := url.Parse(referer)
 		p, _ := headers.GetSiteURL(r)
 		if referer != "" && !csrf.SameOrigin(u, p) {
-			http.Redirect(w, r, config.Default.SitePath+fileName, 303)
+			http.Redirect(w, r, config.Default.SitePath+fileName, http.StatusSeeOther)
 			return
 		}
 	}
@@ -64,7 +65,7 @@ func FileServeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if r.Method != "HEAD" {
+	if r.Method != http.MethodHead {
 		if err := config.StorageBackend.ServeFile(fileName, w, r); err != nil {
 			Oops(w, r, RespAUTO, err.Error())
 			return
@@ -89,19 +90,18 @@ func StaticHandler(w http.ResponseWriter, r *http.Request) {
 	http.ServeContent(w, r, path, config.TimeStarted, file.(io.ReadSeeker))
 }
 
-func CheckFile(filename string) (metadata backends.Metadata, err error) {
-	metadata, err = config.StorageBackend.Head(filename)
+func CheckFile(filename string) (backends.Metadata, error) {
+	metadata, err := config.StorageBackend.Head(filename)
 	if err != nil {
-		return
+		return metadata, err
 	}
 
-	if expiry.IsTsExpired(metadata.Expiry) {
+	if expiry.IsTSExpired(metadata.Expiry) {
 		if err := config.StorageBackend.Delete(filename); err != nil {
 			slog.Error("Failed to delete expired file", "path", filename)
 		}
-		err = backends.NotFoundErr
-		return
+		return metadata, backends.ErrNotFound
 	}
 
-	return
+	return metadata, nil
 }

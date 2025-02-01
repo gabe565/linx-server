@@ -22,7 +22,7 @@ const (
 	FlagMaxExpiry                 = "max-expiry"
 	FlagTLSCert                   = "tls-cert"
 	FlagTLSKey                    = "tls-key"
-	FlagRealIp                    = "real-ip"
+	FlagRealIP                    = "real-ip"
 	FlagFastcgi                   = "fastcgi"
 	FlagRemoteUploads             = "remote-uploads"
 	FlagAuthFile                  = "auth-file"
@@ -70,7 +70,7 @@ func (c *Config) RegisterServeFlags(cmd *cobra.Command) {
 	fs.DurationVar(&c.MaxExpiry.Duration, FlagMaxExpiry, c.MaxExpiry.Duration, "Maximum expiration time. A value of 0 means no expiry.")
 	fs.StringVar(&c.TLSCert, FlagTLSCert, c.TLSCert, "Path to ssl certificate (for https)")
 	fs.StringVar(&c.TLSKey, FlagTLSKey, c.TLSKey, "Path to ssl key (for https)")
-	fs.BoolVar(&c.RealIp, FlagRealIp, c.RealIp, "Use X-Real-IP/X-Forwarded-For headers")
+	fs.BoolVar(&c.RealIP, FlagRealIP, c.RealIP, "Use X-Real-IP/X-Forwarded-For headers")
 	fs.BoolVar(&c.Fastcgi, FlagFastcgi, c.Fastcgi, "Serve through fastcgi")
 	fs.BoolVar(&c.RemoteUploads, FlagRemoteUploads, c.RemoteUploads, "Enable remote uploads")
 	fs.StringVar(&c.AuthFile, FlagAuthFile, c.AuthFile, "Path to a file containing newline-separated scrypted auth keys")

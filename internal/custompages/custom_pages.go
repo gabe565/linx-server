@@ -10,9 +10,10 @@ import (
 	"github.com/russross/blackfriday/v2"
 )
 
+//nolint:gochecknoglobals
 var (
-	CustomPages = make(map[string]string)
-	Names       = make(map[string]string)
+	CustomPages map[string]string
+	Names       map[string]string
 )
 
 func InitializeCustomPages(customPagesDir string) {
@@ -20,6 +21,12 @@ func InitializeCustomPages(customPagesDir string) {
 	if err != nil {
 		log.Fatal("Error reading the custom pages directory: ", err)
 	}
+	if len(files) == 0 {
+		return
+	}
+
+	CustomPages = make(map[string]string, len(files))
+	Names = make(map[string]string, len(files))
 
 	for _, file := range files {
 		fileName := file.Name()

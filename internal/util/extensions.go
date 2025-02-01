@@ -1,19 +1,20 @@
 package util
 
-func ExtensionToHlLang(extension string) (hlExt string) {
-	hlExt, exists := ExtensionToHl[extension]
+func ExtensionToHlLang(extension string) string {
+	hlExt, exists := extensionToHl[extension]
 	if !exists {
 		hlExt = "text"
 	}
-	return
+	return hlExt
 }
 
 func SupportedBinExtension(extension string) bool {
-	_, exists := ExtensionToHl[extension]
+	_, exists := extensionToHl[extension]
 	return exists
 }
 
-var ExtensionToHl = map[string]string{
+//nolint:gochecknoglobals
+var extensionToHl = map[string]string{
 	"ahk":         "autohotkey",
 	"apache":      "apache",
 	"applescript": "applescript",

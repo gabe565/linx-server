@@ -27,8 +27,10 @@ const (
 	AccessKeySourceQuery
 )
 
-const HeaderName = "Linx-Access-Key"
-const ParamName = "access_key"
+const (
+	HeaderName = "Linx-Access-Key"
+	ParamName  = "access_key"
+)
 
 var (
 	errInvalidAccessKey = errors.New("invalid access key")
@@ -104,7 +106,7 @@ func FileAccessHeader(w http.ResponseWriter, r *http.Request) {
 	fileName := chi.URLParam(r, "name")
 
 	metadata, err := CheckFile(fileName)
-	if err == backends.NotFoundErr {
+	if errors.Is(err, backends.ErrNotFound) {
 		NotFound(w, r)
 		return
 	} else if err != nil {
@@ -138,7 +140,7 @@ func FileAccessHeader(w http.ResponseWriter, r *http.Request) {
 	if metadata.AccessKey != "" {
 		var expiry time.Time
 		if config.Default.AccessKeyCookieExpiry != 0 {
-			expiry = time.Now().Add(time.Duration(config.Default.AccessKeyCookieExpiry) * time.Second)
+			expiry = time.Now().Add(time.Duration(config.Default.AccessKeyCookieExpiry) * time.Second) //nolint:gosec
 		}
 		SetAccessKeyCookies(w, r, fileName, metadata.AccessKey, expiry)
 	}

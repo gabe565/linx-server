@@ -6,7 +6,7 @@ import (
 	"compress/bzip2"
 	"compress/gzip"
 	"io"
-	"sort"
+	"slices"
 )
 
 type ReadSeekerAt interface {
@@ -15,56 +15,69 @@ type ReadSeekerAt interface {
 	io.ReaderAt
 }
 
-func ListArchiveFiles(mimetype string, size int64, r ReadSeekerAt) (files []string, err error) {
-	if mimetype == "application/x-tar" {
+func ListArchiveFiles(mimetype string, size int64, r ReadSeekerAt) ([]string, error) {
+	var files []string
+	defer slices.Sort(files)
+	var err error
+	switch mimetype {
+	case "application/x-tar":
 		tReadr := tar.NewReader(r)
 		for {
 			hdr, err := tReadr.Next()
-			if err == io.EOF || err != nil {
-				break
+			if err != nil {
+				if err == io.EOF {
+					return files, nil
+				}
+				return files, err
 			}
 			if hdr.Typeflag == tar.TypeDir || hdr.Typeflag == tar.TypeReg {
 				files = append(files, hdr.Name)
 			}
 		}
-		sort.Strings(files)
-	} else if mimetype == "application/x-gzip" {
+	case "application/x-gzip":
 		gzf, err := gzip.NewReader(r)
-		if err == nil {
-			tReadr := tar.NewReader(gzf)
-			for {
-				hdr, err := tReadr.Next()
-				if err == io.EOF || err != nil {
-					break
-				}
-				if hdr.Typeflag == tar.TypeDir || hdr.Typeflag == tar.TypeReg {
-					files = append(files, hdr.Name)
-				}
-			}
-			sort.Strings(files)
+		if err != nil {
+			return files, err
 		}
-	} else if mimetype == "application/x-bzip" {
+
+		tReadr := tar.NewReader(gzf)
+		for {
+			hdr, err := tReadr.Next()
+			if err != nil {
+				if err == io.EOF {
+					return files, nil
+				}
+				return files, err
+			}
+			if hdr.Typeflag == tar.TypeDir || hdr.Typeflag == tar.TypeReg {
+				files = append(files, hdr.Name)
+			}
+		}
+	case "application/x-bzip":
 		bzf := bzip2.NewReader(r)
 		tReadr := tar.NewReader(bzf)
 		for {
 			hdr, err := tReadr.Next()
-			if err == io.EOF || err != nil {
-				break
+			if err != nil {
+				if err == io.EOF {
+					return files, nil
+				}
+				return files, err
 			}
 			if hdr.Typeflag == tar.TypeDir || hdr.Typeflag == tar.TypeReg {
 				files = append(files, hdr.Name)
 			}
 		}
-		sort.Strings(files)
-	} else if mimetype == "application/zip" {
+	case "application/zip":
 		zf, err := zip.NewReader(r, size)
-		if err == nil {
-			for _, f := range zf.File {
-				files = append(files, f.Name)
-			}
+		if err != nil {
+			return files, err
 		}
-		sort.Strings(files)
+		files = slices.Grow(files, len(zf.File))
+		for _, f := range zf.File {
+			files = append(files, f.Name)
+		}
 	}
 
-	return
+	return files, err
 }

@@ -16,6 +16,7 @@ import (
 	"gabe565.com/linx-server/internal/headers"
 	"gabe565.com/linx-server/internal/templates"
 	"gabe565.com/linx-server/internal/util"
+	"gabe565.com/utils/bytefmt"
 	"github.com/dustin/go-humanize"
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/russross/blackfriday/v2"
@@ -28,9 +29,9 @@ func FileDisplay(w http.ResponseWriter, r *http.Request, fileName string, metada
 	if metadata.Expiry != expiry.NeverExpire {
 		expiryHuman = humanize.RelTime(time.Now(), metadata.Expiry, "", "")
 	}
-	sizeHuman := humanize.Bytes(uint64(metadata.Size))
+	sizeHuman := bytefmt.Encode(metadata.Size)
 	extra := make(map[string]any)
-	lines := []string{}
+	var lines []string
 
 	extension := strings.TrimPrefix(filepath.Ext(fileName), ".")
 
@@ -87,7 +88,7 @@ func FileDisplay(w http.ResponseWriter, r *http.Request, fileName string, metada
 				unsafe := blackfriday.Run(bytes)
 				html := bluemonday.UGCPolicy().SanitizeBytes(unsafe)
 
-				extra["Contents"] = template.HTML(html)
+				extra["Contents"] = template.HTML(html) //nolint:gosec
 				tpl = "display/md.html"
 			}
 		}
@@ -127,7 +128,6 @@ func FileDisplay(w http.ResponseWriter, r *http.Request, fileName string, metada
 		"Files":       metadata.ArchiveFiles,
 		"SiteURL":     strings.TrimSuffix(siteURL.String(), "/"),
 	}, r, w)
-
 	if err != nil {
 		Oops(w, r, RespHTML, "")
 	}

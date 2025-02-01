@@ -27,12 +27,12 @@ import (
 
 func Setup() (*chi.Mux, error) {
 	// make directories if needed
-	err := os.MkdirAll(config.Default.FilesDir, 0755)
+	err := os.MkdirAll(config.Default.FilesDir, 0o755)
 	if err != nil {
 		return nil, fmt.Errorf("could not create files directory: %w", err)
 	}
 
-	err = os.MkdirAll(config.Default.MetaDir, 0700)
+	err = os.MkdirAll(config.Default.MetaDir, 0o700)
 	if err != nil {
 		return nil, fmt.Errorf("could not create metadata directory: %w", err)
 	}
@@ -40,11 +40,11 @@ func Setup() (*chi.Mux, error) {
 	if config.Default.SiteURL != "" {
 		config.Default.SiteURL = strings.TrimSuffix(config.Default.SiteURL, "/") + "/"
 	}
-	parsedUrl, err := url.Parse(config.Default.SiteURL)
+	parsedURL, err := url.Parse(config.Default.SiteURL)
 	if err != nil {
 		return nil, fmt.Errorf("could not parse siteurl: %w", err)
 	}
-	config.Default.SitePath = "/" + strings.Trim(parsedUrl.Path, "/")
+	config.Default.SitePath = "/" + strings.Trim(parsedURL.Path, "/")
 	config.Default.SelifPath = strings.Trim(config.Default.SelifPath, "/")
 
 	if config.Default.S3Bucket != "" {
@@ -70,7 +70,7 @@ func Setup() (*chi.Mux, error) {
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RedirectSlashes)
 
-	if config.Default.RealIp {
+	if config.Default.RealIP {
 		r.Use(middleware.RealIP)
 	}
 
@@ -87,7 +87,7 @@ func Setup() (*chi.Mux, error) {
 	r.Use(headers.AddHeaders(config.Default.AddHeaders))
 
 	if config.Default.AuthFile != "" {
-		r.Use(apikeys.NewApiKeysMiddleware(apikeys.AuthOptions{
+		r.Use(apikeys.NewAPIKeysMiddleware(apikeys.AuthOptions{
 			AuthFile:      config.Default.AuthFile,
 			UnauthMethods: []string{http.MethodGet, http.MethodHead, http.MethodOptions, http.MethodTrace},
 			BasicAuth:     config.Default.BasicAuth,
@@ -101,8 +101,8 @@ func Setup() (*chi.Mux, error) {
 			r.Get("/", handlers.Index)
 			r.Get("/paste", handlers.Paste)
 		} else {
-			r.Get("/", http.RedirectHandler(config.Default.SitePath+"API", 303).ServeHTTP)
-			r.Get("/paste", http.RedirectHandler(config.Default.SitePath+"API/", 303).ServeHTTP)
+			r.Get("/", http.RedirectHandler(config.Default.SitePath+"API", http.StatusSeeOther).ServeHTTP)
+			r.Get("/paste", http.RedirectHandler(config.Default.SitePath+"API/", http.StatusSeeOther).ServeHTTP)
 		}
 
 		r.Get("/API", handlers.APIDoc)
@@ -131,7 +131,7 @@ func Setup() (*chi.Mux, error) {
 		})
 		r.Get("/torrent/{name}", torrent.FileTorrentHandler)
 		r.Get("/{name}/torrent", func(w http.ResponseWriter, r *http.Request) {
-			http.Redirect(w, r, "/torrent/"+chi.URLParam(r, "name"), 301)
+			http.Redirect(w, r, "/torrent/"+chi.URLParam(r, "name"), http.StatusMovedPermanently)
 		})
 
 		if config.Default.CustomPagesDir != "" {

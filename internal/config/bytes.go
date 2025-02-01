@@ -21,7 +21,7 @@ func (b Bytes) Type() string {
 	return "string"
 }
 
-func (b Bytes) MarshalText() (text []byte, err error) {
+func (b Bytes) MarshalText() ([]byte, error) {
 	return []byte(b.String()), nil
 }
 

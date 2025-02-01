@@ -2,7 +2,8 @@ package torrent
 
 import (
 	"bytes"
-	"crypto/sha1"
+	"crypto/sha1" //nolint:gosec
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -14,15 +15,14 @@ import (
 	"gabe565.com/linx-server/internal/expiry"
 	"gabe565.com/linx-server/internal/handlers"
 	"gabe565.com/linx-server/internal/headers"
+	"gabe565.com/utils/bytefmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/zeebo/bencode"
 )
 
-const (
-	TORRENT_PIECE_LENGTH = 262144
-)
+const PieceLength = 256 * bytefmt.KiB
 
-type TorrentInfo struct {
+type Info struct {
 	PieceLength int    `bencode:"piece length"`
 	Pieces      string `bencode:"pieces"`
 	Name        string `bencode:"name"`
@@ -30,13 +30,13 @@ type TorrentInfo struct {
 }
 
 type Torrent struct {
-	Encoding string      `bencode:"encoding"`
-	Info     TorrentInfo `bencode:"info"`
-	UrlList  []string    `bencode:"url-list"`
+	Encoding string   `bencode:"encoding"`
+	Info     Info     `bencode:"info"`
+	URLList  []string `bencode:"url-list"`
 }
 
 func HashPiece(piece []byte) []byte {
-	h := sha1.New()
+	h := sha1.New() //nolint:gosec
 	h.Write(piece)
 	return h.Sum(nil)
 }
@@ -46,22 +46,22 @@ func CreateTorrent(fileName string, f io.Reader, r *http.Request) ([]byte, error
 	if err != nil {
 		return nil, err
 	}
-	chunk := make([]byte, TORRENT_PIECE_LENGTH)
+	chunk := make([]byte, PieceLength)
 
 	t := Torrent{
 		Encoding: "UTF-8",
-		Info: TorrentInfo{
-			PieceLength: TORRENT_PIECE_LENGTH,
+		Info: Info{
+			PieceLength: PieceLength,
 			Name:        fileName,
 		},
-		UrlList: []string{url.String()},
+		URLList: []string{url.String()},
 	}
 
 	for {
 		n, err := io.ReadFull(f, chunk)
 		if err == io.EOF {
 			break
-		} else if err != nil && err != io.ErrUnexpectedEOF {
+		} else if err != nil && !errors.Is(err, io.ErrUnexpectedEOF) {
 			return []byte{}, err
 		}
 
@@ -81,19 +81,22 @@ func FileTorrentHandler(w http.ResponseWriter, r *http.Request) {
 	fileName := chi.URLParam(r, "name")
 
 	metadata, f, err := config.StorageBackend.Get(fileName)
-	if err == backends.NotFoundErr {
-		handlers.NotFound(w, r)
-		return
-	} else if err == backends.BadMetadata {
-		handlers.Oops(w, r, handlers.RespAUTO, "Corrupt metadata.")
-		return
-	} else if err != nil {
-		handlers.Oops(w, r, handlers.RespAUTO, err.Error())
-		return
+	if err != nil {
+		switch {
+		case errors.Is(err, backends.ErrNotFound):
+			handlers.NotFound(w, r)
+			return
+		case errors.Is(err, backends.ErrBadMetadata):
+			handlers.Oops(w, r, handlers.RespAUTO, "Corrupt metadata.")
+			return
+		default:
+			handlers.Oops(w, r, handlers.RespAUTO, err.Error())
+			return
+		}
 	}
 	defer f.Close()
 
-	if expiry.IsTsExpired(metadata.Expiry) {
+	if expiry.IsTSExpired(metadata.Expiry) {
 		if err := config.StorageBackend.Delete(fileName); err != nil {
 			slog.Error("Failed to delete expired file", "path", fileName)
 		}

@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -16,7 +17,7 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 
 	// Ensure that file exists and delete key is correct
 	metadata, err := config.StorageBackend.Head(filename)
-	if err == backends.NotFoundErr {
+	if errors.Is(err, backends.ErrNotFound) {
 		NotFound(w, r) // 404 - file doesn't exist
 		return
 	} else if err != nil {
@@ -31,11 +32,9 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		fmt.Fprintf(w, "DELETED")
-		return
-
-	} else {
-		Unauthorized(w, r) // 401 - wrong delete key
+		_, _ = fmt.Fprintf(w, "DELETED")
 		return
 	}
+
+	Unauthorized(w, r) // 401 - wrong delete key
 }

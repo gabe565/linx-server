@@ -27,7 +27,7 @@ func Cleanup(filesDir string, metaDir string, noLogs bool) error {
 			}
 		}
 
-		if expiry.IsTsExpired(metadata.Expiry) {
+		if expiry.IsTSExpired(metadata.Expiry) {
 			if !noLogs {
 				log.Printf("Delete %s", filename)
 			}
@@ -46,5 +46,4 @@ func PeriodicCleanup(minutes time.Duration, filesDir string, metaDir string, noL
 			slog.Error("Cleanup failed", "error", err)
 		}
 	}
-
 }

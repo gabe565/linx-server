@@ -10,13 +10,13 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var testCSPHeaders = map[string]string{
-	"Content-Security-Policy": "default-src 'none'; style-src 'self';",
-	"Referrer-Policy":         "strict-origin-when-cross-origin",
-	"X-Frame-Options":         "SAMEORIGIN",
-}
-
 func TestContentSecurityPolicy(t *testing.T) {
+	testCSPHeaders := map[string]string{
+		"Content-Security-Policy": "default-src 'none'; style-src 'self';",
+		"Referrer-Policy":         "strict-origin-when-cross-origin",
+		"X-Frame-Options":         "SAMEORIGIN",
+	}
+
 	config.Default.SiteURL = "http://linx.example.org/"
 	config.Default.FilesDir = t.TempDir()
 	config.Default.MetaDir = config.Default.FilesDir + "_meta"
@@ -32,7 +32,7 @@ func TestContentSecurityPolicy(t *testing.T) {
 
 	w := httptest.NewRecorder()
 
-	req, err := http.NewRequest("GET", "/", nil)
+	req, err := http.NewRequest(http.MethodGet, "/", nil)
 	require.NoError(t, err)
 
 	r.ServeHTTP(w, req)
