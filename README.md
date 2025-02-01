@@ -1,6 +1,8 @@
-# linx-server 
+# linx-server
 
-Self-hosted file/media sharing website.  
+[![Build](https://github.com/gabe565/linx-server/actions/workflows/build.yaml/badge.svg)](https://github.com/gabe565/linx-server/actions/workflows/build.yaml)
+
+Self-hosted file/media sharing website.
 
 ### Clients
 **Official**
