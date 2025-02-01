@@ -1,0 +1,138 @@
+version: 2
+project_name: linx-server
+builds:
+  - binary: linx-server
+    env:
+      - CGO_ENABLED=0
+    flags:
+      - -trimpath
+    ldflags:
+      - -s
+      - -w
+      - -X main.version={{.Version}}
+    goarch:
+      - amd64
+      - arm
+      - arm64
+    goarm:
+      - "7"
+    mod_timestamp: "{{.CommitTimestamp}}"
+    ignore:
+      - goos: windows
+        goarch: arm
+        goarm: 7
+archives:
+  - formats: tar.gz
+    # use zip for windows archives
+    format_overrides:
+      - goos: windows
+        formats: zip
+    files:
+      - src: LICENSE
+        info: &info
+          owner: 0
+          group: 0
+          mtime: "{{.CommitDate}}"
+          mode: 0644
+      - src: README.md
+        info: *info
+checksum:
+  name_template: "checksums.txt"
+snapshot:
+  version_template: "{{ incpatch .Version }}-beta"
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs'
+      - '^test'
+  groups:
+    - title: Breaking Changes
+      order: 0
+      regexp: '\)!:'
+    - title: Features
+      order: 0
+      regexp: "(feat)"
+    - title: Fixes
+      order: 1
+      regexp: "(fix|perf)"
+    - title: Others
+      order: 999
+brews:
+  - homepage: https://github.com/gabe565/linx-server
+    description: Self-hosted file/media sharing website
+    license: GPL-3.0
+    repository:
+      owner: gabe565
+      name: homebrew-tap
+    directory: Formula
+    install: |
+      bin.install "linx-server"
+nfpms:
+  - id: packages
+    vendor: Gabe Cook
+    homepage: https://github.com/gabe565/linx-server
+    description: Self-hosted file/media sharing website
+    license: GPL-3.0
+    maintainer: Gabe Cook <gabe565@gmail.com>
+    formats:
+      - deb
+      - rpm
+publishers:
+  - name: fury.io
+    ids:
+      - packages
+    dir: "{{ dir .ArtifactPath }}"
+    cmd: curl -sf -Fpackage=@{{ .ArtifactName }} https://{{ .Env.FURY_TOKEN }}@push.fury.io/gabe565/
+aurs:
+  - name: linx-server-bin
+    homepage: https://github.com/gabe565/linx-server
+    description: Self-hosted file/media sharing website
+    maintainers:
+      - Gabe Cook <gabe565@gmail.com>
+    license: GPL-3.0
+    private_key: '{{ .Env.AUR_SSH_KEY }}'
+    git_url: ssh://aur@aur.archlinux.org/linx-server-bin.git
+    skip_upload: auto
+    package: |-
+      # bin
+      install -Dm755 "./linx-server" "${pkgdir}/usr/bin/linx-server"
+      # license
+      install -Dm644 "./LICENSE" "${pkgdir}/usr/share/licenses/linx-server/LICENSE"
+    commit_author:
+      name: goreleaserbot
+      email: bot@goreleaser.com
+dockers:
+  - &dockers
+    image_templates:
+      - ghcr.io/gabe565/{{ .ProjectName }}:{{ .Version }}-amd64
+    use: buildx
+    dockerfile: goreleaser.Dockerfile
+    build_flag_templates:
+      - "--platform=linux/amd64"
+  - <<: *dockers
+    image_templates:
+      - ghcr.io/gabe565/{{ .ProjectName }}:{{ .Version }}-armv7
+    goarch: arm
+    goarm: 7
+    build_flag_templates:
+      - "--platform=linux/arm/v7"
+  - <<: *dockers
+    image_templates:
+      - ghcr.io/gabe565/{{ .ProjectName }}:{{ .Version }}-arm64v8
+    goarch: arm64
+    build_flag_templates:
+      - "--platform=linux/arm64/v8"
+docker_manifests:
+  - &docker_manifests
+    name_template: ghcr.io/gabe565/{{ .ProjectName }}:latest
+    image_templates:
+      - ghcr.io/gabe565/{{ .ProjectName }}:{{ .Version }}-amd64
+      - ghcr.io/gabe565/{{ .ProjectName }}:{{ .Version }}-armv7
+      - ghcr.io/gabe565/{{ .ProjectName }}:{{ .Version }}-arm64v8
+  - <<: *docker_manifests
+    name_template: ghcr.io/gabe565/{{ .ProjectName }}:{{ .Version }}
+  - <<: *docker_manifests
+    name_template: ghcr.io/gabe565/{{ .ProjectName }}:{{ .Major }}
+  - <<: *docker_manifests
+    name_template: ghcr.io/gabe565/{{ .ProjectName }}:{{ .Major }}.{{ .Minor }}

@@ -38,3 +38,4 @@ binaries/
 custom_pages/
 authfile
 .idea/
+dist/
