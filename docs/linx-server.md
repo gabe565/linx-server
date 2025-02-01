@@ -15,7 +15,7 @@ linx-server [flags]
       --auth-file string                      Path to a file containing newline-separated scrypted auth keys
       --basic-auth                            Allow logging in with basic auth password
       --bind string                           Host to bind to (default "127.0.0.1:8080")
-      --cleanup-every duration                How often to clean up expired files. A value of 0 means files will be cleaned up as they are accessed.
+      --cleanup-every duration                How often to clean up expired files. A value of 0 means files will be cleaned up as they are accessed. (default 1h0m0s)
   -c, --config string                         Path to the config file (default "$HOME/.config/linx-server/config.toml")
       --content-security-policy string        Value of default Content-Security-Policy header (default "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; frame-ancestors 'self';")
       --custom-pages-path string              Path to directory containing .md files to render as custom pages

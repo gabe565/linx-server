@@ -77,12 +77,13 @@ func New() *Config {
 		FilesDir:                  "files",
 		MetaDir:                   "meta",
 		SelifPath:                 "selif",
+		MaxSize:                   4 * bytefmt.GiB,
+		CleanupEvery:              Duration{time.Hour},
 		ContentSecurityPolicy:     "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; frame-ancestors 'self';",
 		FileContentSecurityPolicy: "default-src 'none'; img-src 'self'; object-src 'self'; media-src 'self'; style-src 'self' 'unsafe-inline'; frame-ancestors 'self';",
 		ReferrerPolicy:            "same-origin",
 		FileReferrerPolicy:        "same-origin",
 		XFrameOptions:             "SAMEORIGIN",
-		MaxSize:                   4 * bytefmt.GiB,
 	}
 }
 
