@@ -83,6 +83,8 @@ max-expiry = '24h'
 ### Options
 See the [example configuration file](config_example.toml) or the [command-line docs](docs/linx-server.md).
 
+Any config can be provided as an environment variable by capitalizing it, changing `-` to `_`, and prefixing it with `LINX_`.
+
 ## Deployment
 Linx-server supports being deployed in a subdirectory (ie. example.com/mylinx/) as well as on its own (example.com/).
 
