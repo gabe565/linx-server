@@ -2,6 +2,9 @@
 
 {{- define "content" -}}
 <div id="main">
-	400 Bad Request
+	<p>400 Bad Request</p>
+	{{- with .Msg -}}
+	<p>{{ . }}</p>
+	{{- end -}}
 </div>
 {{- end -}}
