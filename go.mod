@@ -8,12 +8,12 @@ require (
 	github.com/dchest/uniuri v1.2.0
 	github.com/dustin/go-humanize v1.0.1
 	github.com/gabriel-vasile/mimetype v1.4.8
+	github.com/go-chi/chi/v5 v5.2.0
 	github.com/microcosm-cc/bluemonday v1.0.27
 	github.com/minio/sha256-simd v1.0.1
 	github.com/russross/blackfriday v1.6.0
 	github.com/vharitonsky/iniflags v0.0.0-20180513140207-a33cd0b5f3de
 	github.com/zeebo/bencode v1.0.0
-	github.com/zenazn/goji v1.0.1
 	golang.org/x/crypto v0.32.0
 )
 

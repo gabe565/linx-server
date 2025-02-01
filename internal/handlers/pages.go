@@ -12,7 +12,6 @@ import (
 	"github.com/andreimarcu/linx-server/internal/expiry"
 	"github.com/andreimarcu/linx-server/internal/headers"
 	"github.com/andreimarcu/linx-server/internal/templates"
-	"github.com/zenazn/goji/web"
 )
 
 type RespType int
@@ -24,7 +23,7 @@ const (
 	RespAUTO
 )
 
-func Index(c web.C, w http.ResponseWriter, r *http.Request) {
+func Index(w http.ResponseWriter, r *http.Request) {
 	err := templates.Render("index.html", map[string]any{
 		"MaxSize":     config.Default.MaxSize,
 		"ExpiryList":  expiry.ListExpirationTimes(),
@@ -35,28 +34,28 @@ func Index(c web.C, w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func Paste(c web.C, w http.ResponseWriter, r *http.Request) {
+func Paste(w http.ResponseWriter, r *http.Request) {
 	err := templates.Render("paste.html", map[string]any{
 		"ExpiryList":  expiry.ListExpirationTimes(),
 		"ForceRandom": config.Default.ForceRandomFilename,
 	}, r, w)
 	if err != nil {
-		Oops(c, w, r, RespHTML, "")
+		Oops(w, r, RespHTML, "")
 	}
 }
 
-func APIDoc(c web.C, w http.ResponseWriter, r *http.Request) {
+func APIDoc(w http.ResponseWriter, r *http.Request) {
 	err := templates.Render("API.html", map[string]any{
 		"SiteURL":     headers.GetSiteURL(r),
 		"ForceRandom": config.Default.ForceRandomFilename,
 	}, r, w)
 	if err != nil {
-		Oops(c, w, r, RespHTML, "")
+		Oops(w, r, RespHTML, "")
 	}
 }
 
-func MakeCustomPage(fileName string) func(c web.C, w http.ResponseWriter, r *http.Request) {
-	return func(c web.C, w http.ResponseWriter, r *http.Request) {
+func MakeCustomPage(fileName string) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
 		err := templates.Render("custom_page.html", map[string]any{
 			"SiteURL":     headers.GetSiteURL(r),
 			"ForceRandom": config.Default.ForceRandomFilename,
@@ -65,20 +64,20 @@ func MakeCustomPage(fileName string) func(c web.C, w http.ResponseWriter, r *htt
 			"PageName":    custompages.Names[fileName],
 		}, r, w)
 		if err != nil {
-			Oops(c, w, r, RespHTML, "")
+			Oops(w, r, RespHTML, "")
 		}
 	}
 }
 
-func NotFound(c web.C, w http.ResponseWriter, r *http.Request) {
+func NotFound(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(404)
 	err := templates.Render("404.html", nil, r, w)
 	if err != nil {
-		Oops(c, w, r, RespHTML, "")
+		Oops(w, r, RespHTML, "")
 	}
 }
 
-func Oops(c web.C, w http.ResponseWriter, r *http.Request, rt RespType, msg string) {
+func Oops(w http.ResponseWriter, r *http.Request, rt RespType, msg string) {
 	if msg == "" {
 		msg = "Oops! Something went wrong..."
 	}
@@ -102,14 +101,14 @@ func Oops(c web.C, w http.ResponseWriter, r *http.Request, rt RespType, msg stri
 		return
 	} else if rt == RespAUTO {
 		if strings.EqualFold("application/json", r.Header.Get("Accept")) {
-			Oops(c, w, r, RespJSON, msg)
+			Oops(w, r, RespJSON, msg)
 		} else {
-			Oops(c, w, r, RespHTML, msg)
+			Oops(w, r, RespHTML, msg)
 		}
 	}
 }
 
-func BadRequest(c web.C, w http.ResponseWriter, r *http.Request, rt RespType, msg string) {
+func BadRequest(w http.ResponseWriter, r *http.Request, rt RespType, msg string) {
 	if rt == RespHTML {
 		w.WriteHeader(http.StatusBadRequest)
 		err := templates.Render("400.html", map[string]any{"Msg": msg}, r, w)
@@ -132,14 +131,14 @@ func BadRequest(c web.C, w http.ResponseWriter, r *http.Request, rt RespType, ms
 		return
 	} else if rt == RespAUTO {
 		if strings.EqualFold("application/json", r.Header.Get("Accept")) {
-			BadRequest(c, w, r, RespJSON, msg)
+			BadRequest(w, r, RespJSON, msg)
 		} else {
-			BadRequest(c, w, r, RespHTML, msg)
+			BadRequest(w, r, RespHTML, msg)
 		}
 	}
 }
 
-func Unauthorized(c web.C, w http.ResponseWriter, r *http.Request) {
+func Unauthorized(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(401)
 	err := templates.Render("401.html", nil, r, w)
 	if err != nil {

@@ -15,7 +15,7 @@ import (
 	"github.com/andreimarcu/linx-server/internal/config"
 	"github.com/andreimarcu/linx-server/internal/headers"
 	"github.com/andreimarcu/linx-server/internal/templates"
-	"github.com/zenazn/goji/web"
+	"github.com/go-chi/chi/v5"
 )
 
 type AccessKeySource int
@@ -97,20 +97,20 @@ func SetAccessKeyCookies(w http.ResponseWriter, siteURL, fileName, value string,
 	http.SetCookie(w, &cookie)
 }
 
-func FileAccessHeader(c web.C, w http.ResponseWriter, r *http.Request) {
+func FileAccessHeader(w http.ResponseWriter, r *http.Request) {
 	if !config.Default.NoDirectAgents && cliUserAgentRe.MatchString(r.Header.Get("User-Agent")) && !strings.EqualFold("application/json", r.Header.Get("Accept")) {
-		FileServeHandler(c, w, r)
+		FileServeHandler(w, r)
 		return
 	}
 
-	fileName := c.URLParams["name"]
+	fileName := chi.URLParam(r, "name")
 
 	metadata, err := CheckFile(fileName)
 	if err == backends.NotFoundErr {
-		NotFound(c, w, r)
+		NotFound(w, r)
 		return
 	} else if err != nil {
-		Oops(c, w, r, RespAUTO, "Corrupt metadata.")
+		Oops(w, r, RespAUTO, "Corrupt metadata.")
 		return
 	}
 
@@ -145,5 +145,5 @@ func FileAccessHeader(c web.C, w http.ResponseWriter, r *http.Request) {
 		SetAccessKeyCookies(w, headers.GetSiteURL(r), fileName, metadata.AccessKey, expiry)
 	}
 
-	FileDisplay(c, w, r, fileName, metadata)
+	FileDisplay(w, r, fileName, metadata)
 }

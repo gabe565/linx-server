@@ -32,5 +32,5 @@ func StrictReferrerCheck(r *http.Request, prefix string, whitelistHeaders []stri
 // Check if two URLs have the same origin
 func SameOrigin(u1, u2 *url.URL) bool {
 	// host also contains the port if one was specified
-	return (u1.Scheme == u2.Scheme && u1.Host == u2.Host)
+	return u1.Scheme == u2.Scheme && u1.Host == u2.Host
 }

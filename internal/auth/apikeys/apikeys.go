@@ -9,8 +9,6 @@ import (
 	"os"
 
 	"golang.org/x/crypto/scrypt"
-
-	"github.com/zenazn/goji/web"
 )
 
 const (
@@ -132,15 +130,14 @@ func (a ApiKeysMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	successHandler.ServeHTTP(w, r)
 }
 
-func NewApiKeysMiddleware(o AuthOptions) func(*web.C, http.Handler) http.Handler {
-	fn := func(c *web.C, h http.Handler) http.Handler {
+func NewApiKeysMiddleware(o AuthOptions) func(http.Handler) http.Handler {
+	return func(h http.Handler) http.Handler {
 		return ApiKeysMiddleware{
 			successHandler: h,
 			authKeys:       ReadAuthKeys(o.AuthFile),
 			o:              o,
 		}
 	}
-	return fn
 }
 
 func sliceContains(slice []string, s string) bool {

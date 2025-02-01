@@ -1,12 +1,12 @@
 {{ template "display.html" . }}
 
 {{- define "head" -}}
-<meta property="og:video" content="{{ .SiteURL }}{{ .SitePath }}{{ .SelifPath }}{{ .FileName }}" />
+<meta property="og:video" content="{{ .SiteURL }}{{ .SitePath }}{{ .SelifPath }}/{{ .FileName }}" />
 {{- end -}}
 
 {{- define "main" -}}
 <video class="display-video" controls autoplay>
-    <source src="{{ .SitePath }}{{ .SelifPath }}{{ .FileName }}" />
-    <a href="{{ .SitePath }}{{ .SelifPath }}{{ .FileName }}">Download it instead</a>
+    <source src="{{ .SitePath }}{{ .SelifPath }}/{{ .FileName }}" />
+    <a href="{{ .SitePath }}{{ .SelifPath }}/{{ .FileName }}">Download it instead</a>
 </video>
 {{- end -}}

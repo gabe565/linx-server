@@ -13,8 +13,8 @@ import (
 	"github.com/andreimarcu/linx-server/internal/expiry"
 	"github.com/andreimarcu/linx-server/internal/handlers"
 	"github.com/andreimarcu/linx-server/internal/headers"
+	"github.com/go-chi/chi/v5"
 	"github.com/zeebo/bencode"
-	"github.com/zenazn/goji/web"
 )
 
 const (
@@ -73,31 +73,31 @@ func CreateTorrent(fileName string, f io.Reader, r *http.Request) ([]byte, error
 	return data, nil
 }
 
-func FileTorrentHandler(c web.C, w http.ResponseWriter, r *http.Request) {
-	fileName := c.URLParams["name"]
+func FileTorrentHandler(w http.ResponseWriter, r *http.Request) {
+	fileName := chi.URLParam(r, "name")
 
 	metadata, f, err := config.StorageBackend.Get(fileName)
 	if err == backends.NotFoundErr {
-		handlers.NotFound(c, w, r)
+		handlers.NotFound(w, r)
 		return
 	} else if err == backends.BadMetadata {
-		handlers.Oops(c, w, r, handlers.RespAUTO, "Corrupt metadata.")
+		handlers.Oops(w, r, handlers.RespAUTO, "Corrupt metadata.")
 		return
 	} else if err != nil {
-		handlers.Oops(c, w, r, handlers.RespAUTO, err.Error())
+		handlers.Oops(w, r, handlers.RespAUTO, err.Error())
 		return
 	}
 	defer f.Close()
 
 	if expiry.IsTsExpired(metadata.Expiry) {
 		config.StorageBackend.Delete(fileName)
-		handlers.NotFound(c, w, r)
+		handlers.NotFound(w, r)
 		return
 	}
 
 	encoded, err := CreateTorrent(fileName, f, r)
 	if err != nil {
-		handlers.Oops(c, w, r, handlers.RespHTML, "Could not create torrent.")
+		handlers.Oops(w, r, handlers.RespHTML, "Could not create torrent.")
 		return
 	}
 

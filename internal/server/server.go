@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -23,43 +22,11 @@ import (
 	"github.com/andreimarcu/linx-server/internal/templates"
 	"github.com/andreimarcu/linx-server/internal/torrent"
 	"github.com/andreimarcu/linx-server/internal/upload"
-	"github.com/zenazn/goji/web"
-	"github.com/zenazn/goji/web/middleware"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 )
 
-func Setup() (*web.Mux, error) {
-	mux := web.New()
-
-	// middleware
-	mux.Use(middleware.RequestID)
-
-	if config.Default.RealIp {
-		mux.Use(middleware.RealIP)
-	}
-
-	if !config.Default.NoLogs {
-		mux.Use(middleware.Logger)
-	}
-
-	mux.Use(middleware.Recoverer)
-	mux.Use(middleware.AutomaticOptions)
-	mux.Use(csp.ContentSecurityPolicy(csp.CSPOptions{
-		Policy:         config.Default.ContentSecurityPolicy,
-		ReferrerPolicy: config.Default.ReferrerPolicy,
-		Frame:          config.Default.XFrameOptions,
-	}))
-	mux.Use(headers.AddHeaders(config.Default.AddHeaders))
-
-	if config.Default.AuthFile != "" {
-		mux.Use(apikeys.NewApiKeysMiddleware(apikeys.AuthOptions{
-			AuthFile:      config.Default.AuthFile,
-			UnauthMethods: []string{"GET", "HEAD", "OPTIONS", "TRACE"},
-			BasicAuth:     config.Default.BasicAuth,
-			SiteName:      config.Default.SiteName,
-			SitePath:      config.Default.SitePath,
-		}))
-	}
-
+func Setup() (*chi.Mux, error) {
 	// make directories if needed
 	err := os.MkdirAll(config.Default.FilesDir, 0755)
 	if err != nil {
@@ -71,26 +38,13 @@ func Setup() (*web.Mux, error) {
 		return nil, fmt.Errorf("could not create metadata directory: %w", err)
 	}
 
-	if config.Default.SiteURL != "" {
-		// ensure siteURL ends wth '/'
-		if lastChar := config.Default.SiteURL[len(config.Default.SiteURL)-1:]; lastChar != "/" {
-			config.Default.SiteURL = config.Default.SiteURL + "/"
-		}
-
-		parsedUrl, err := url.Parse(config.Default.SiteURL)
-		if err != nil {
-			return nil, fmt.Errorf("could not parse siteurl: %w", err)
-		}
-
-		config.Default.SitePath = parsedUrl.Path
-	} else {
-		config.Default.SitePath = "/"
+	config.Default.SiteURL = strings.TrimSuffix(config.Default.SiteURL, "/")
+	parsedUrl, err := url.Parse(config.Default.SiteURL)
+	if err != nil {
+		return nil, fmt.Errorf("could not parse siteurl: %w", err)
 	}
-
-	config.Default.SelifPath = strings.TrimLeft(config.Default.SelifPath, "/")
-	if lastChar := config.Default.SelifPath[len(config.Default.SelifPath)-1:]; lastChar != "/" {
-		config.Default.SelifPath = config.Default.SelifPath + "/"
-	}
+	config.Default.SitePath = "/" + strings.Trim(parsedUrl.Path, "/")
+	config.Default.SelifPath = strings.Trim(config.Default.SelifPath, "/")
 
 	if config.Default.S3Bucket != "" {
 		config.StorageBackend = s3.NewS3Backend(config.Default.S3Bucket, config.Default.S3Region, config.Default.S3Endpoint, config.Default.S3ForcePathStyle)
@@ -99,7 +53,6 @@ func Setup() (*web.Mux, error) {
 		if config.Default.CleanupEveryMinutes > 0 {
 			go cleanup.PeriodicCleanup(time.Duration(config.Default.CleanupEveryMinutes)*time.Minute, config.Default.FilesDir, config.Default.MetaDir, config.Default.NoLogs)
 		}
-
 	}
 
 	// Template setup
@@ -112,58 +65,83 @@ func Setup() (*web.Mux, error) {
 	config.TimeStartedStr = strconv.FormatInt(config.TimeStarted.Unix(), 10)
 
 	// Routing setup
-	nameRe := regexp.MustCompile("^" + config.Default.SitePath + `(?P<name>[a-z0-9-\.]+)$`)
-	selifRe := regexp.MustCompile("^" + config.Default.SitePath + config.Default.SelifPath + `(?P<name>[a-z0-9-\.]+)$`)
-	selifIndexRe := regexp.MustCompile("^" + config.Default.SitePath + config.Default.SelifPath + `$`)
-	torrentRe := regexp.MustCompile("^" + config.Default.SitePath + `(?P<name>[a-z0-9-\.]+)/torrent$`)
+	r := chi.NewRouter()
+	r.Use(middleware.RequestID)
+	r.Use(middleware.RedirectSlashes)
 
-	if config.Default.AuthFile == "" || config.Default.BasicAuth {
-		mux.Get(config.Default.SitePath, handlers.Index)
-		mux.Get(config.Default.SitePath+"paste/", handlers.Paste)
-	} else {
-		mux.Get(config.Default.SitePath, http.RedirectHandler(config.Default.SitePath+"API", 303))
-		mux.Get(config.Default.SitePath+"paste/", http.RedirectHandler(config.Default.SitePath+"API/", 303))
+	if config.Default.RealIp {
+		r.Use(middleware.RealIP)
 	}
-	mux.Get(config.Default.SitePath+"paste", http.RedirectHandler(config.Default.SitePath+"paste/", 301))
 
-	mux.Get(config.Default.SitePath+"API/", handlers.APIDoc)
-	mux.Get(config.Default.SitePath+"API", http.RedirectHandler(config.Default.SitePath+"API/", 301))
+	if !config.Default.NoLogs {
+		r.Use(middleware.Logger)
+	}
 
-	if config.Default.RemoteUploads {
-		mux.Get(config.Default.SitePath+"upload", upload.Remote)
-		mux.Get(config.Default.SitePath+"upload/", upload.Remote)
+	r.Use(middleware.Recoverer)
+	r.Use(csp.ContentSecurityPolicy(csp.CSPOptions{
+		Policy:         config.Default.ContentSecurityPolicy,
+		ReferrerPolicy: config.Default.ReferrerPolicy,
+		Frame:          config.Default.XFrameOptions,
+	}))
+	r.Use(headers.AddHeaders(config.Default.AddHeaders))
 
-		if config.Default.RemoteAuthFile != "" {
-			config.RemoteAuthKeys = apikeys.ReadAuthKeys(config.Default.RemoteAuthFile)
+	if config.Default.AuthFile != "" {
+		r.Use(apikeys.NewApiKeysMiddleware(apikeys.AuthOptions{
+			AuthFile:      config.Default.AuthFile,
+			UnauthMethods: []string{http.MethodGet, http.MethodHead, http.MethodOptions, http.MethodTrace},
+			BasicAuth:     config.Default.BasicAuth,
+			SiteName:      config.Default.SiteName,
+			SitePath:      config.Default.SitePath,
+		}))
+	}
+
+	r.Route(config.Default.SitePath, func(r chi.Router) {
+		if config.Default.AuthFile == "" || config.Default.BasicAuth {
+			r.Get("/", handlers.Index)
+			r.Get("/paste", handlers.Paste)
+		} else {
+			r.Get("/", http.RedirectHandler(config.Default.SitePath+"API", 303).ServeHTTP)
+			r.Get("/paste", http.RedirectHandler(config.Default.SitePath+"API/", 303).ServeHTTP)
 		}
-	}
 
-	mux.Post(config.Default.SitePath+"upload", upload.POSTHandler)
-	mux.Post(config.Default.SitePath+"upload/", upload.POSTHandler)
-	mux.Put(config.Default.SitePath+"upload", upload.PUTHandler)
-	mux.Put(config.Default.SitePath+"upload/", upload.PUTHandler)
-	mux.Put(config.Default.SitePath+"upload/:name", upload.PUTHandler)
+		r.Get("/API", handlers.APIDoc)
 
-	mux.Delete(config.Default.SitePath+":name", handlers.Delete)
+		if config.Default.RemoteUploads {
+			r.Get("/upload", upload.Remote)
 
-	mux.Get(config.Default.SitePath+"static/*", handlers.StaticHandler)
-	mux.Get(config.Default.SitePath+"favicon.ico", handlers.StaticHandler)
-	mux.Get(config.Default.SitePath+"robots.txt", handlers.StaticHandler)
-	mux.Get(nameRe, handlers.FileAccessHeader)
-	mux.Post(nameRe, handlers.FileAccessHeader)
-	mux.Get(selifRe, handlers.FileServeHandler)
-	mux.Get(selifIndexRe, handlers.Unauthorized)
-	mux.Get(torrentRe, torrent.FileTorrentHandler)
-
-	if config.Default.CustomPagesDir != "" {
-		custompages.InitializeCustomPages(config.Default.CustomPagesDir)
-		for fileName := range custompages.Names {
-			mux.Get(config.Default.SitePath+fileName, handlers.MakeCustomPage(fileName))
-			mux.Get(config.Default.SitePath+fileName+"/", handlers.MakeCustomPage(fileName))
+			if config.Default.RemoteAuthFile != "" {
+				config.RemoteAuthKeys = apikeys.ReadAuthKeys(config.Default.RemoteAuthFile)
+			}
 		}
-	}
 
-	mux.NotFound(handlers.NotFound)
+		r.Post("/upload", upload.POSTHandler)
+		r.Put("/upload", upload.PUTHandler)
+		r.Put("/upload/{name}", upload.PUTHandler)
 
-	return mux, nil
+		r.Delete("/{name}", handlers.Delete)
+
+		r.Get("/static/*", handlers.StaticHandler)
+		r.Get("/favicon.ico", handlers.StaticHandler)
+		r.Get("/robots.txt", handlers.StaticHandler)
+		r.Get("/{name}", handlers.FileAccessHeader)
+		r.Post("/{name}", handlers.FileAccessHeader)
+		r.Route("/"+config.Default.SelifPath, func(r chi.Router) {
+			r.Get("/{name}", handlers.FileServeHandler)
+		})
+		r.Get("/torrent/{name}", torrent.FileTorrentHandler)
+		r.Get("/{name}/torrent", func(w http.ResponseWriter, r *http.Request) {
+			http.Redirect(w, r, "/torrent/"+chi.URLParam(r, "name"), 301)
+		})
+
+		if config.Default.CustomPagesDir != "" {
+			custompages.InitializeCustomPages(config.Default.CustomPagesDir)
+			for fileName := range custompages.Names {
+				r.Get("/"+fileName, handlers.MakeCustomPage(fileName))
+			}
+		}
+
+		r.NotFound(handlers.NotFound)
+	})
+
+	return r, nil
 }

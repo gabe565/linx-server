@@ -32,22 +32,21 @@ func AddHeaders(headers []string) func(http.Handler) http.Handler {
 func GetSiteURL(r *http.Request) string {
 	if config.Default.SiteURL != "" {
 		return config.Default.SiteURL
-	} else {
-		u := &url.URL{}
-		u.Host = r.Host
-
-		if config.Default.SitePath != "" {
-			u.Path = config.Default.SitePath
-		}
-
-		if scheme := r.Header.Get("X-Forwarded-Proto"); scheme != "" {
-			u.Scheme = scheme
-		} else if config.Default.CertFile != "" || (r.TLS != nil && r.TLS.HandshakeComplete == true) {
-			u.Scheme = "https"
-		} else {
-			u.Scheme = "http"
-		}
-
-		return u.String()
 	}
+
+	u := &url.URL{Host: r.Host}
+
+	if config.Default.SitePath != "" {
+		u.Path = config.Default.SitePath
+	}
+
+	if scheme := r.Header.Get("X-Forwarded-Proto"); scheme != "" {
+		u.Scheme = scheme
+	} else if config.Default.CertFile != "" || (r.TLS != nil && r.TLS.HandshakeComplete == true) {
+		u.Scheme = "https"
+	} else {
+		u.Scheme = "http"
+	}
+
+	return u.String()
 }

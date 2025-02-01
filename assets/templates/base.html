@@ -18,9 +18,9 @@
 				<div id="navigation" class="right">
 					{{- if ne .Auth "header" -}}
 					<a href="{{ .SitePath }}">Upload</a> |
-					<a href="{{ .SitePath }}paste/">Paste</a> |
+					<a href="{{ .SitePath }}paste">Paste</a> |
 					{{ end -}}
-					<a href="{{ .SitePath }}API/">API</a>
+					<a href="{{ .SitePath }}API">API</a>
 					{{- range $path, $name := .CustomPagesNames }}
 					| <a href="{{ .SitePath }}{{ $path }}/">{{ $name }}</a>
 					{{- end -}}

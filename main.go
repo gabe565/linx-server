@@ -4,6 +4,7 @@ import (
 	"flag"
 	"log"
 	"net"
+	"net/http"
 	"net/http/fcgi"
 	"os"
 	"os/signal"
@@ -12,7 +13,6 @@ import (
 	"github.com/andreimarcu/linx-server/internal/config"
 	"github.com/andreimarcu/linx-server/internal/server"
 	"github.com/vharitonsky/iniflags"
-	"github.com/zenazn/goji/graceful"
 )
 
 func main() {
@@ -123,13 +123,13 @@ func main() {
 		fcgi.Serve(listener, mux)
 	} else if config.Default.CertFile != "" {
 		log.Printf("Serving over https, bound on %s", config.Default.Bind)
-		err := graceful.ListenAndServeTLS(config.Default.Bind, config.Default.CertFile, config.Default.KeyFile, mux)
+		err := http.ListenAndServeTLS(config.Default.Bind, config.Default.CertFile, config.Default.KeyFile, mux)
 		if err != nil {
 			log.Fatal(err)
 		}
 	} else {
 		log.Printf("Serving over http, bound on %s", config.Default.Bind)
-		err := graceful.ListenAndServe(config.Default.Bind, mux)
+		err := http.ListenAndServe(config.Default.Bind, mux)
 		if err != nil {
 			log.Fatal(err)
 		}

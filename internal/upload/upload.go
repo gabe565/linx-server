@@ -24,7 +24,7 @@ import (
 	"github.com/andreimarcu/linx-server/internal/headers"
 	"github.com/dchest/uniuri"
 	"github.com/gabriel-vasile/mimetype"
-	"github.com/zenazn/goji/web"
+	"github.com/go-chi/chi/v5"
 )
 
 var FileTooLargeError = errors.New("File too large.")
@@ -54,9 +54,9 @@ type Upload struct {
 	Metadata backends.Metadata
 }
 
-func POSTHandler(c web.C, w http.ResponseWriter, r *http.Request) {
+func POSTHandler(w http.ResponseWriter, r *http.Request) {
 	if !csrf.StrictReferrerCheck(r, headers.GetSiteURL(r), []string{"Linx-Delete-Key", "Linx-Expiry", "Linx-Randomize", "X-Requested-With"}) {
-		handlers.BadRequest(c, w, r, handlers.RespAUTO, "")
+		handlers.BadRequest(w, r, handlers.RespAUTO, "")
 		return
 	}
 
@@ -68,7 +68,7 @@ func POSTHandler(c web.C, w http.ResponseWriter, r *http.Request) {
 	if strings.HasPrefix(contentType, "multipart/form-data") {
 		file, headers, err := r.FormFile("file")
 		if err != nil {
-			handlers.Oops(c, w, r, handlers.RespHTML, "Could not upload file.")
+			handlers.Oops(w, r, handlers.RespHTML, "Could not upload file.")
 			return
 		}
 		defer file.Close()
@@ -78,7 +78,7 @@ func POSTHandler(c web.C, w http.ResponseWriter, r *http.Request) {
 		upReq.filename = headers.Filename
 	} else {
 		if r.PostFormValue("content") == "" {
-			handlers.BadRequest(c, w, r, handlers.RespAUTO, "Empty file")
+			handlers.BadRequest(w, r, handlers.RespAUTO, "Empty file")
 			return
 		}
 		extension := r.PostFormValue("extension")
@@ -104,10 +104,10 @@ func POSTHandler(c web.C, w http.ResponseWriter, r *http.Request) {
 
 	if strings.EqualFold("application/json", r.Header.Get("Accept")) {
 		if err == FileTooLargeError || err == backends.FileEmptyError {
-			handlers.BadRequest(c, w, r, handlers.RespJSON, err.Error())
+			handlers.BadRequest(w, r, handlers.RespJSON, err.Error())
 			return
 		} else if err != nil {
-			handlers.Oops(c, w, r, handlers.RespJSON, "Could not upload file: "+err.Error())
+			handlers.Oops(w, r, handlers.RespJSON, "Could not upload file: "+err.Error())
 			return
 		}
 
@@ -116,10 +116,10 @@ func POSTHandler(c web.C, w http.ResponseWriter, r *http.Request) {
 		w.Write(js)
 	} else {
 		if err == FileTooLargeError || err == backends.FileEmptyError {
-			handlers.BadRequest(c, w, r, handlers.RespHTML, err.Error())
+			handlers.BadRequest(w, r, handlers.RespHTML, err.Error())
 			return
 		} else if err != nil {
-			handlers.Oops(c, w, r, handlers.RespHTML, "Could not upload file: "+err.Error())
+			handlers.Oops(w, r, handlers.RespHTML, "Could not upload file: "+err.Error())
 			return
 		}
 
@@ -127,22 +127,22 @@ func POSTHandler(c web.C, w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func PUTHandler(c web.C, w http.ResponseWriter, r *http.Request) {
+func PUTHandler(w http.ResponseWriter, r *http.Request) {
 	upReq := UploadRequest{}
 	HeaderProcess(r, &upReq)
 
 	defer r.Body.Close()
-	upReq.filename = c.URLParams["name"]
+	upReq.filename = chi.URLParam(r, "name")
 	upReq.src = http.MaxBytesReader(w, r.Body, config.Default.MaxSize)
 
 	upload, err := Process(upReq)
 
 	if strings.EqualFold("application/json", r.Header.Get("Accept")) {
 		if err == FileTooLargeError || err == backends.FileEmptyError {
-			handlers.BadRequest(c, w, r, handlers.RespJSON, err.Error())
+			handlers.BadRequest(w, r, handlers.RespJSON, err.Error())
 			return
 		} else if err != nil {
-			handlers.Oops(c, w, r, handlers.RespJSON, "Could not upload file: "+err.Error())
+			handlers.Oops(w, r, handlers.RespJSON, "Could not upload file: "+err.Error())
 			return
 		}
 
@@ -151,10 +151,10 @@ func PUTHandler(c web.C, w http.ResponseWriter, r *http.Request) {
 		w.Write(js)
 	} else {
 		if err == FileTooLargeError || err == backends.FileEmptyError {
-			handlers.BadRequest(c, w, r, handlers.RespPLAIN, err.Error())
+			handlers.BadRequest(w, r, handlers.RespPLAIN, err.Error())
 			return
 		} else if err != nil {
-			handlers.Oops(c, w, r, handlers.RespPLAIN, "Could not upload file: "+err.Error())
+			handlers.Oops(w, r, handlers.RespPLAIN, "Could not upload file: "+err.Error())
 			return
 		}
 
@@ -162,7 +162,7 @@ func PUTHandler(c web.C, w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func Remote(c web.C, w http.ResponseWriter, r *http.Request) {
+func Remote(w http.ResponseWriter, r *http.Request) {
 	if config.Default.RemoteAuthFile != "" {
 		key := r.FormValue("key")
 		if key == "" && config.Default.BasicAuth {
@@ -180,7 +180,7 @@ func Remote(c web.C, w http.ResponseWriter, r *http.Request) {
 				}
 				w.Header().Set("WWW-Authenticate", `Basic`+rs)
 			}
-			handlers.Unauthorized(c, w, r)
+			handlers.Unauthorized(w, r)
 			return
 		}
 	}
@@ -196,7 +196,7 @@ func Remote(c web.C, w http.ResponseWriter, r *http.Request) {
 
 	resp, err := http.Get(grabUrl.String())
 	if err != nil {
-		handlers.Oops(c, w, r, handlers.RespAUTO, "Could not retrieve URL")
+		handlers.Oops(w, r, handlers.RespAUTO, "Could not retrieve URL")
 		return
 	}
 
@@ -211,7 +211,7 @@ func Remote(c web.C, w http.ResponseWriter, r *http.Request) {
 
 	if strings.EqualFold("application/json", r.Header.Get("Accept")) {
 		if err != nil {
-			handlers.Oops(c, w, r, handlers.RespJSON, "Could not upload file: "+err.Error())
+			handlers.Oops(w, r, handlers.RespJSON, "Could not upload file: "+err.Error())
 			return
 		}
 
@@ -220,7 +220,7 @@ func Remote(c web.C, w http.ResponseWriter, r *http.Request) {
 		w.Write(js)
 	} else {
 		if err != nil {
-			handlers.Oops(c, w, r, handlers.RespHTML, "Could not upload file: "+err.Error())
+			handlers.Oops(w, r, handlers.RespHTML, "Could not upload file: "+err.Error())
 			return
 		}
 

@@ -10,7 +10,6 @@ import (
 	"github.com/andreimarcu/linx-server/internal/config"
 	"github.com/andreimarcu/linx-server/internal/server"
 	"github.com/andreimarcu/linx-server/internal/upload"
-	"github.com/zenazn/goji"
 )
 
 var testCSPHeaders = map[string]string{
@@ -26,7 +25,7 @@ func TestContentSecurityPolicy(t *testing.T) {
 	config.Default.MaxSize = 1024 * 1024 * 1024
 	config.Default.NoLogs = true
 	config.Default.SiteName = "linx"
-	config.Default.SelifPath = "selif"
+	config.Default.SelifPath = "/selif"
 	config.Default.ContentSecurityPolicy = testCSPHeaders["Content-Security-Policy"]
 	config.Default.ReferrerPolicy = testCSPHeaders["Referrer-Policy"]
 	config.Default.XFrameOptions = testCSPHeaders["X-Frame-Options"]
@@ -42,7 +41,7 @@ func TestContentSecurityPolicy(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	goji.Use(ContentSecurityPolicy(CSPOptions{
+	mux.Use(ContentSecurityPolicy(CSPOptions{
 		Policy:         testCSPHeaders["Content-Security-Policy"],
 		ReferrerPolicy: testCSPHeaders["Referrer-Policy"],
 		Frame:          testCSPHeaders["X-Frame-Options"],

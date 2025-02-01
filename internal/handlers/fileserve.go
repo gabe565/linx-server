@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/andreimarcu/linx-server/assets"
@@ -16,18 +15,18 @@ import (
 	"github.com/andreimarcu/linx-server/internal/expiry"
 	"github.com/andreimarcu/linx-server/internal/headers"
 	"github.com/andreimarcu/linx-server/internal/httputil"
-	"github.com/zenazn/goji/web"
+	"github.com/go-chi/chi/v5"
 )
 
-func FileServeHandler(c web.C, w http.ResponseWriter, r *http.Request) {
-	fileName := c.URLParams["name"]
+func FileServeHandler(w http.ResponseWriter, r *http.Request) {
+	fileName := chi.URLParam(r, "name")
 
 	metadata, err := CheckFile(fileName)
 	if err == backends.NotFoundErr {
-		NotFound(c, w, r)
+		NotFound(w, r)
 		return
 	} else if err != nil {
-		Oops(c, w, r, RespAUTO, "Corrupt metadata.")
+		Oops(w, r, RespAUTO, "Corrupt metadata.")
 		return
 	}
 
@@ -36,7 +35,7 @@ func FileServeHandler(c web.C, w http.ResponseWriter, r *http.Request) {
 		if src == AccessKeySourceCookie {
 			SetAccessKeyCookies(w, headers.GetSiteURL(r), fileName, "", time.Unix(0, 0))
 		}
-		Unauthorized(c, w, r)
+		Unauthorized(w, r)
 
 		return
 	}
@@ -68,34 +67,28 @@ func FileServeHandler(c web.C, w http.ResponseWriter, r *http.Request) {
 
 		config.StorageBackend.ServeFile(fileName, w, r)
 		if err != nil {
-			Oops(c, w, r, RespAUTO, err.Error())
+			Oops(w, r, RespAUTO, err.Error())
 			return
 		}
 	}
 }
 
-func StaticHandler(c web.C, w http.ResponseWriter, r *http.Request) {
-	path := r.URL.Path
-	if path[len(path)-1:] == "/" {
-		NotFound(c, w, r)
-		return
-	} else {
-		if path == "/favicon.ico" {
-			path = config.Default.SitePath + "/static/images/favicon.gif"
-		}
+func StaticHandler(w http.ResponseWriter, r *http.Request) {
+	path := chi.URLParam(r, "*")
+	if path == "/favicon.ico" {
+		path = "/static/images/favicon.gif"
+	}
 
-		filePath := strings.TrimPrefix(path, config.Default.SitePath+"static/")
-		file, err := assets.Static.Open("static/" + filePath)
-		if err != nil {
-			NotFound(c, w, r)
-			return
-		}
-
-		w.Header().Set("Etag", fmt.Sprintf("\"%s\"", config.TimeStartedStr))
-		w.Header().Set("Cache-Control", "public, max-age=86400")
-		http.ServeContent(w, r, filePath, config.TimeStarted, file.(io.ReadSeeker))
+	file, err := assets.Static.Open("static/" + path)
+	if err != nil {
+		NotFound(w, r)
 		return
 	}
+
+	w.Header().Set("Etag", fmt.Sprintf("\"%s\"", config.TimeStartedStr))
+	w.Header().Set("Cache-Control", "public, max-age=86400")
+	http.ServeContent(w, r, path, config.TimeStarted, file.(io.ReadSeeker))
+	return
 }
 
 func CheckFile(filename string) (metadata backends.Metadata, err error) {

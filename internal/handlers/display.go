@@ -19,12 +19,11 @@ import (
 	"github.com/dustin/go-humanize"
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/russross/blackfriday"
-	"github.com/zenazn/goji/web"
 )
 
 const maxDisplayFileSizeBytes = 1024 * 512
 
-func FileDisplay(c web.C, w http.ResponseWriter, r *http.Request, fileName string, metadata backends.Metadata) {
+func FileDisplay(w http.ResponseWriter, r *http.Request, fileName string, metadata backends.Metadata) {
 	var expiryHuman string
 	if metadata.Expiry != expiry.NeverExpire {
 		expiryHuman = humanize.RelTime(time.Now(), metadata.Expiry, "", "")
@@ -35,7 +34,9 @@ func FileDisplay(c web.C, w http.ResponseWriter, r *http.Request, fileName strin
 
 	extension := strings.TrimPrefix(filepath.Ext(fileName), ".")
 
-	if strings.EqualFold("application/json", r.Header.Get("Accept")) {
+	tpl := "display/file.html"
+	switch {
+	case strings.EqualFold("application/json", r.Header.Get("Accept")):
 		js, _ := json.Marshal(map[string]string{
 			"filename":   fileName,
 			"direct_url": headers.GetSiteURL(r) + config.Default.SelifPath + fileName,
@@ -46,22 +47,18 @@ func FileDisplay(c web.C, w http.ResponseWriter, r *http.Request, fileName strin
 		})
 		w.Write(js)
 		return
-	}
-
-	var tpl string
-
-	if strings.HasPrefix(metadata.Mimetype, "image/") {
+	case strings.HasPrefix(metadata.Mimetype, "image/"):
 		tpl = "display/image.html"
-	} else if strings.HasPrefix(metadata.Mimetype, "video/") {
+	case strings.HasPrefix(metadata.Mimetype, "video/"):
 		tpl = "display/video.html"
-	} else if strings.HasPrefix(metadata.Mimetype, "audio/") {
+	case strings.HasPrefix(metadata.Mimetype, "audio/"):
 		tpl = "display/audio.html"
-	} else if metadata.Mimetype == "application/pdf" {
+	case metadata.Mimetype == "application/pdf":
 		tpl = "display/pdf.html"
-	} else if extension == "story" {
+	case extension == "story":
 		metadata, reader, err := config.StorageBackend.Get(fileName)
 		if err != nil {
-			Oops(c, w, r, RespHTML, err.Error())
+			Oops(w, r, RespHTML, err.Error())
 		}
 
 		if metadata.Size < maxDisplayFileSizeBytes {
@@ -73,10 +70,10 @@ func FileDisplay(c web.C, w http.ResponseWriter, r *http.Request, fileName strin
 			}
 		}
 
-	} else if extension == "md" {
+	case extension == "md":
 		metadata, reader, err := config.StorageBackend.Get(fileName)
 		if err != nil {
-			Oops(c, w, r, RespHTML, err.Error())
+			Oops(w, r, RespHTML, err.Error())
 		}
 
 		if metadata.Size < maxDisplayFileSizeBytes {
@@ -90,10 +87,10 @@ func FileDisplay(c web.C, w http.ResponseWriter, r *http.Request, fileName strin
 			}
 		}
 
-	} else if strings.HasPrefix(metadata.Mimetype, "text/") || util.SupportedBinExtension(extension) {
+	case strings.HasPrefix(metadata.Mimetype, "text/"), util.SupportedBinExtension(extension):
 		metadata, reader, err := config.StorageBackend.Get(fileName)
 		if err != nil {
-			Oops(c, w, r, RespHTML, err.Error())
+			Oops(w, r, RespHTML, err.Error())
 		}
 
 		if metadata.Size < maxDisplayFileSizeBytes {
@@ -105,11 +102,6 @@ func FileDisplay(c web.C, w http.ResponseWriter, r *http.Request, fileName strin
 				tpl = "display/bin.html"
 			}
 		}
-	}
-
-	// Catch other files
-	if tpl == "" {
-		tpl = "display/file.html"
 	}
 
 	err := templates.Render(tpl, map[string]any{
@@ -126,6 +118,6 @@ func FileDisplay(c web.C, w http.ResponseWriter, r *http.Request, fileName strin
 	}, r, w)
 
 	if err != nil {
-		Oops(c, w, r, RespHTML, "")
+		Oops(w, r, RespHTML, "")
 	}
 }
