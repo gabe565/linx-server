@@ -96,7 +96,7 @@ func (b LocalfsBackend) ServeFile(key string, w http.ResponseWriter, r *http.Req
 }
 
 func (b LocalfsBackend) writeMetadata(key string, metadata backends.Metadata) error {
-	metaPath := path.Join(b.metaPath, key)
+	tmpPath := path.Join(b.metaPath, "."+key)
 
 	mjson := MetadataJSON{
 		DeleteKey:    metadata.DeleteKey,
@@ -108,69 +108,76 @@ func (b LocalfsBackend) writeMetadata(key string, metadata backends.Metadata) er
 		Size:         metadata.Size,
 	}
 
-	dst, err := os.Create(metaPath)
+	tmp, err := os.Create(tmpPath)
 	if err != nil {
 		return err
 	}
-	defer dst.Close()
+	defer func() {
+		_ = tmp.Close()
+		_ = os.Remove(tmpPath)
+	}()
 
-	encoder := json.NewEncoder(dst)
-	err = encoder.Encode(mjson)
-	if err != nil {
-		os.Remove(metaPath)
+	if err = json.NewEncoder(tmp).Encode(mjson); err != nil {
 		return err
 	}
 
-	return nil
+	if err := tmp.Close(); err != nil {
+		return err
+	}
+
+	return os.Rename(tmpPath, path.Join(b.metaPath, key))
 }
 
-func (b LocalfsBackend) Put(key string, r io.Reader, expiry time.Time, deleteKey, accessKey string) (m backends.Metadata, err error) {
-	filePath := path.Join(b.filesPath, key)
+func (b LocalfsBackend) Put(key string, r io.Reader, expiry time.Time, deleteKey, accessKey string) (backends.Metadata, error) {
+	var m backends.Metadata
+	tmpPath := path.Join(b.filesPath, "."+key)
 
-	dst, err := os.Create(filePath)
+	tmp, err := os.Create(tmpPath)
 	if err != nil {
-		return
-	}
-	defer dst.Close()
-
-	bytes, err := io.Copy(dst, r)
-	if bytes == 0 {
-		os.Remove(filePath)
-		return m, backends.FileEmptyError
-	} else if err != nil {
-		os.Remove(filePath)
 		return m, err
 	}
+	defer func() {
+		_ = tmp.Close()
+		_ = os.Remove(tmpPath)
+	}()
 
-	dst.Seek(0, 0)
-	m, err = helpers.GenerateMetadata(dst)
+	bytes, err := io.Copy(tmp, r)
 	if err != nil {
-		os.Remove(filePath)
-		return
+		return m, err
+	} else if bytes == 0 {
+		return m, backends.FileEmptyError
 	}
-	dst.Seek(0, 0)
+
+	if _, err := tmp.Seek(0, 0); err != nil {
+		return m, err
+	}
+	m, err = helpers.GenerateMetadata(tmp)
+	if err != nil {
+		return m, err
+	}
+	if _, err := tmp.Seek(0, 0); err != nil {
+		return m, err
+	}
 
 	m.Expiry = expiry
 	m.DeleteKey = deleteKey
 	m.AccessKey = accessKey
-	m.ArchiveFiles, _ = helpers.ListArchiveFiles(m.Mimetype, m.Size, dst)
+	m.ArchiveFiles, _ = helpers.ListArchiveFiles(m.Mimetype, m.Size, tmp)
 
 	err = b.writeMetadata(key, m)
 	if err != nil {
-		os.Remove(filePath)
-		return
+		return m, err
 	}
 
-	return
+	if err := tmp.Close(); err != nil {
+		return m, err
+	}
+
+	return m, os.Rename(tmpPath, path.Join(b.filesPath, key))
 }
 
-func (b LocalfsBackend) PutMetadata(key string, m backends.Metadata) (err error) {
-	err = b.writeMetadata(key, m)
-	if err != nil {
-		return
-	}
-
-	return
+func (b LocalfsBackend) PutMetadata(key string, m backends.Metadata) error {
+	return b.writeMetadata(key, m)
 }
 
 func (b LocalfsBackend) Size(key string) (int64, error) {
