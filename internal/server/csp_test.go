@@ -3,12 +3,11 @@ package server
 import (
 	"net/http"
 	"net/http/httptest"
-	"os"
-	"path"
 	"testing"
 
 	"gabe565.com/linx-server/internal/config"
-	"gabe565.com/linx-server/internal/upload"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 var testCSPHeaders = map[string]string{
@@ -19,7 +18,7 @@ var testCSPHeaders = map[string]string{
 
 func TestContentSecurityPolicy(t *testing.T) {
 	config.Default.SiteURL = "http://linx.example.org/"
-	config.Default.FilesDir = path.Join(os.TempDir(), upload.GenerateBarename())
+	config.Default.FilesDir = t.TempDir()
 	config.Default.MetaDir = config.Default.FilesDir + "_meta"
 	config.Default.MaxSize = 1024 * 1024 * 1024
 	config.Default.NoLogs = true
@@ -28,23 +27,17 @@ func TestContentSecurityPolicy(t *testing.T) {
 	config.Default.ContentSecurityPolicy = testCSPHeaders["Content-Security-Policy"]
 	config.Default.ReferrerPolicy = testCSPHeaders["Referrer-Policy"]
 	config.Default.XFrameOptions = testCSPHeaders["X-Frame-Options"]
-	mux, err := Setup()
-	if err != nil {
-		t.Fatal(err)
-	}
+	r, err := Setup()
+	require.NoError(t, err)
 
 	w := httptest.NewRecorder()
 
 	req, err := http.NewRequest("GET", "/", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
-	mux.ServeHTTP(w, req)
+	r.ServeHTTP(w, req)
 
 	for k, v := range testCSPHeaders {
-		if w.HeaderMap[k][0] != v {
-			t.Fatalf("%s header did not match expected value set by middleware", k)
-		}
+		assert.Equal(t, v, w.Header().Get(k))
 	}
 }

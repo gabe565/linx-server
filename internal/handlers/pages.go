@@ -47,7 +47,7 @@ func Paste(w http.ResponseWriter, r *http.Request) {
 
 func APIDoc(w http.ResponseWriter, r *http.Request) {
 	err := templates.Render("API.html", map[string]any{
-		"SiteURL":     must.Must2(headers.GetSiteURL(r)),
+		"SiteURL":     must.Must2(headers.GetSiteURL(r)).String(),
 		"ForceRandom": config.Default.ForceRandomFilename,
 	}, r, w)
 	if err != nil {
@@ -58,7 +58,7 @@ func APIDoc(w http.ResponseWriter, r *http.Request) {
 func MakeCustomPage(fileName string) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		err := templates.Render("custom_page.html", map[string]any{
-			"SiteURL":     must.Must2(headers.GetSiteURL(r)),
+			"SiteURL":     must.Must2(headers.GetSiteURL(r)).String(),
 			"ForceRandom": config.Default.ForceRandomFilename,
 			"Contents":    template.HTML(custompages.CustomPages[fileName]),
 			"FileName":    fileName,
