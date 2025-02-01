@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"context"
+	"errors"
 	"log"
 	"log/slog"
 	"net"
@@ -9,6 +11,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"gabe565.com/linx-server/cmd/cleanup"
 	"gabe565.com/linx-server/cmd/genkey"
@@ -16,6 +19,7 @@ import (
 	"gabe565.com/linx-server/internal/server"
 	"gabe565.com/utils/cobrax"
 	"github.com/spf13/cobra"
+	"golang.org/x/sync/errgroup"
 )
 
 func New(options ...cobrax.Option) *cobra.Command {
@@ -47,6 +51,11 @@ func run(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
+	ctx, cancel := signal.NotifyContext(cmd.Context(), os.Interrupt, syscall.SIGTERM, syscall.SIGQUIT)
+	defer cancel()
+
+	group, ctx := errgroup.WithContext(ctx)
+
 	if config.Default.Fastcgi {
 		var listener net.Listener
 		if config.Default.Bind[0] == '/' {
@@ -55,18 +64,9 @@ func run(cmd *cobra.Command, _ []string) error {
 			if err != nil {
 				return err
 			}
-			cleanup := func() {
+			defer func() {
 				slog.Info("Removing FastCGI socket")
-				os.Remove(config.Default.Bind)
-			}
-			defer cleanup()
-			sigs := make(chan os.Signal, 1)
-			signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
-			go func() {
-				sig := <-sigs
-				slog.Info("Got signal", "value", sig)
-				cleanup()
-				os.Exit(0)
+				_ = os.Remove(config.Default.Bind)
 			}()
 		} else {
 			listener, err = net.Listen("tcp", config.Default.Bind)
@@ -75,20 +75,45 @@ func run(cmd *cobra.Command, _ []string) error {
 			}
 		}
 
-		log.Printf("Serving over fastcgi, bound on %s", config.Default.Bind)
-		fcgi.Serve(listener, mux)
-	} else if config.Default.TLSCert != "" {
-		log.Printf("Serving over https, bound on %s", config.Default.Bind)
-		err := http.ListenAndServeTLS(config.Default.Bind, config.Default.TLSCert, config.Default.TLSKey, mux)
-		if err != nil {
-			return err
-		}
+		group.Go(func() error {
+			<-ctx.Done()
+			return listener.Close()
+		})
+
+		group.Go(func() error {
+			log.Printf("Serving over fastcgi, bound on %s", config.Default.Bind)
+			return fcgi.Serve(listener, mux)
+		})
 	} else {
-		log.Printf("Serving over http, bound on %s", config.Default.Bind)
-		err := http.ListenAndServe(config.Default.Bind, mux)
-		if err != nil {
-			return err
+		srv := &http.Server{
+			Addr:    config.Default.Bind,
+			Handler: mux,
 		}
+
+		if config.Default.TLSCert != "" {
+			group.Go(func() error {
+				log.Printf("Serving over https, bound on %s", config.Default.Bind)
+				return srv.ListenAndServeTLS(config.Default.TLSCert, config.Default.TLSKey)
+			})
+		} else {
+			group.Go(func() error {
+				log.Printf("Serving over http, bound on %s", config.Default.Bind)
+				return srv.ListenAndServe()
+			})
+		}
+
+		group.Go(func() error {
+			<-ctx.Done()
+			const timeout = 10 * time.Second
+			slog.Info("Gracefully shutting down", "timeout", timeout.String())
+			ctx, cancel := context.WithTimeout(context.Background(), timeout)
+			defer cancel()
+			return srv.Shutdown(ctx)
+		})
 	}
-	return nil
+	err = group.Wait()
+	if errors.Is(err, http.ErrServerClosed) || errors.Is(err, net.ErrClosed) {
+		err = nil
+	}
+	return err
 }
