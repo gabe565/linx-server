@@ -18,7 +18,7 @@ import (
 	"gabe565.com/linx-server/internal/util"
 	"github.com/dustin/go-humanize"
 	"github.com/microcosm-cc/bluemonday"
-	"github.com/russross/blackfriday"
+	"github.com/russross/blackfriday/v2"
 )
 
 const maxDisplayFileSizeBytes = 1024 * 512
