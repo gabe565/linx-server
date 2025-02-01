@@ -14,6 +14,7 @@ func New() *cobra.Command {
 		RunE:  run,
 	}
 	config.Default.RegisterBasicFlags(cmd)
+	cmd.Flags().Lookup(config.FlagNoLogs).Usage = "Disable logging of deleted files"
 	return cmd
 }
 

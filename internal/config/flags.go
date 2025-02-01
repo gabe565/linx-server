@@ -53,7 +53,7 @@ func (c *Config) RegisterBasicFlags(cmd *cobra.Command) {
 	fs.StringP(FlagConfig, "c", confPath, "Path to the config file")
 	fs.StringVar(&c.FilesDir, FlagFiles, c.FilesDir, "Path to files directory")
 	fs.StringVar(&c.MetaDir, FlagMeta, c.MetaDir, "Path to metadata directory")
-	fs.BoolVar(&c.NoLogs, FlagNoLogs, c.NoLogs, "Remove stdout output for each request")
+	fs.BoolVar(&c.NoLogs, FlagNoLogs, c.NoLogs, "Remove logging of each request")
 }
 
 func (c *Config) RegisterServeFlags(cmd *cobra.Command) {

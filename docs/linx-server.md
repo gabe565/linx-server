@@ -29,7 +29,7 @@ linx-server [flags]
       --max-size string                       Maximum upload file size in bytes (default "4 GiB")
       --meta-dir string                       Path to metadata directory (default "meta")
       --no-direct-agents                      Disable serving files directly for wget/curl user agents
-      --no-logs                               Remove stdout output for each request
+      --no-logs                               Remove logging of each request
       --real-ip                               Use X-Real-IP/X-Forwarded-For headers
       --referrer-policy string                Value of default Referrer-Policy header (default "same-origin")
       --remote-auth-file string               Path to a file containing newline-separated scrypted auth keys for remote uploads

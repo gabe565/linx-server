@@ -13,7 +13,7 @@ linx-server cleanup [flags]
       --files-dir string   Path to files directory (default "files")
   -h, --help               help for cleanup
       --meta-dir string    Path to metadata directory (default "meta")
-      --no-logs            Remove stdout output for each request
+      --no-logs            Disable logging of deleted files
 ```
 
 ### SEE ALSO
