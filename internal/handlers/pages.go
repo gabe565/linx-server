@@ -84,7 +84,7 @@ func Oops(w http.ResponseWriter, r *http.Request, rt RespType, msg string) {
 		msg = "Oops! Something went wrong..."
 	}
 
-	const name = "oops.html"
+	const name = "error.html"
 
 	switch {
 	case rt == RespHTML:
@@ -118,7 +118,7 @@ func BadRequest(w http.ResponseWriter, r *http.Request, rt RespType, msg string)
 	switch {
 	case rt == RespHTML:
 		w.WriteHeader(http.StatusBadRequest)
-		err := templates.Render("400.html", map[string]any{"Msg": msg}, r, w)
+		err := templates.Render("error.html", map[string]any{"Title": "400 Bad Request", "Msg": msg}, r, w)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
@@ -146,7 +146,7 @@ func BadRequest(w http.ResponseWriter, r *http.Request, rt RespType, msg string)
 
 func Unauthorized(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusUnauthorized)
-	err := templates.Render("401.html", nil, r, w)
+	err := templates.Render("error.html", map[string]any{"Title": "401 Unauthorized"}, r, w)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
