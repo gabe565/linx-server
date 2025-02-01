@@ -33,7 +33,7 @@ auth-file = ''
 # Path to a file containing newline-separated scrypted auth keys for remote uploads
 remote-auth-file = ''
 # How often to clean up expired files. A value of 0 means files will be cleaned up as they are accessed.
-cleanup-every = '0s'
+cleanup-every = '1h0m0s'
 # HTTPS configuration
 tls-cert = ''
 tls-key = ''
