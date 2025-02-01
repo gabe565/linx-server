@@ -84,7 +84,7 @@ func FileDisplay(w http.ResponseWriter, r *http.Request, fileName string, metada
 		if metadata.Size < maxDisplayFileSizeBytes {
 			bytes, err := ioutil.ReadAll(reader)
 			if err == nil {
-				unsafe := blackfriday.MarkdownCommon(bytes)
+				unsafe := blackfriday.Run(bytes)
 				html := bluemonday.UGCPolicy().SanitizeBytes(unsafe)
 
 				extra["Contents"] = template.HTML(html)
