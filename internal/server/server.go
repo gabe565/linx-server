@@ -15,7 +15,6 @@ import (
 	"gabe565.com/linx-server/internal/backends/s3"
 	"gabe565.com/linx-server/internal/cleanup"
 	"gabe565.com/linx-server/internal/config"
-	"gabe565.com/linx-server/internal/csp"
 	"gabe565.com/linx-server/internal/custompages"
 	"gabe565.com/linx-server/internal/handlers"
 	"gabe565.com/linx-server/internal/headers"
@@ -78,7 +77,7 @@ func Setup() (*chi.Mux, error) {
 	}
 
 	r.Use(middleware.Recoverer)
-	r.Use(csp.ContentSecurityPolicy(csp.CSPOptions{
+	r.Use(ContentSecurityPolicy(CSPOptions{
 		Policy:         config.Default.ContentSecurityPolicy,
 		ReferrerPolicy: config.Default.ReferrerPolicy,
 		Frame:          config.Default.XFrameOptions,

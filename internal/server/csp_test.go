@@ -1,4 +1,4 @@
-package csp
+package server
 
 import (
 	"net/http"
@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"gabe565.com/linx-server/internal/config"
-	"gabe565.com/linx-server/internal/server"
 	"gabe565.com/linx-server/internal/upload"
 )
 
@@ -29,7 +28,7 @@ func TestContentSecurityPolicy(t *testing.T) {
 	config.Default.ContentSecurityPolicy = testCSPHeaders["Content-Security-Policy"]
 	config.Default.ReferrerPolicy = testCSPHeaders["Referrer-Policy"]
 	config.Default.XFrameOptions = testCSPHeaders["X-Frame-Options"]
-	mux, err := server.Setup()
+	mux, err := Setup()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -40,12 +39,6 @@ func TestContentSecurityPolicy(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	mux.Use(ContentSecurityPolicy(CSPOptions{
-		Policy:         testCSPHeaders["Content-Security-Policy"],
-		ReferrerPolicy: testCSPHeaders["Referrer-Policy"],
-		Frame:          testCSPHeaders["X-Frame-Options"],
-	}))
 
 	mux.ServeHTTP(w, req)
 

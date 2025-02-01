@@ -33,7 +33,7 @@ func FileServeHandler(w http.ResponseWriter, r *http.Request) {
 	if src, err := CheckAccessKey(r, &metadata); err != nil {
 		// remove invalid cookie
 		if src == AccessKeySourceCookie {
-			SetAccessKeyCookies(w, headers.GetSiteURL(r), fileName, "", time.Unix(0, 0))
+			SetAccessKeyCookies(w, r, fileName, "", time.Unix(0, 0))
 		}
 		Unauthorized(w, r)
 
@@ -43,7 +43,7 @@ func FileServeHandler(w http.ResponseWriter, r *http.Request) {
 	if !config.Default.AllowHotlink {
 		referer := r.Header.Get("Referer")
 		u, _ := url.Parse(referer)
-		p, _ := url.Parse(headers.GetSiteURL(r))
+		p, _ := headers.GetSiteURL(r)
 		if referer != "" && !csrf.SameOrigin(u, p) {
 			http.Redirect(w, r, config.Default.SitePath+fileName, 303)
 			return

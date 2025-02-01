@@ -3,22 +3,32 @@ package torrent
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"testing"
 
+	"gabe565.com/linx-server/internal/config"
 	"github.com/zeebo/bencode"
 )
 
 func TestCreateTorrent(t *testing.T) {
-	fileName := "main.go"
 	var decoded Torrent
 
-	f, err := os.Open("main.go")
+	tmp := t.TempDir()
+	tmpFile := filepath.Join(tmp, "test.txt")
+	err := os.WriteFile(tmpFile, []byte("test"), 0o600)
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer f.Close()
 
-	encoded, err := CreateTorrent(fileName, f, nil)
+	f, err := os.Open(tmpFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		_ = f.Close()
+	})
+
+	encoded, err := CreateTorrent(filepath.Base(tmpFile), f, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -29,8 +39,8 @@ func TestCreateTorrent(t *testing.T) {
 		t.Fatalf("Encoding was %s, expected UTF-8", decoded.Encoding)
 	}
 
-	if decoded.Info.Name != "main.go" {
-		t.Fatalf("Name was %s, expected main.go", decoded.Info.Name)
+	if decoded.Info.Name != filepath.Base(tmpFile) {
+		t.Fatalf("Name was %s, expected %s", decoded.Info.Name, filepath.Base(tmpFile))
 	}
 
 	if decoded.Info.PieceLength <= 0 {
@@ -45,7 +55,7 @@ func TestCreateTorrent(t *testing.T) {
 		t.Fatal("Length was less than or equal to 0, expected more")
 	}
 
-	tracker := fmt.Sprintf("%s%s%s", Config.siteURL, Config.selifPath, fileName)
+	tracker := fmt.Sprintf("%s%s/%s", config.Default.SiteURL, config.Default.SelifPath, filepath.Base(tmpFile))
 	if decoded.UrlList[0] != tracker {
 		t.Fatalf("First entry in URL list was %s, expected %s", decoded.UrlList[0], tracker)
 	}
@@ -54,7 +64,7 @@ func TestCreateTorrent(t *testing.T) {
 func TestCreateTorrentWithImage(t *testing.T) {
 	var decoded Torrent
 
-	f, err := os.Open("static/images/404.jpg")
+	f, err := os.Open("../../assets/static/images/404.jpg")
 	if err != nil {
 		t.Fatal(err)
 	}

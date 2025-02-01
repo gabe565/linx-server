@@ -57,7 +57,7 @@ type Config struct {
 }
 
 var (
-	Default            Config
+	Default            = New()
 	StorageBackend     backends.StorageBackend
 	Templates          map[string]*template.Template
 	TimeStarted        time.Time

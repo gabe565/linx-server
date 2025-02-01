@@ -41,7 +41,10 @@ func HashPiece(piece []byte) []byte {
 }
 
 func CreateTorrent(fileName string, f io.Reader, r *http.Request) ([]byte, error) {
-	url := headers.GetSiteURL(r) + config.Default.SelifPath + fileName
+	url, err := headers.GetSelifURL(r, fileName)
+	if err != nil {
+		return nil, err
+	}
 	chunk := make([]byte, TORRENT_PIECE_LENGTH)
 
 	t := Torrent{
@@ -50,7 +53,7 @@ func CreateTorrent(fileName string, f io.Reader, r *http.Request) ([]byte, error
 			PieceLength: TORRENT_PIECE_LENGTH,
 			Name:        fileName,
 		},
-		UrlList: []string{url},
+		UrlList: []string{url.String()},
 	}
 
 	for {

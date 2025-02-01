@@ -22,6 +22,7 @@ import (
 	"gabe565.com/linx-server/internal/expiry"
 	"gabe565.com/linx-server/internal/handlers"
 	"gabe565.com/linx-server/internal/headers"
+	"gabe565.com/utils/must"
 	"github.com/dchest/uniuri"
 	"github.com/gabriel-vasile/mimetype"
 	"github.com/go-chi/chi/v5"
@@ -55,7 +56,8 @@ type Upload struct {
 }
 
 func POSTHandler(w http.ResponseWriter, r *http.Request) {
-	if !csrf.StrictReferrerCheck(r, headers.GetSiteURL(r), []string{"Linx-Delete-Key", "Linx-Expiry", "Linx-Randomize", "X-Requested-With"}) {
+	siteURL := must.Must2(headers.GetSiteURL(r)).String()
+	if !csrf.StrictReferrerCheck(r, siteURL, []string{"Linx-Delete-Key", "Linx-Expiry", "Linx-Randomize", "X-Requested-With"}) {
 		handlers.BadRequest(w, r, handlers.RespAUTO, "")
 		return
 	}
@@ -158,7 +160,7 @@ func PUTHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		fmt.Fprintf(w, "%s\n", headers.GetSiteURL(r)+upload.Filename)
+		fmt.Fprintf(w, "%s\n", must.Must2(headers.GetFileUrl(r, upload.Filename)))
 	}
 }
 
@@ -352,8 +354,8 @@ func GenerateBarename() string {
 
 func GenerateJSONresponse(upload Upload, r *http.Request) []byte {
 	js, _ := json.Marshal(map[string]string{
-		"url":        headers.GetSiteURL(r) + upload.Filename,
-		"direct_url": headers.GetSiteURL(r) + config.Default.SelifPath + upload.Filename,
+		"url":        must.Must2(headers.GetFileUrl(r, upload.Filename)).String(),
+		"direct_url": must.Must2(headers.GetSelifURL(r, upload.Filename)).String(),
 		"filename":   upload.Filename,
 		"delete_key": upload.Metadata.DeleteKey,
 		"access_key": upload.Metadata.AccessKey,

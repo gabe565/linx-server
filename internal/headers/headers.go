@@ -3,6 +3,7 @@ package headers
 import (
 	"net/http"
 	"net/url"
+	"path"
 	"strings"
 
 	"gabe565.com/linx-server/internal/config"
@@ -29,9 +30,9 @@ func AddHeaders(headers []string) func(http.Handler) http.Handler {
 	return fn
 }
 
-func GetSiteURL(r *http.Request) string {
-	if config.Default.SiteURL != "" {
-		return config.Default.SiteURL
+func GetSiteURL(r *http.Request) (*url.URL, error) {
+	if config.Default.SiteURL != "" || r == nil {
+		return url.Parse(config.Default.SiteURL)
 	}
 
 	u := &url.URL{Host: r.Host}
@@ -48,5 +49,26 @@ func GetSiteURL(r *http.Request) string {
 		u.Scheme = "http"
 	}
 
-	return u.String()
+	return u, nil
+}
+
+func GetFileUrl(r *http.Request, filename string) (*url.URL, error) {
+	u, err := GetSiteURL(r)
+	if err != nil {
+		return nil, err
+	}
+	u.Path = path.Join(u.Path, filename)
+	return u, nil
+}
+
+func GetSelifURL(r *http.Request, filename string) (*url.URL, error) {
+	u, err := GetSiteURL(r)
+	if err != nil {
+		return nil, err
+	}
+	u.Path = path.Join(u.Path, config.Default.SelifPath)
+	if filename != "" {
+		u.Path = path.Join(u.Path, filename)
+	}
+	return u, nil
 }

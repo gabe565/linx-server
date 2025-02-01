@@ -5,7 +5,6 @@ import (
 	"errors"
 	"log"
 	"net/http"
-	"net/url"
 	"path"
 	"regexp"
 	"strings"
@@ -75,13 +74,12 @@ func CheckAccessKey(r *http.Request, metadata *backends.Metadata) (AccessKeySour
 	return AccessKeySourceNone, errInvalidAccessKey
 }
 
-func SetAccessKeyCookies(w http.ResponseWriter, siteURL, fileName, value string, expires time.Time) {
-	u, err := url.Parse(siteURL)
+func SetAccessKeyCookies(w http.ResponseWriter, r *http.Request, fileName, value string, expires time.Time) {
+	u, err := headers.GetSiteURL(r)
 	if err != nil {
-		log.Printf("cant parse siteURL (%v): %v", siteURL, err)
+		log.Printf("cant parse siteURL: %v", err)
 		return
 	}
-
 	cookie := http.Cookie{
 		Name:     HeaderName,
 		Value:    value,
@@ -117,7 +115,7 @@ func FileAccessHeader(w http.ResponseWriter, r *http.Request) {
 	if src, err := CheckAccessKey(r, &metadata); err != nil {
 		// remove invalid cookie
 		if src == AccessKeySourceCookie {
-			SetAccessKeyCookies(w, headers.GetSiteURL(r), fileName, "", time.Unix(0, 0))
+			SetAccessKeyCookies(w, r, fileName, "", time.Unix(0, 0))
 		}
 
 		if strings.EqualFold("application/json", r.Header.Get("Accept")) {
@@ -142,7 +140,7 @@ func FileAccessHeader(w http.ResponseWriter, r *http.Request) {
 		if config.Default.AccessKeyCookieExpiry != 0 {
 			expiry = time.Now().Add(time.Duration(config.Default.AccessKeyCookieExpiry) * time.Second)
 		}
-		SetAccessKeyCookies(w, headers.GetSiteURL(r), fileName, metadata.AccessKey, expiry)
+		SetAccessKeyCookies(w, r, fileName, metadata.AccessKey, expiry)
 	}
 
 	FileDisplay(w, r, fileName, metadata)

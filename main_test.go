@@ -16,6 +16,8 @@ import (
 	"testing"
 	"time"
 
+	"gabe565.com/linx-server/internal/config"
+	"gabe565.com/linx-server/internal/server"
 	"gabe565.com/linx-server/internal/upload"
 )
 
@@ -32,16 +34,19 @@ type RespErrJSON struct {
 }
 
 func TestSetup(t *testing.T) {
-	Config.siteURL = "http://linx.example.org/"
-	Config.filesDir = path.Join(os.TempDir(), upload.GenerateBarename())
-	Config.metaDir = Config.filesDir + "_meta"
-	Config.maxSize = 1024 * 1024 * 1024
-	Config.noLogs = true
-	Config.siteName = "linx"
+	config.Default.SiteURL = "http://linx.example.org/"
+	config.Default.FilesDir = path.Join(os.TempDir(), upload.GenerateBarename())
+	config.Default.MetaDir = config.Default.FilesDir + "_meta"
+	config.Default.MaxSize = 1024 * 1024 * 1024
+	config.Default.NoLogs = true
+	config.Default.SiteName = "linx"
 }
 
 func TestIndex(t *testing.T) {
-	mux := setup()
+	mux, err := server.Setup()
+	if err != nil {
+		t.Fatal(err)
+	}
 	w := httptest.NewRecorder()
 
 	req, err := http.NewRequest("GET", "/", nil)
@@ -57,8 +62,11 @@ func TestIndex(t *testing.T) {
 }
 
 func TestIndexStandardMaxExpiry(t *testing.T) {
-	mux := setup()
-	Config.maxExpiry = 60
+	mux, err := server.Setup()
+	if err != nil {
+		t.Fatal(err)
+	}
+	config.Default.MaxExpiry = 60
 	w := httptest.NewRecorder()
 
 	req, err := http.NewRequest("GET", "/", nil)
@@ -72,12 +80,15 @@ func TestIndexStandardMaxExpiry(t *testing.T) {
 		t.Fatal("String '>1 hour</object>' found in index response")
 	}
 
-	Config.maxExpiry = 0
+	config.Default.MaxExpiry = 0
 }
 
 func TestIndexWeirdMaxExpiry(t *testing.T) {
-	mux := setup()
-	Config.maxExpiry = 1500
+	mux, err := server.Setup()
+	if err != nil {
+		t.Fatal(err)
+	}
+	config.Default.MaxExpiry = 1500
 	w := httptest.NewRecorder()
 
 	req, err := http.NewRequest("GET", "/", nil)
@@ -91,13 +102,16 @@ func TestIndexWeirdMaxExpiry(t *testing.T) {
 		t.Fatal("String '>never</object>' found in index response")
 	}
 
-	Config.maxExpiry = 0
+	config.Default.MaxExpiry = 0
 }
 
 func TestAddHeader(t *testing.T) {
-	Config.addHeaders = []string{"Linx-Test: It works!"}
+	config.Default.AddHeaders = []string{"Linx-Test: It works!"}
 
-	mux := setup()
+	mux, err := server.Setup()
+	if err != nil {
+		t.Fatal(err)
+	}
 	w := httptest.NewRecorder()
 
 	req, err := http.NewRequest("GET", "/", nil)
@@ -113,14 +127,17 @@ func TestAddHeader(t *testing.T) {
 }
 
 func TestAuthKeys(t *testing.T) {
-	Config.authFile = "/dev/null"
+	config.Default.AuthFile = "/dev/null"
 
 	redirects := []string{
 		"/",
-		"/paste/",
+		"/paste",
 	}
 
-	mux := setup()
+	mux, err := server.Setup()
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	for _, v := range redirects {
 		w := httptest.NewRecorder()
@@ -139,7 +156,7 @@ func TestAuthKeys(t *testing.T) {
 
 	w := httptest.NewRecorder()
 
-	req, err := http.NewRequest("POST", "/paste/", nil)
+	req, err := http.NewRequest("POST", "/paste", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -150,11 +167,14 @@ func TestAuthKeys(t *testing.T) {
 		t.Fatalf("Status code is not 401, but %d", w.Code)
 	}
 
-	Config.authFile = ""
+	config.Default.AuthFile = ""
 }
 
 func TestNotFound(t *testing.T) {
-	mux := setup()
+	mux, err := server.Setup()
+	if err != nil {
+		t.Fatal(err)
+	}
 	w := httptest.NewRecorder()
 
 	req, err := http.NewRequest("GET", "/url/should/not/exist", nil)
@@ -170,12 +190,15 @@ func TestNotFound(t *testing.T) {
 }
 
 func TestFileNotFound(t *testing.T) {
-	mux := setup()
+	mux, err := server.Setup()
+	if err != nil {
+		t.Fatal(err)
+	}
 	w := httptest.NewRecorder()
 
 	filename := upload.GenerateBarename()
 
-	req, err := http.NewRequest("GET", "/"+Config.selifPath+filename, nil)
+	req, err := http.NewRequest("GET", "/"+config.Default.SelifPath+filename, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -188,7 +211,10 @@ func TestFileNotFound(t *testing.T) {
 }
 
 func TestDisplayNotFound(t *testing.T) {
-	mux := setup()
+	mux, err := server.Setup()
+	if err != nil {
+		t.Fatal(err)
+	}
 	w := httptest.NewRecorder()
 
 	filename := upload.GenerateBarename()
@@ -206,7 +232,10 @@ func TestDisplayNotFound(t *testing.T) {
 }
 
 func TestPostCodeUpload(t *testing.T) {
-	mux := setup()
+	mux, err := server.Setup()
+	if err != nil {
+		t.Fatal(err)
+	}
 	w := httptest.NewRecorder()
 
 	filename := upload.GenerateBarename()
@@ -217,13 +246,13 @@ func TestPostCodeUpload(t *testing.T) {
 	form.Add("filename", filename)
 	form.Add("extension", extension)
 
-	req, err := http.NewRequest("POST", "/upload/", nil)
+	req, err := http.NewRequest("POST", "/upload", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 	req.PostForm = form
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	req.Header.Set("Referer", Config.siteURL)
+	req.Header.Set("Referer", config.Default.SiteURL)
 
 	mux.ServeHTTP(w, req)
 
@@ -237,7 +266,10 @@ func TestPostCodeUpload(t *testing.T) {
 }
 
 func TestPostCodeUploadWhitelistedHeader(t *testing.T) {
-	mux := setup()
+	mux, err := server.Setup()
+	if err != nil {
+		t.Fatal(err)
+	}
 	w := httptest.NewRecorder()
 
 	filename := upload.GenerateBarename()
@@ -248,7 +280,7 @@ func TestPostCodeUploadWhitelistedHeader(t *testing.T) {
 	form.Add("filename", filename)
 	form.Add("extension", extension)
 
-	req, err := http.NewRequest("POST", "/upload/", nil)
+	req, err := http.NewRequest("POST", "/upload", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -264,7 +296,10 @@ func TestPostCodeUploadWhitelistedHeader(t *testing.T) {
 }
 
 func TestPostCodeUploadNoReferrer(t *testing.T) {
-	mux := setup()
+	mux, err := server.Setup()
+	if err != nil {
+		t.Fatal(err)
+	}
 	w := httptest.NewRecorder()
 
 	filename := upload.GenerateBarename()
@@ -275,7 +310,7 @@ func TestPostCodeUploadNoReferrer(t *testing.T) {
 	form.Add("filename", filename)
 	form.Add("extension", extension)
 
-	req, err := http.NewRequest("POST", "/upload/", nil)
+	req, err := http.NewRequest("POST", "/upload", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -290,7 +325,10 @@ func TestPostCodeUploadNoReferrer(t *testing.T) {
 }
 
 func TestPostCodeUploadBadOrigin(t *testing.T) {
-	mux := setup()
+	mux, err := server.Setup()
+	if err != nil {
+		t.Fatal(err)
+	}
 	w := httptest.NewRecorder()
 
 	filename := upload.GenerateBarename()
@@ -301,13 +339,13 @@ func TestPostCodeUploadBadOrigin(t *testing.T) {
 	form.Add("filename", filename)
 	form.Add("extension", extension)
 
-	req, err := http.NewRequest("POST", "/upload/", nil)
+	req, err := http.NewRequest("POST", "/upload", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 	req.PostForm = form
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	req.Header.Set("Referer", Config.siteURL)
+	req.Header.Set("Referer", config.Default.SiteURL)
 	req.Header.Set("Origin", "http://example.com")
 
 	mux.ServeHTTP(w, req)
@@ -318,7 +356,10 @@ func TestPostCodeUploadBadOrigin(t *testing.T) {
 }
 
 func TestPostCodeExpiryJSONUpload(t *testing.T) {
-	mux := setup()
+	mux, err := server.Setup()
+	if err != nil {
+		t.Fatal(err)
+	}
 	w := httptest.NewRecorder()
 
 	form := url.Values{}
@@ -326,15 +367,15 @@ func TestPostCodeExpiryJSONUpload(t *testing.T) {
 	form.Add("filename", "")
 	form.Add("expires", "60")
 
-	req, err := http.NewRequest("POST", "/upload/", nil)
+	req, err := http.NewRequest("POST", "/upload", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 	req.PostForm = form
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Set("Accept", "application/json")
-	req.Header.Set("Referer", Config.siteURL)
-	req.Header.Set("Origin", strings.TrimSuffix(Config.siteURL, "/"))
+	req.Header.Set("Referer", config.Default.SiteURL)
+	req.Header.Set("Origin", strings.TrimSuffix(config.Default.SiteURL, "/"))
 
 	mux.ServeHTTP(w, req)
 
@@ -365,7 +406,10 @@ func TestPostCodeExpiryJSONUpload(t *testing.T) {
 }
 
 func TestPostUpload(t *testing.T) {
-	mux := setup()
+	mux, err := server.Setup()
+	if err != nil {
+		t.Fatal(err)
+	}
 	w := httptest.NewRecorder()
 
 	filename := upload.GenerateBarename() + ".txt"
@@ -380,9 +424,9 @@ func TestPostUpload(t *testing.T) {
 	fw.Write([]byte("File content"))
 	mw.Close()
 
-	req, err := http.NewRequest("POST", "/upload/", &b)
+	req, err := http.NewRequest("POST", "/upload", &b)
 	req.Header.Set("Content-Type", mw.FormDataContentType())
-	req.Header.Set("Referer", Config.siteURL)
+	req.Header.Set("Referer", config.Default.SiteURL)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -399,7 +443,10 @@ func TestPostUpload(t *testing.T) {
 }
 
 func TestPostJSONUpload(t *testing.T) {
-	mux := setup()
+	mux, err := server.Setup()
+	if err != nil {
+		t.Fatal(err)
+	}
 	w := httptest.NewRecorder()
 
 	filename := upload.GenerateBarename() + ".txt"
@@ -414,10 +461,10 @@ func TestPostJSONUpload(t *testing.T) {
 	fw.Write([]byte("File content"))
 	mw.Close()
 
-	req, err := http.NewRequest("POST", "/upload/", &b)
+	req, err := http.NewRequest("POST", "/upload", &b)
 	req.Header.Set("Content-Type", mw.FormDataContentType())
 	req.Header.Set("Accept", "application/json")
-	req.Header.Set("Referer", Config.siteURL)
+	req.Header.Set("Referer", config.Default.SiteURL)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -449,8 +496,11 @@ func TestPostJSONUpload(t *testing.T) {
 }
 
 func TestPostJSONUploadMaxExpiry(t *testing.T) {
-	mux := setup()
-	Config.maxExpiry = 300
+	mux, err := server.Setup()
+	if err != nil {
+		t.Fatal(err)
+	}
+	config.Default.MaxExpiry = 300
 
 	// include 0 to test edge case
 	// https://github.com/andreimarcu/linx-server/issues/111
@@ -470,7 +520,7 @@ func TestPostJSONUploadMaxExpiry(t *testing.T) {
 		fw.Write([]byte("File content"))
 		mw.Close()
 
-		req, err := http.NewRequest("POST", "/upload/", &b)
+		req, err := http.NewRequest("POST", "/upload", &b)
 		req.Header.Set("Content-Type", mw.FormDataContentType())
 		req.Header.Set("Accept", "application/json")
 		req.Header.Set("Linx-Expiry", expiry)
@@ -496,17 +546,20 @@ func TestPostJSONUploadMaxExpiry(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		expected := time.Now().Add(time.Duration(Config.maxExpiry) * time.Second).Unix()
+		expected := time.Now().Add(time.Duration(config.Default.MaxExpiry) * time.Second).Unix()
 		if myExp != expected {
 			t.Fatalf("File expiry is not %d but %s", expected, myjson.Expiry)
 		}
 	}
 
-	Config.maxExpiry = 0
+	config.Default.MaxExpiry = 0
 }
 
 func TestPostExpiresJSONUpload(t *testing.T) {
-	mux := setup()
+	mux, err := server.Setup()
+	if err != nil {
+		t.Fatal(err)
+	}
 	w := httptest.NewRecorder()
 
 	filename := upload.GenerateBarename() + ".txt"
@@ -527,10 +580,10 @@ func TestPostExpiresJSONUpload(t *testing.T) {
 
 	mw.Close()
 
-	req, err := http.NewRequest("POST", "/upload/", &b)
+	req, err := http.NewRequest("POST", "/upload", &b)
 	req.Header.Set("Content-Type", mw.FormDataContentType())
 	req.Header.Set("Accept", "application/json")
-	req.Header.Set("Referer", Config.siteURL)
+	req.Header.Set("Referer", config.Default.SiteURL)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -568,7 +621,10 @@ func TestPostExpiresJSONUpload(t *testing.T) {
 }
 
 func TestPostRandomizeJSONUpload(t *testing.T) {
-	mux := setup()
+	mux, err := server.Setup()
+	if err != nil {
+		t.Fatal(err)
+	}
 	w := httptest.NewRecorder()
 
 	filename := upload.GenerateBarename() + ".txt"
@@ -589,10 +645,10 @@ func TestPostRandomizeJSONUpload(t *testing.T) {
 
 	mw.Close()
 
-	req, err := http.NewRequest("POST", "/upload/", &b)
+	req, err := http.NewRequest("POST", "/upload", &b)
 	req.Header.Set("Content-Type", mw.FormDataContentType())
 	req.Header.Set("Accept", "application/json")
-	req.Header.Set("Referer", Config.siteURL)
+	req.Header.Set("Referer", config.Default.SiteURL)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -620,7 +676,10 @@ func TestPostRandomizeJSONUpload(t *testing.T) {
 }
 
 func TestPostEmptyUpload(t *testing.T) {
-	mux := setup()
+	mux, err := server.Setup()
+	if err != nil {
+		t.Fatal(err)
+	}
 	w := httptest.NewRecorder()
 
 	filename := upload.GenerateBarename() + ".txt"
@@ -635,9 +694,9 @@ func TestPostEmptyUpload(t *testing.T) {
 	fw.Write([]byte(""))
 	mw.Close()
 
-	req, err := http.NewRequest("POST", "/upload/", &b)
+	req, err := http.NewRequest("POST", "/upload", &b)
 	req.Header.Set("Content-Type", mw.FormDataContentType())
-	req.Header.Set("Referer", Config.siteURL)
+	req.Header.Set("Referer", config.Default.SiteURL)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -651,9 +710,12 @@ func TestPostEmptyUpload(t *testing.T) {
 }
 
 func TestPostTooLargeUpload(t *testing.T) {
-	mux := setup()
-	oldMaxSize := Config.maxSize
-	Config.maxSize = 2
+	mux, err := server.Setup()
+	if err != nil {
+		t.Fatal(err)
+	}
+	oldMaxSize := config.Default.MaxSize
+	config.Default.MaxSize = 2
 	w := httptest.NewRecorder()
 
 	filename := upload.GenerateBarename() + ".txt"
@@ -668,9 +730,9 @@ func TestPostTooLargeUpload(t *testing.T) {
 	fw.Write([]byte("test content"))
 	mw.Close()
 
-	req, err := http.NewRequest("POST", "/upload/", &b)
+	req, err := http.NewRequest("POST", "/upload", &b)
 	req.Header.Set("Content-Type", mw.FormDataContentType())
-	req.Header.Set("Referer", Config.siteURL)
+	req.Header.Set("Referer", config.Default.SiteURL)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -682,11 +744,14 @@ func TestPostTooLargeUpload(t *testing.T) {
 		t.Fatalf("Status code is not 400, but %d", w.Code)
 	}
 
-	Config.maxSize = oldMaxSize
+	config.Default.MaxSize = oldMaxSize
 }
 
 func TestPostEmptyJSONUpload(t *testing.T) {
-	mux := setup()
+	mux, err := server.Setup()
+	if err != nil {
+		t.Fatal(err)
+	}
 	w := httptest.NewRecorder()
 
 	filename := upload.GenerateBarename() + ".txt"
@@ -701,10 +766,10 @@ func TestPostEmptyJSONUpload(t *testing.T) {
 	fw.Write([]byte(""))
 	mw.Close()
 
-	req, err := http.NewRequest("POST", "/upload/", &b)
+	req, err := http.NewRequest("POST", "/upload", &b)
 	req.Header.Set("Content-Type", mw.FormDataContentType())
 	req.Header.Set("Accept", "application/json")
-	req.Header.Set("Referer", Config.siteURL)
+	req.Header.Set("Referer", config.Default.SiteURL)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -728,7 +793,10 @@ func TestPostEmptyJSONUpload(t *testing.T) {
 }
 
 func TestPutUpload(t *testing.T) {
-	mux := setup()
+	mux, err := server.Setup()
+	if err != nil {
+		t.Fatal(err)
+	}
 	w := httptest.NewRecorder()
 
 	filename := upload.GenerateBarename() + ".file"
@@ -740,13 +808,16 @@ func TestPutUpload(t *testing.T) {
 
 	mux.ServeHTTP(w, req)
 
-	if w.Body.String() != fmt.Sprintf("%s\n", Config.siteURL+filename) {
+	if w.Body.String() != fmt.Sprintf("%s\n", config.Default.SiteURL+"/"+filename) {
 		t.Fatal("Response was not expected URL")
 	}
 }
 
 func TestPutRandomizedUpload(t *testing.T) {
-	mux := setup()
+	mux, err := server.Setup()
+	if err != nil {
+		t.Fatal(err)
+	}
 	w := httptest.NewRecorder()
 
 	filename := upload.GenerateBarename() + ".file"
@@ -760,17 +831,20 @@ func TestPutRandomizedUpload(t *testing.T) {
 
 	mux.ServeHTTP(w, req)
 
-	if w.Body.String() == Config.siteURL+filename {
+	if w.Body.String() == config.Default.SiteURL+filename {
 		t.Fatal("Filename was not random")
 	}
 }
 
 func TestPutForceRandomUpload(t *testing.T) {
-	mux := setup()
+	mux, err := server.Setup()
+	if err != nil {
+		t.Fatal(err)
+	}
 	w := httptest.NewRecorder()
 
-	oldFRF := Config.forceRandomFilename
-	Config.forceRandomFilename = true
+	oldFRF := config.Default.ForceRandomFilename
+	config.Default.ForceRandomFilename = true
 	filename := "randomizeme.file"
 
 	req, err := http.NewRequest("PUT", "/upload/"+filename, strings.NewReader("File content"))
@@ -784,15 +858,18 @@ func TestPutForceRandomUpload(t *testing.T) {
 
 	mux.ServeHTTP(w, req)
 
-	if w.Body.String() == Config.siteURL+filename {
+	if w.Body.String() == config.Default.SiteURL+filename {
 		t.Fatal("Filename was not random")
 	}
 
-	Config.forceRandomFilename = oldFRF
+	config.Default.ForceRandomFilename = oldFRF
 }
 
 func TestPutNoExtensionUpload(t *testing.T) {
-	mux := setup()
+	mux, err := server.Setup()
+	if err != nil {
+		t.Fatal(err)
+	}
 	w := httptest.NewRecorder()
 
 	filename := upload.GenerateBarename()
@@ -806,13 +883,16 @@ func TestPutNoExtensionUpload(t *testing.T) {
 
 	mux.ServeHTTP(w, req)
 
-	if w.Body.String() == Config.siteURL+filename {
+	if w.Body.String() == config.Default.SiteURL+filename {
 		t.Fatal("Filename was not random")
 	}
 }
 
 func TestPutEmptyUpload(t *testing.T) {
-	mux := setup()
+	mux, err := server.Setup()
+	if err != nil {
+		t.Fatal(err)
+	}
 	w := httptest.NewRecorder()
 
 	filename := upload.GenerateBarename() + ".file"
@@ -832,9 +912,12 @@ func TestPutEmptyUpload(t *testing.T) {
 }
 
 func TestPutTooLargeUpload(t *testing.T) {
-	mux := setup()
-	oldMaxSize := Config.maxSize
-	Config.maxSize = 2
+	mux, err := server.Setup()
+	if err != nil {
+		t.Fatal(err)
+	}
+	oldMaxSize := config.Default.MaxSize
+	config.Default.MaxSize = 2
 
 	w := httptest.NewRecorder()
 
@@ -858,13 +941,16 @@ func TestPutTooLargeUpload(t *testing.T) {
 		t.Fatal("Response did not contain 'request body too large'")
 	}
 
-	Config.maxSize = oldMaxSize
+	config.Default.MaxSize = oldMaxSize
 }
 
 func TestPutJSONUpload(t *testing.T) {
 	var myjson RespOkJSON
 
-	mux := setup()
+	mux, err := server.Setup()
+	if err != nil {
+		t.Fatal(err)
+	}
 	w := httptest.NewRecorder()
 
 	filename := upload.GenerateBarename() + ".file"
@@ -891,7 +977,10 @@ func TestPutJSONUpload(t *testing.T) {
 func TestPutRandomizedJSONUpload(t *testing.T) {
 	var myjson RespOkJSON
 
-	mux := setup()
+	mux, err := server.Setup()
+	if err != nil {
+		t.Fatal(err)
+	}
 	w := httptest.NewRecorder()
 
 	filename := upload.GenerateBarename() + ".file"
@@ -919,7 +1008,10 @@ func TestPutRandomizedJSONUpload(t *testing.T) {
 func TestPutExpireJSONUpload(t *testing.T) {
 	var myjson RespOkJSON
 
-	mux := setup()
+	mux, err := server.Setup()
+	if err != nil {
+		t.Fatal(err)
+	}
 	w := httptest.NewRecorder()
 
 	filename := upload.GenerateBarename() + ".file"
@@ -951,7 +1043,10 @@ func TestPutExpireJSONUpload(t *testing.T) {
 func TestPutAndDelete(t *testing.T) {
 	var myjson RespOkJSON
 
-	mux := setup()
+	mux, err := server.Setup()
+	if err != nil {
+		t.Fatal(err)
+	}
 	w := httptest.NewRecorder()
 
 	req, err := http.NewRequest("PUT", "/upload", strings.NewReader("File content"))
@@ -989,7 +1084,7 @@ func TestPutAndDelete(t *testing.T) {
 
 	// Make sure torrent is also gone
 	w = httptest.NewRecorder()
-	req, err = http.NewRequest("GET", "/"+myjson.Filename+"/torrent", nil)
+	req, err = http.NewRequest("GET", "/torrent/"+myjson.Filename, nil)
 	mux.ServeHTTP(w, req)
 
 	if w.Code != 404 {
@@ -1000,7 +1095,10 @@ func TestPutAndDelete(t *testing.T) {
 func TestPutAndOverwrite(t *testing.T) {
 	var myjson RespOkJSON
 
-	mux := setup()
+	mux, err := server.Setup()
+	if err != nil {
+		t.Fatal(err)
+	}
 	w := httptest.NewRecorder()
 
 	req, err := http.NewRequest("PUT", "/upload", strings.NewReader("File content"))
@@ -1029,7 +1127,7 @@ func TestPutAndOverwrite(t *testing.T) {
 
 	// Make sure it's the new file
 	w = httptest.NewRecorder()
-	req, err = http.NewRequest("GET", "/"+Config.selifPath+myjson.Filename, nil)
+	req, err = http.NewRequest("GET", "/"+config.Default.SelifPath+"/"+myjson.Filename, nil)
 	mux.ServeHTTP(w, req)
 
 	if w.Code == 404 {
@@ -1044,11 +1142,14 @@ func TestPutAndOverwrite(t *testing.T) {
 func TestPutAndOverwriteForceRandom(t *testing.T) {
 	var myjson RespOkJSON
 
-	mux := setup()
+	mux, err := server.Setup()
+	if err != nil {
+		t.Fatal(err)
+	}
 	w := httptest.NewRecorder()
 
-	oldFRF := Config.forceRandomFilename
-	Config.forceRandomFilename = true
+	oldFRF := config.Default.ForceRandomFilename
+	config.Default.ForceRandomFilename = true
 
 	req, err := http.NewRequest("PUT", "/upload", strings.NewReader("File content"))
 	if err != nil {
@@ -1076,7 +1177,7 @@ func TestPutAndOverwriteForceRandom(t *testing.T) {
 
 	// Make sure it's the new file
 	w = httptest.NewRecorder()
-	req, err = http.NewRequest("GET", "/"+Config.selifPath+myjson.Filename, nil)
+	req, err = http.NewRequest("GET", "/"+config.Default.SelifPath+"/"+myjson.Filename, nil)
 	mux.ServeHTTP(w, req)
 
 	if w.Code == 404 {
@@ -1087,13 +1188,16 @@ func TestPutAndOverwriteForceRandom(t *testing.T) {
 		t.Fatal("File did not contain 'New file content")
 	}
 
-	Config.forceRandomFilename = oldFRF
+	config.Default.ForceRandomFilename = oldFRF
 }
 
 func TestPutAndSpecificDelete(t *testing.T) {
 	var myjson RespOkJSON
 
-	mux := setup()
+	mux, err := server.Setup()
+	if err != nil {
+		t.Fatal(err)
+	}
 	w := httptest.NewRecorder()
 
 	req, err := http.NewRequest("PUT", "/upload", strings.NewReader("File content"))
@@ -1132,7 +1236,7 @@ func TestPutAndSpecificDelete(t *testing.T) {
 
 	// Make sure torrent is gone too
 	w = httptest.NewRecorder()
-	req, err = http.NewRequest("GET", "/"+myjson.Filename+"/torrent", nil)
+	req, err = http.NewRequest("GET", "/torrent/"+myjson.Filename, nil)
 	mux.ServeHTTP(w, req)
 
 	if w.Code != 404 {
@@ -1159,15 +1263,18 @@ func TestExtension(t *testing.T) {
 }
 
 func TestInferSiteURL(t *testing.T) {
-	oldSiteURL := Config.siteURL
-	oldSitePath := Config.sitePath
-	Config.siteURL = ""
-	Config.sitePath = "/linxtest/"
+	oldSiteURL := config.Default.SiteURL
+	oldSitePath := config.Default.SitePath
+	config.Default.SiteURL = ""
+	config.Default.SitePath = "/linxtest/"
 
-	mux := setup()
+	mux, err := server.Setup()
+	if err != nil {
+		t.Fatal(err)
+	}
 	w := httptest.NewRecorder()
 
-	req, err := http.NewRequest("GET", "/API/", nil)
+	req, err := http.NewRequest("GET", "/API", nil)
 	req.Host = "example.com:8080"
 	if err != nil {
 		t.Fatal(err)
@@ -1175,22 +1282,25 @@ func TestInferSiteURL(t *testing.T) {
 
 	mux.ServeHTTP(w, req)
 
-	if !strings.Contains(w.Body.String(), "http://example.com:8080/upload/") {
+	if !strings.Contains(w.Body.String(), "http://example.com:8080/upload") {
 		t.Fatal("Site URL not found properly embedded in response")
 	}
 
-	Config.siteURL = oldSiteURL
-	Config.sitePath = oldSitePath
+	config.Default.SiteURL = oldSiteURL
+	config.Default.SitePath = oldSitePath
 }
 
 func TestInferSiteURLProxied(t *testing.T) {
-	oldSiteURL := Config.siteURL
-	Config.siteURL = ""
+	oldSiteURL := config.Default.SiteURL
+	config.Default.SiteURL = ""
 
-	mux := setup()
+	mux, err := server.Setup()
+	if err != nil {
+		t.Fatal(err)
+	}
 	w := httptest.NewRecorder()
 
-	req, err := http.NewRequest("GET", "/API/", nil)
+	req, err := http.NewRequest("GET", "/API", nil)
 	req.Header.Add("X-Forwarded-Proto", "https")
 	req.Host = "example.com:8080"
 	if err != nil {
@@ -1199,23 +1309,26 @@ func TestInferSiteURLProxied(t *testing.T) {
 
 	mux.ServeHTTP(w, req)
 
-	if !strings.Contains(w.Body.String(), "https://example.com:8080/upload/") {
+	if !strings.Contains(w.Body.String(), "https://example.com:8080/upload") {
 		t.Fatal("Site URL not found properly embedded in response")
 	}
 
-	Config.siteURL = oldSiteURL
+	config.Default.SiteURL = oldSiteURL
 }
 
 func TestInferSiteURLHTTPS(t *testing.T) {
-	oldSiteURL := Config.siteURL
-	oldCertFile := Config.certFile
-	Config.siteURL = ""
-	Config.certFile = "/dev/null"
+	oldSiteURL := config.Default.SiteURL
+	oldCertFile := config.Default.CertFile
+	config.Default.SiteURL = ""
+	config.Default.CertFile = "/dev/null"
 
-	mux := setup()
+	mux, err := server.Setup()
+	if err != nil {
+		t.Fatal(err)
+	}
 	w := httptest.NewRecorder()
 
-	req, err := http.NewRequest("GET", "/API/", nil)
+	req, err := http.NewRequest("GET", "/API", nil)
 	req.Host = "example.com"
 	if err != nil {
 		t.Fatal(err)
@@ -1223,22 +1336,25 @@ func TestInferSiteURLHTTPS(t *testing.T) {
 
 	mux.ServeHTTP(w, req)
 
-	if !strings.Contains(w.Body.String(), "https://example.com/upload/") {
+	if !strings.Contains(w.Body.String(), "https://example.com/upload") {
 		t.Fatal("Site URL not found properly embedded in response")
 	}
 
-	Config.siteURL = oldSiteURL
-	Config.certFile = oldCertFile
+	config.Default.SiteURL = oldSiteURL
+	config.Default.CertFile = oldCertFile
 }
 
 func TestInferSiteURLHTTPSFastCGI(t *testing.T) {
-	oldSiteURL := Config.siteURL
-	Config.siteURL = ""
+	oldSiteURL := config.Default.SiteURL
+	config.Default.SiteURL = ""
 
-	mux := setup()
+	mux, err := server.Setup()
+	if err != nil {
+		t.Fatal(err)
+	}
 	w := httptest.NewRecorder()
 
-	req, err := http.NewRequest("GET", "/API/", nil)
+	req, err := http.NewRequest("GET", "/API", nil)
 	req.Host = "example.com"
 	req.TLS = &tls.ConnectionState{HandshakeComplete: true}
 	if err != nil {
@@ -1247,21 +1363,19 @@ func TestInferSiteURLHTTPSFastCGI(t *testing.T) {
 
 	mux.ServeHTTP(w, req)
 
-	if !strings.Contains(w.Body.String(), "https://example.com/upload/") {
+	if !strings.Contains(w.Body.String(), "https://example.com/upload") {
 		t.Fatal("Site URL not found properly embedded in response")
 	}
 
-	Config.siteURL = oldSiteURL
-}
-
-func TestShutdown(t *testing.T) {
-	os.RemoveAll(Config.filesDir)
-	os.RemoveAll(Config.metaDir)
+	config.Default.SiteURL = oldSiteURL
 }
 
 func TestPutAndGetCLI(t *testing.T) {
 	var myjson RespOkJSON
-	mux := setup()
+	mux, err := server.Setup()
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	// upload file
 	w := httptest.NewRecorder()
@@ -1303,5 +1417,9 @@ func TestPutAndGetCLI(t *testing.T) {
 	if !strings.HasPrefix(contentType, "text/plain") {
 		t.Fatalf("Didn't receive file directly but %s", contentType)
 	}
+}
 
+func TestShutdown(t *testing.T) {
+	os.RemoveAll(config.Default.FilesDir)
+	os.RemoveAll(config.Default.MetaDir)
 }

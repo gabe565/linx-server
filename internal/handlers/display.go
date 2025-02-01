@@ -37,9 +37,14 @@ func FileDisplay(w http.ResponseWriter, r *http.Request, fileName string, metada
 	tpl := "display/file.html"
 	switch {
 	case strings.EqualFold("application/json", r.Header.Get("Accept")):
+		directURL, err := headers.GetSelifURL(r, fileName)
+		if err != nil {
+			Oops(w, r, RespHTML, "")
+			return
+		}
 		js, _ := json.Marshal(map[string]string{
 			"filename":   fileName,
-			"direct_url": headers.GetSiteURL(r) + config.Default.SelifPath + fileName,
+			"direct_url": directURL.String(),
 			"expiry":     strconv.FormatInt(metadata.Expiry.Unix(), 10),
 			"size":       strconv.FormatInt(metadata.Size, 10),
 			"mimetype":   metadata.Mimetype,
@@ -104,7 +109,13 @@ func FileDisplay(w http.ResponseWriter, r *http.Request, fileName string, metada
 		}
 	}
 
-	err := templates.Render(tpl, map[string]any{
+	siteURL, err := headers.GetSelifURL(r, fileName)
+	if err != nil {
+		Oops(w, r, RespHTML, err.Error())
+		return
+	}
+
+	err = templates.Render(tpl, map[string]any{
 		"MIME":        metadata.Mimetype,
 		"FileName":    fileName,
 		"Size":        sizeHuman,
@@ -114,7 +125,7 @@ func FileDisplay(w http.ResponseWriter, r *http.Request, fileName string, metada
 		"ForceRandom": config.Default.ForceRandomFilename,
 		"Lines":       lines,
 		"Files":       metadata.ArchiveFiles,
-		"SiteURL":     strings.TrimSuffix(headers.GetSiteURL(r), "/"),
+		"SiteURL":     strings.TrimSuffix(siteURL.String(), "/"),
 	}, r, w)
 
 	if err != nil {
