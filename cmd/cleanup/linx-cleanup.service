@@ -5,7 +5,7 @@ After=network.target
 [Service]
 User=linx
 Group=linx
-ExecStart=/usr/bin/linx-cleanup
+ExecStart=/usr/bin/linx-server cleanup
 WorkingDirectory=/srv/linx/
 
 [Install]

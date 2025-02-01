@@ -1318,9 +1318,9 @@ func TestInferSiteURLProxied(t *testing.T) {
 
 func TestInferSiteURLHTTPS(t *testing.T) {
 	oldSiteURL := config.Default.SiteURL
-	oldCertFile := config.Default.CertFile
+	oldCertFile := config.Default.TLSCert
 	config.Default.SiteURL = ""
-	config.Default.CertFile = "/dev/null"
+	config.Default.TLSCert = "/dev/null"
 
 	mux, err := server.Setup()
 	if err != nil {
@@ -1341,7 +1341,7 @@ func TestInferSiteURLHTTPS(t *testing.T) {
 	}
 
 	config.Default.SiteURL = oldSiteURL
-	config.Default.CertFile = oldCertFile
+	config.Default.TLSCert = oldCertFile
 }
 
 func TestInferSiteURLHTTPSFastCGI(t *testing.T) {

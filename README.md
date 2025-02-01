@@ -98,7 +98,7 @@ maxexpiry = 86400
 
 ### Cleaning up expired files
 When files expire, access is disabled immediately, but the files and metadata
-will persist on disk until someone attempts to access them. You can set the following option to run cleanup every few minutes. This can also be done using a separate utility found the linx-cleanup directory.
+will persist on disk until someone attempts to access them. You can set the following option to run cleanup every few minutes. This can also be done using the `linx-server cleanup` subcommand.
 
 
 |Option|Description

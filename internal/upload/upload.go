@@ -135,7 +135,7 @@ func PUTHandler(w http.ResponseWriter, r *http.Request) {
 
 	defer r.Body.Close()
 	upReq.filename = chi.URLParam(r, "name")
-	upReq.src = http.MaxBytesReader(w, r.Body, config.Default.MaxSize)
+	upReq.src = http.MaxBytesReader(w, r.Body, int64(config.Default.MaxSize))
 
 	upload, err := Process(upReq)
 
@@ -203,7 +203,7 @@ func Remote(w http.ResponseWriter, r *http.Request) {
 	}
 
 	upReq.filename = filepath.Base(grabUrl.Path)
-	upReq.src = http.MaxBytesReader(w, resp.Body, config.Default.MaxSize)
+	upReq.src = http.MaxBytesReader(w, resp.Body, int64(config.Default.MaxSize))
 	upReq.deleteKey = r.FormValue("deletekey")
 	upReq.accessKey = r.FormValue(handlers.ParamName)
 	upReq.randomBarename = r.FormValue("randomize") == "yes"
@@ -248,7 +248,7 @@ func HeaderProcess(r *http.Request, upReq *UploadRequest) {
 }
 
 func Process(upReq UploadRequest) (upload Upload, err error) {
-	if upReq.size > config.Default.MaxSize {
+	if upReq.size > int64(config.Default.MaxSize) {
 		return upload, FileTooLargeError
 	}
 
