@@ -2,6 +2,9 @@ package config
 
 import (
 	"html/template"
+	"os"
+	"path/filepath"
+	"runtime"
 	"strings"
 	"time"
 
@@ -25,40 +28,47 @@ func (h *HeaderList) Type() string {
 }
 
 type Config struct {
-	Bind                      string
-	FilesDir                  string
-	MetaDir                   string
-	SiteName                  string
-	SiteURL                   string
-	SitePath                  string
-	SelifPath                 string
-	TLSCert                   string
-	TLSKey                    string
-	ContentSecurityPolicy     string
-	FileContentSecurityPolicy string
-	ReferrerPolicy            string
-	FileReferrerPolicy        string
-	XFrameOptions             string
-	MaxSize                   Bytes
-	MaxExpiry                 uint64
-	RealIp                    bool
-	NoLogs                    bool
-	AllowHotlink              bool
-	Fastcgi                   bool
-	RemoteUploads             bool
-	BasicAuth                 bool
-	AuthFile                  string
-	RemoteAuthFile            string
-	AddHeaders                HeaderList
-	NoDirectAgents            bool
-	S3Endpoint                string
-	S3Region                  string
-	S3Bucket                  string
-	S3ForcePathStyle          bool
-	ForceRandomFilename       bool
-	AccessKeyCookieExpiry     uint64
-	CustomPagesDir            string
-	CleanupEveryMinutes       uint64
+	Bind      string `toml:"bind"`
+	FilesDir  string `toml:"files-dir" comment:"Path to files directory"`
+	MetaDir   string `toml:"meta-dir" comment:"Path to metadata directory"`
+	SiteName  string `toml:"site-name"`
+	SiteURL   string `toml:"site-url"`
+	SitePath  string `toml:"site-path"`
+	SelifPath string `toml:"selif-path" comment:"Path relative to site base url where files are accessed directly"`
+	Fastcgi   bool   `toml:"fastcgi" comment:"Serve through fastcgi"`
+
+	MaxSize               Bytes    `toml:"max-size" comment:"Maximum upload file size in bytes"`
+	MaxExpiry             Duration `toml:"max-expiry" comment:"Maximum expiration time. A value of 0 means no expiry."`
+	AllowHotlink          bool     `toml:"allow-hotlink" comment:"Allow hot-linking of files"`
+	RemoteUploads         bool     `toml:"remote-uploads" comment:"Enable remote uploads"`
+	NoDirectAgents        bool     `toml:"no-direct-agents" comment:"Disable serving files directly for wget/curl user agents"`
+	ForceRandomFilename   bool     `toml:"force-random-filename" comment:"Force all uploads to use a random filename"`
+	AccessKeyCookieExpiry uint64   `toml:"access-key-cookie-expiry" comment:"Expiration time for access key cookies in seconds (set 0 to use session cookies)"`
+	NoLogs                bool     `toml:"no-logs" comment:"Remove stdout output for each request"`
+
+	BasicAuth      bool   `toml:"basic-auth" comment:"Allow logging in with basic auth password"`
+	AuthFile       string `toml:"auth-file" comment:"Path to a file containing newline-separated scrypted auth keys"`
+	RemoteAuthFile string `toml:"remote-auth-file" comment:"Path to a file containing newline-separated scrypted auth keys for remote uploads"`
+
+	CleanupEvery Duration `toml:"cleanup-every" comment:"How often to clean up expired files. A value of 0 means files will be cleaned up as they are accessed."`
+
+	TLSCert string `toml:"tls-cert" comment:"HTTPS configuration"`
+	TLSKey  string `toml:"tls-key"`
+
+	S3Endpoint       string `toml:"s3_endpoint" comment:"AWS S3 configuration"`
+	S3Region         string `toml:"s3_region"`
+	S3Bucket         string `toml:"s3_bucket"`
+	S3ForcePathStyle bool   `toml:"s3_force_path_style" comment:"Force path-style addressing for S3 (e.g. https://s3.amazonaws.com/linx/example.txt)"`
+
+	CustomPagesDir string `toml:"custom-pages-dir" comment:"Path to directory containing .md files to render as custom pages"`
+
+	RealIp                    bool       `toml:"real-ip" comment:"Use X-Real-IP/X-Forwarded-For headers"`
+	AddHeaders                HeaderList `toml:"add-headers" comment:"Add arbitrary headers to the response"`
+	ContentSecurityPolicy     string     `toml:"content_security_policy" comment:"Value of default Content-Security-Policy header"`
+	FileContentSecurityPolicy string     `toml:"file_content_security_policy" comment:"Value of Content-Security-Policy header for file access"`
+	ReferrerPolicy            string     `toml:"referrer_policy" comment:"Value of default Referrer-Policy header"`
+	FileReferrerPolicy        string     `toml:"file_referrer_policy" comment:"Value of Referrer-Policy header for file access"`
+	XFrameOptions             string     `toml:"x_frame_options" comment:"Value of X-Frame-Options header"`
 }
 
 func New() *Config {
@@ -85,3 +95,29 @@ var (
 	RemoteAuthKeys     []string
 	MetaStorageBackend backends.MetaStorageBackend
 )
+
+func getDefaultFile() (string, error) {
+	const configDir, configFile = "linx-server", "config.toml"
+	var dir string
+	switch runtime.GOOS {
+	case "darwin":
+		if xdgConfigHome := os.Getenv("XDG_CONFIG_HOME"); xdgConfigHome != "" {
+			dir = filepath.Join(xdgConfigHome, configDir)
+			break
+		}
+		fallthrough
+	default:
+		var err error
+		dir, err = os.UserConfigDir()
+		if err != nil {
+			return "", err
+		}
+
+		dir = filepath.Join(dir, configDir)
+	}
+	return filepath.Join(dir, configFile), nil
+}
+
+func (c *Config) MaxExpirySeconds() uint64 {
+	return uint64(c.MaxExpiry.Seconds())
+}

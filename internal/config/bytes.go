@@ -20,3 +20,11 @@ func (b *Bytes) Set(s string) error {
 func (b Bytes) Type() string {
 	return "string"
 }
+
+func (b Bytes) MarshalText() (text []byte, err error) {
+	return []byte(b.String()), nil
+}
+
+func (b Bytes) UnmarshalText(text []byte) error {
+	return b.Set(string(text))
+}

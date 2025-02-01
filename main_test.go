@@ -66,7 +66,7 @@ func TestIndexStandardMaxExpiry(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	config.Default.MaxExpiry = 60
+	config.Default.MaxExpiry.Duration = 60
 	w := httptest.NewRecorder()
 
 	req, err := http.NewRequest("GET", "/", nil)
@@ -80,7 +80,7 @@ func TestIndexStandardMaxExpiry(t *testing.T) {
 		t.Fatal("String '>1 hour</object>' found in index response")
 	}
 
-	config.Default.MaxExpiry = 0
+	config.Default.MaxExpiry.Duration = 0
 }
 
 func TestIndexWeirdMaxExpiry(t *testing.T) {
@@ -88,7 +88,7 @@ func TestIndexWeirdMaxExpiry(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	config.Default.MaxExpiry = 1500
+	config.Default.MaxExpiry.Duration = 25 * time.Minute
 	w := httptest.NewRecorder()
 
 	req, err := http.NewRequest("GET", "/", nil)
@@ -102,7 +102,7 @@ func TestIndexWeirdMaxExpiry(t *testing.T) {
 		t.Fatal("String '>never</object>' found in index response")
 	}
 
-	config.Default.MaxExpiry = 0
+	config.Default.MaxExpiry.Duration = 0
 }
 
 func TestAddHeader(t *testing.T) {
@@ -500,7 +500,7 @@ func TestPostJSONUploadMaxExpiry(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	config.Default.MaxExpiry = 300
+	config.Default.MaxExpiry.Duration = 5 * time.Minute
 
 	// include 0 to test edge case
 	// https://github.com/andreimarcu/linx-server/issues/111
@@ -546,13 +546,13 @@ func TestPostJSONUploadMaxExpiry(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		expected := time.Now().Add(time.Duration(config.Default.MaxExpiry) * time.Second).Unix()
+		expected := time.Now().Add(config.Default.MaxExpiry.Duration).Unix()
 		if myExp != expected {
 			t.Fatalf("File expiry is not %d but %s", expected, myjson.Expiry)
 		}
 	}
 
-	config.Default.MaxExpiry = 0
+	config.Default.MaxExpiry.Duration = 0
 }
 
 func TestPostExpiresJSONUpload(t *testing.T) {

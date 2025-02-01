@@ -27,6 +27,8 @@ const (
 )
 
 func run(cmd *cobra.Command, args []string) error {
+	cmd.SilenceUsage = true
+
 	checkKey, err := scrypt.Key([]byte(args[0]), []byte(scryptSalt), scryptN, scryptr, scryptp, scryptKeyLen)
 	if err != nil {
 		return err

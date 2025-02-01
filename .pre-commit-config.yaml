@@ -1,0 +1,9 @@
+repos:
+  - repo: local
+    hooks:
+      - id: config-example
+        name: config-example
+        entry: go run ./internal/config/generate_example
+        language: system
+        types: [go]
+        pass_filenames: false

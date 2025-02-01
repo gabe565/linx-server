@@ -49,8 +49,8 @@ func Setup() (*chi.Mux, error) {
 		config.StorageBackend = s3.NewS3Backend(config.Default.S3Bucket, config.Default.S3Region, config.Default.S3Endpoint, config.Default.S3ForcePathStyle)
 	} else {
 		config.StorageBackend = localfs.NewLocalfsBackend(config.Default.MetaDir, config.Default.FilesDir)
-		if config.Default.CleanupEveryMinutes > 0 {
-			go cleanup.PeriodicCleanup(time.Duration(config.Default.CleanupEveryMinutes)*time.Minute, config.Default.FilesDir, config.Default.MetaDir, config.Default.NoLogs)
+		if config.Default.CleanupEvery.Duration > 0 {
+			go cleanup.PeriodicCleanup(config.Default.CleanupEvery.Duration, config.Default.FilesDir, config.Default.MetaDir, config.Default.NoLogs)
 		}
 	}
 

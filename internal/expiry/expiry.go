@@ -7,14 +7,14 @@ import (
 	"github.com/dustin/go-humanize"
 )
 
-var defaultExpiryList = []uint64{
-	60,
-	300,
-	3600,
-	86400,
-	604800,
-	2419200,
-	31536000,
+var defaultExpiryList = []time.Duration{
+	time.Minute,
+	5 * time.Minute,
+	time.Hour,
+	24 * time.Hour,
+	7 * 24 * time.Hour,
+	31 * 24 * time.Hour,
+	365 * 24 * time.Hour,
 }
 
 type ExpirationTime struct {
@@ -39,29 +39,27 @@ func ListExpirationTimes() []ExpirationTime {
 	var expiryList []ExpirationTime
 
 	for _, expiryEntry := range defaultExpiryList {
-		if config.Default.MaxExpiry == 0 || expiryEntry <= config.Default.MaxExpiry {
-			if expiryEntry == config.Default.MaxExpiry {
+		if config.Default.MaxExpiry.Duration == 0 || expiryEntry <= config.Default.MaxExpiry.Duration {
+			if expiryEntry == config.Default.MaxExpiry.Duration {
 				actualExpiryInList = true
 			}
 
-			duration := time.Duration(expiryEntry) * time.Second
 			expiryList = append(expiryList, ExpirationTime{
-				Seconds: expiryEntry,
-				Human:   humanize.RelTime(epoch, epoch.Add(duration), "", ""),
+				Seconds: uint64(expiryEntry.Seconds()),
+				Human:   humanize.RelTime(epoch, epoch.Add(expiryEntry), "", ""),
 			})
 		}
 	}
 
-	if config.Default.MaxExpiry == 0 {
+	if config.Default.MaxExpiry.Duration == 0 {
 		expiryList = append(expiryList, ExpirationTime{
 			0,
 			"never",
 		})
 	} else if actualExpiryInList == false {
-		duration := time.Duration(config.Default.MaxExpiry) * time.Second
 		expiryList = append(expiryList, ExpirationTime{
-			config.Default.MaxExpiry,
-			humanize.RelTime(epoch, epoch.Add(duration), "", ""),
+			Seconds: uint64(config.Default.MaxExpiry.Seconds()),
+			Human:   humanize.RelTime(epoch, epoch.Add(config.Default.MaxExpiry.Duration), "", ""),
 		})
 	}
 

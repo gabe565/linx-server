@@ -30,7 +30,13 @@ func New() *cobra.Command {
 	return cmd
 }
 
-func run(_ *cobra.Command, _ []string) error {
+func run(cmd *cobra.Command, _ []string) error {
+	if err := config.Default.Load(cmd); err != nil {
+		return err
+	}
+
+	cmd.SilenceUsage = true
+
 	mux, err := server.Setup()
 	if err != nil {
 		return err

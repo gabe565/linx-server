@@ -404,14 +404,14 @@ func BarePlusExt(filename string) (barename, extension string) {
 
 func ParseExpiry(expStr string) time.Duration {
 	if expStr == "" {
-		return time.Duration(config.Default.MaxExpiry) * time.Second
+		return config.Default.MaxExpiry.Duration
 	} else {
 		fileExpiry, err := strconv.ParseUint(expStr, 10, 64)
 		if err != nil {
-			return time.Duration(config.Default.MaxExpiry) * time.Second
+			return config.Default.MaxExpiry.Duration
 		} else {
-			if config.Default.MaxExpiry > 0 && (fileExpiry > config.Default.MaxExpiry || fileExpiry == 0) {
-				fileExpiry = config.Default.MaxExpiry
+			if config.Default.MaxExpiry.Duration > 0 && (fileExpiry > config.Default.MaxExpirySeconds() || fileExpiry == 0) {
+				fileExpiry = config.Default.MaxExpirySeconds()
 			}
 			return time.Duration(fileExpiry) * time.Second
 		}
