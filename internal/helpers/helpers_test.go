@@ -5,29 +5,19 @@ import (
 	"strings"
 	"testing"
 	"unicode/utf16"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestGenerateMetadata(t *testing.T) {
 	r := strings.NewReader("This is my test content")
 	m, err := GenerateMetadata(r)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
-	expectedSha256sum := "966152d20a77e739716a625373ee15af16e8f4aec631a329a27da41c204b0171"
-	if m.Sha256sum != expectedSha256sum {
-		t.Fatalf("Sha256sum was %q instead of expected value of %q", m.Sha256sum, expectedSha256sum)
-	}
-
-	expectedMimetype := "text/plain; charset=utf-8"
-	if m.Mimetype != expectedMimetype {
-		t.Fatalf("Mimetype was %q instead of expected value of %q", m.Mimetype, expectedMimetype)
-	}
-
-	expectedSize := int64(23)
-	if m.Size != expectedSize {
-		t.Fatalf("Size was %d instead of expected value of %d", m.Size, expectedSize)
-	}
+	assert.Equal(t, "966152d20a77e739716a625373ee15af16e8f4aec631a329a27da41c204b0171", m.Sha256sum)
+	assert.Equal(t, "text/plain; charset=utf-8", m.Mimetype)
+	assert.Equal(t, int64(23), m.Size)
 }
 
 func TestTextCharsets(t *testing.T) {
@@ -60,14 +50,10 @@ func TestTextCharsets(t *testing.T) {
 		{mimetype: "text/plain; charset=utf-16be", data: utf16BE},
 	}
 
-	for i, testcase := range testcases {
+	for _, testcase := range testcases {
 		r := bytes.NewReader(testcase.data)
 		m, err := GenerateMetadata(r)
-		if err != nil {
-			t.Fatalf("[%d] unexpected error return %v\n", i, err)
-		}
-		if m.Mimetype != testcase.mimetype {
-			t.Errorf("[%d] Expected mimetype '%s', got mimetype '%s'\n", i, testcase.mimetype, m.Mimetype)
-		}
+		require.NoError(t, err)
+		assert.Equal(t, testcase.mimetype, m.Mimetype)
 	}
 }

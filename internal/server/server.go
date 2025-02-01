@@ -37,7 +37,9 @@ func Setup() (*chi.Mux, error) {
 		return nil, fmt.Errorf("could not create metadata directory: %w", err)
 	}
 
-	config.Default.SiteURL = strings.TrimSuffix(config.Default.SiteURL, "/")
+	if config.Default.SiteURL != "" {
+		config.Default.SiteURL = strings.TrimSuffix(config.Default.SiteURL, "/") + "/"
+	}
 	parsedUrl, err := url.Parse(config.Default.SiteURL)
 	if err != nil {
 		return nil, fmt.Errorf("could not parse siteurl: %w", err)
