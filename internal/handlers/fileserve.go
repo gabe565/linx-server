@@ -3,6 +3,7 @@ package handlers
 import (
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -59,14 +60,12 @@ func FileServeHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "public, no-cache")
 
 	modtime := time.Unix(0, 0)
-	if done := httputil.CheckPreconditions(w, r, modtime); done == true {
+	if done := httputil.CheckPreconditions(w, r, modtime); done {
 		return
 	}
 
 	if r.Method != "HEAD" {
-
-		config.StorageBackend.ServeFile(fileName, w, r)
-		if err != nil {
+		if err := config.StorageBackend.ServeFile(fileName, w, r); err != nil {
 			Oops(w, r, RespAUTO, err.Error())
 			return
 		}
@@ -88,7 +87,6 @@ func StaticHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Etag", fmt.Sprintf("\"%s\"", config.TimeStartedStr))
 	w.Header().Set("Cache-Control", "public, max-age=86400")
 	http.ServeContent(w, r, path, config.TimeStarted, file.(io.ReadSeeker))
-	return
 }
 
 func CheckFile(filename string) (metadata backends.Metadata, err error) {
@@ -98,7 +96,9 @@ func CheckFile(filename string) (metadata backends.Metadata, err error) {
 	}
 
 	if expiry.IsTsExpired(metadata.Expiry) {
-		config.StorageBackend.Delete(filename)
+		if err := config.StorageBackend.Delete(filename); err != nil {
+			slog.Error("Failed to delete expired file", "path", filename)
+		}
 		err = backends.NotFoundErr
 		return
 	}

@@ -56,7 +56,7 @@ func ListExpirationTimes() []ExpirationTime {
 			0,
 			"never",
 		})
-	} else if actualExpiryInList == false {
+	} else if !actualExpiryInList {
 		expiryList = append(expiryList, ExpirationTime{
 			Seconds: uint64(config.Default.MaxExpiry.Seconds()),
 			Human:   humanize.RelTime(epoch, epoch.Add(config.Default.MaxExpiry.Duration), "", ""),

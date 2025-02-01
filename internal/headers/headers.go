@@ -43,7 +43,7 @@ func GetSiteURL(r *http.Request) (*url.URL, error) {
 
 	if scheme := r.Header.Get("X-Forwarded-Proto"); scheme != "" {
 		u.Scheme = scheme
-	} else if config.Default.TLSCert != "" || (r.TLS != nil && r.TLS.HandshakeComplete == true) {
+	} else if config.Default.TLSCert != "" || (r.TLS != nil && r.TLS.HandshakeComplete) {
 		u.Scheme = "https"
 	} else {
 		u.Scheme = "http"

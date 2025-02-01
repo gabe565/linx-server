@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"html/template"
+	"log/slog"
 	"net/http"
 	"strings"
 
@@ -83,13 +84,17 @@ func Oops(w http.ResponseWriter, r *http.Request, rt RespType, msg string) {
 		msg = "Oops! Something went wrong..."
 	}
 
+	const name = "oops.html"
+
 	if rt == RespHTML {
 		w.WriteHeader(500)
-		templates.Render("oops.html", map[string]any{"Msg": msg}, r, w)
+		if err := templates.Render(name, map[string]any{"Msg": msg}, r, w); err != nil {
+			slog.Error("Failed to render template", "template", name, "error", err)
+		}
 		return
 	} else if rt == RespPLAIN {
 		w.WriteHeader(500)
-		fmt.Fprintf(w, "%s", msg)
+		_, _ = fmt.Fprintf(w, "%s", msg)
 		return
 	} else if rt == RespJSON {
 		js, _ := json.Marshal(map[string]string{
@@ -98,7 +103,7 @@ func Oops(w http.ResponseWriter, r *http.Request, rt RespType, msg string) {
 
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 		w.WriteHeader(500)
-		w.Write(js)
+		_, _ = w.Write(js)
 		return
 	} else if rt == RespAUTO {
 		if strings.EqualFold("application/json", r.Header.Get("Accept")) {
@@ -128,7 +133,7 @@ func BadRequest(w http.ResponseWriter, r *http.Request, rt RespType, msg string)
 
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write(js)
+		_, _ = w.Write(js)
 		return
 	} else if rt == RespAUTO {
 		if strings.EqualFold("application/json", r.Header.Get("Accept")) {

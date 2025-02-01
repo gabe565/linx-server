@@ -5,6 +5,7 @@ import (
 	"crypto/sha1"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"time"
 
@@ -93,7 +94,9 @@ func FileTorrentHandler(w http.ResponseWriter, r *http.Request) {
 	defer f.Close()
 
 	if expiry.IsTsExpired(metadata.Expiry) {
-		config.StorageBackend.Delete(fileName)
+		if err := config.StorageBackend.Delete(fileName); err != nil {
+			slog.Error("Failed to delete expired file", "path", fileName)
+		}
 		handlers.NotFound(w, r)
 		return
 	}

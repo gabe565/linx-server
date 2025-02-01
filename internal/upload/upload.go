@@ -115,7 +115,7 @@ func POSTHandler(w http.ResponseWriter, r *http.Request) {
 
 		js := GenerateJSONresponse(upload, r)
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-		w.Write(js)
+		_, _ = w.Write(js)
 	} else {
 		if err == FileTooLargeError || err == backends.FileEmptyError {
 			handlers.BadRequest(w, r, handlers.RespHTML, err.Error())
@@ -150,7 +150,7 @@ func PUTHandler(w http.ResponseWriter, r *http.Request) {
 
 		js := GenerateJSONresponse(upload, r)
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-		w.Write(js)
+		_, _ = w.Write(js)
 	} else {
 		if err == FileTooLargeError || err == backends.FileEmptyError {
 			handlers.BadRequest(w, r, handlers.RespPLAIN, err.Error())
@@ -219,7 +219,7 @@ func Remote(w http.ResponseWriter, r *http.Request) {
 
 		js := GenerateJSONresponse(upload, r)
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-		w.Write(js)
+		_, _ = w.Write(js)
 	} else {
 		if err != nil {
 			handlers.Oops(w, r, handlers.RespHTML, "Could not upload file: "+err.Error())
@@ -284,7 +284,10 @@ func Process(upReq UploadRequest) (upload Upload, err error) {
 	upload.Filename = strings.Join([]string{barename, extension}, ".")
 	upload.Filename = strings.Replace(upload.Filename, " ", "", -1)
 
-	fileexists, _ := config.StorageBackend.Exists(upload.Filename)
+	fileexists, err := config.StorageBackend.Exists(upload.Filename)
+	if err != nil {
+		return upload, err
+	}
 
 	// Check if the delete key matches, in which case overwrite
 	if fileexists {
@@ -292,14 +295,14 @@ func Process(upReq UploadRequest) (upload Upload, err error) {
 		if merr == nil {
 			if upReq.deleteKey == metad.DeleteKey {
 				fileexists = false
-			} else if config.Default.ForceRandomFilename == true {
+			} else if config.Default.ForceRandomFilename {
 				// the file exists
 				// the delete key doesn't match
 				// force random filenames is enabled
 				randomize = true
 			}
 		}
-	} else if config.Default.ForceRandomFilename == true {
+	} else if config.Default.ForceRandomFilename {
 		// the file doesn't exist
 		// force random filenames is enabled
 		randomize = true
@@ -322,6 +325,9 @@ func Process(upReq UploadRequest) (upload Upload, err error) {
 		upload.Filename = strings.Join([]string{barename, extension}, ".")
 
 		fileexists, err = config.StorageBackend.Exists(upload.Filename)
+		if err != nil {
+			return upload, err
+		}
 	}
 
 	if fileBlacklist[strings.ToLower(upload.Filename)] {

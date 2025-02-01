@@ -2,7 +2,6 @@ package s3
 
 import (
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"strconv"
@@ -156,12 +155,14 @@ func unmapMetadata(input map[string]*string) (m backends.Metadata, err error) {
 }
 
 func (b S3Backend) Put(key string, r io.Reader, expiry time.Time, deleteKey, accessKey string) (m backends.Metadata, err error) {
-	tmpDst, err := ioutil.TempFile("", "linx-server-upload")
+	tmpDst, err := os.CreateTemp("", "linx-server-upload")
 	if err != nil {
 		return m, err
 	}
-	defer tmpDst.Close()
-	defer os.Remove(tmpDst.Name())
+	defer func() {
+		_ = tmpDst.Close()
+		_ = os.Remove(tmpDst.Name())
+	}()
 
 	bytes, err := io.Copy(tmpDst, r)
 	if bytes == 0 {
@@ -259,7 +260,7 @@ func NewS3Backend(bucket string, region string, endpoint string, forcePathStyle 
 	if endpoint != "" {
 		awsConfig.Endpoint = aws.String(endpoint)
 	}
-	if forcePathStyle == true {
+	if forcePathStyle {
 		awsConfig.S3ForcePathStyle = aws.Bool(true)
 	}
 
