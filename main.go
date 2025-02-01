@@ -10,8 +10,8 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/andreimarcu/linx-server/internal/config"
-	"github.com/andreimarcu/linx-server/internal/server"
+	"gabe565.com/linx-server/internal/config"
+	"gabe565.com/linx-server/internal/server"
 	"github.com/vharitonsky/iniflags"
 )
 

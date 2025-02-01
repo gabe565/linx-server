@@ -8,11 +8,11 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/andreimarcu/linx-server/internal/backends"
-	"github.com/andreimarcu/linx-server/internal/config"
-	"github.com/andreimarcu/linx-server/internal/expiry"
-	"github.com/andreimarcu/linx-server/internal/handlers"
-	"github.com/andreimarcu/linx-server/internal/headers"
+	"gabe565.com/linx-server/internal/backends"
+	"gabe565.com/linx-server/internal/config"
+	"gabe565.com/linx-server/internal/expiry"
+	"gabe565.com/linx-server/internal/handlers"
+	"gabe565.com/linx-server/internal/headers"
 	"github.com/go-chi/chi/v5"
 	"github.com/zeebo/bencode"
 )

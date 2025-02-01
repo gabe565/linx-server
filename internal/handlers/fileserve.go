@@ -8,13 +8,13 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/andreimarcu/linx-server/assets"
-	"github.com/andreimarcu/linx-server/internal/backends"
-	"github.com/andreimarcu/linx-server/internal/config"
-	"github.com/andreimarcu/linx-server/internal/csrf"
-	"github.com/andreimarcu/linx-server/internal/expiry"
-	"github.com/andreimarcu/linx-server/internal/headers"
-	"github.com/andreimarcu/linx-server/internal/httputil"
+	"gabe565.com/linx-server/assets"
+	"gabe565.com/linx-server/internal/backends"
+	"gabe565.com/linx-server/internal/config"
+	"gabe565.com/linx-server/internal/csrf"
+	"gabe565.com/linx-server/internal/expiry"
+	"gabe565.com/linx-server/internal/headers"
+	"gabe565.com/linx-server/internal/httputil"
 	"github.com/go-chi/chi/v5"
 )
 

@@ -16,7 +16,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/andreimarcu/linx-server/internal/upload"
+	"gabe565.com/linx-server/internal/upload"
 )
 
 type RespOkJSON struct {

@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/andreimarcu/linx-server/internal/backends"
-	"github.com/andreimarcu/linx-server/internal/config"
+	"gabe565.com/linx-server/internal/backends"
+	"gabe565.com/linx-server/internal/config"
 	"github.com/go-chi/chi/v5"
 )
 

@@ -10,8 +10,8 @@ import (
 	"strings"
 
 	"github.com/Masterminds/sprig/v3"
-	"github.com/andreimarcu/linx-server/internal/config"
-	"github.com/andreimarcu/linx-server/internal/custompages"
+	"gabe565.com/linx-server/internal/config"
+	"gabe565.com/linx-server/internal/custompages"
 )
 
 func Load(fsys fs.FS) (map[string]*template.Template, error) {

@@ -1,4 +1,4 @@
-module github.com/andreimarcu/linx-server
+module gabe565.com/linx-server
 
 go 1.23.5
 

@@ -44,7 +44,7 @@ Getting started
 
 Example running
 ```
-docker run -p 8080:8080 -v /path/to/linx-server.conf:/data/linx-server.conf -v /path/to/meta:/data/meta -v /path/to/files:/data/files andreimarcu/linx-server -config /data/linx-server.conf
+docker run -p 8080:8080 -v /path/to/linx-server.conf:/data/linx-server.conf -v /path/to/meta:/data/meta -v /path/to/files:/data/files ghcr.io/gabe565/linx-server -config /data/linx-server.conf
 ``` 
 
 Example with docker-compose 
@@ -53,7 +53,7 @@ version: '2.2'
 services:
   linx-server:
     container_name: linx-server
-    image: andreimarcu/linx-server
+    image: ghcr.io/gabe565/linx-server
     command: -config /data/linx-server.conf
     volumes:
       - /path/to/files:/data/files
@@ -68,7 +68,7 @@ Ideally, you would use a reverse proxy such as nginx or caddy to handle TLS cert
 
 #### Using a binary release
 
-1. Grab the latest binary from the [releases](https://github.com/andreimarcu/linx-server/releases), then run ```go install```
+1. Grab the latest binary from the [releases](https://github.com/gabe565/linx-server/releases), then run ```go install```
 2. Run ```linx-server -config path/to/linx-server.conf```
 
   

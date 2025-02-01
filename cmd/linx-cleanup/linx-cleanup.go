@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 
-	"github.com/andreimarcu/linx-server/internal/cleanup"
+	"gabe565.com/linx-server/internal/cleanup"
 )
 
 func main() {

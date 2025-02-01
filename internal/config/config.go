@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/andreimarcu/linx-server/internal/backends"
+	"gabe565.com/linx-server/internal/backends"
 )
 
 type HeaderList []string

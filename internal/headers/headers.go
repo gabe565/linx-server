@@ -5,7 +5,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/andreimarcu/linx-server/internal/config"
+	"gabe565.com/linx-server/internal/config"
 )
 
 type addheaders struct {

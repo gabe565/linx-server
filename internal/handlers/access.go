@@ -11,10 +11,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/andreimarcu/linx-server/internal/backends"
-	"github.com/andreimarcu/linx-server/internal/config"
-	"github.com/andreimarcu/linx-server/internal/headers"
-	"github.com/andreimarcu/linx-server/internal/templates"
+	"gabe565.com/linx-server/internal/backends"
+	"gabe565.com/linx-server/internal/config"
+	"gabe565.com/linx-server/internal/headers"
+	"gabe565.com/linx-server/internal/templates"
 	"github.com/go-chi/chi/v5"
 )
 

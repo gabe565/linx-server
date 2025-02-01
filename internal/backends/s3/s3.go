@@ -8,8 +8,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/andreimarcu/linx-server/internal/backends"
-	"github.com/andreimarcu/linx-server/internal/helpers"
+	"gabe565.com/linx-server/internal/backends"
+	"gabe565.com/linx-server/internal/helpers"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"

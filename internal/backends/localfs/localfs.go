@@ -9,8 +9,8 @@ import (
 	"path"
 	"time"
 
-	"github.com/andreimarcu/linx-server/internal/backends"
-	"github.com/andreimarcu/linx-server/internal/helpers"
+	"gabe565.com/linx-server/internal/backends"
+	"gabe565.com/linx-server/internal/helpers"
 )
 
 type LocalfsBackend struct {

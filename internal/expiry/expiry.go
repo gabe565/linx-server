@@ -3,7 +3,7 @@ package expiry
 import (
 	"time"
 
-	"github.com/andreimarcu/linx-server/internal/config"
+	"gabe565.com/linx-server/internal/config"
 	"github.com/dustin/go-humanize"
 )
 
