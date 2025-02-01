@@ -19,8 +19,9 @@ import (
 
 func New() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:  "linx-server",
-		RunE: run,
+		Use:   "linx-server",
+		Short: "Self-hosted file/media sharing website",
+		RunE:  run,
 	}
 	cmd.AddCommand(
 		cleanup.New(),

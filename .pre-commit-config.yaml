@@ -1,6 +1,12 @@
 repos:
   - repo: local
     hooks:
+      - id: usage-docs
+        name: usage-docs
+        entry: go run ./internal/generate/docs
+        language: system
+        types: [go]
+        pass_filenames: false
       - id: config-example
         name: config-example
         entry: go run ./internal/config/generate_example
