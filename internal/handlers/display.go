@@ -18,7 +18,7 @@ import (
 	"gabe565.com/linx-server/internal/util"
 	"github.com/dustin/go-humanize"
 	"github.com/microcosm-cc/bluemonday"
-	"github.com/russross/blackfriday"
+	"github.com/russross/blackfriday/v2"
 )
 
 const maxDisplayFileSizeBytes = 1024 * 512
@@ -84,7 +84,7 @@ func FileDisplay(w http.ResponseWriter, r *http.Request, fileName string, metada
 		if metadata.Size < maxDisplayFileSizeBytes {
 			bytes, err := ioutil.ReadAll(reader)
 			if err == nil {
-				unsafe := blackfriday.MarkdownCommon(bytes)
+				unsafe := blackfriday.Run(bytes)
 				html := bluemonday.UGCPolicy().SanitizeBytes(unsafe)
 
 				extra["Contents"] = template.HTML(html)

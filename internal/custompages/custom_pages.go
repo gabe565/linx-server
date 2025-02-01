@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/microcosm-cc/bluemonday"
-	"github.com/russross/blackfriday"
+	"github.com/russross/blackfriday/v2"
 )
 
 var (
@@ -34,7 +34,7 @@ func InitializeCustomPages(customPagesDir string) {
 				log.Fatalf("Error reading file %s", fileName)
 			}
 
-			unsafe := blackfriday.MarkdownCommon(contents)
+			unsafe := blackfriday.Run(contents)
 			html := bluemonday.UGCPolicy().SanitizeBytes(unsafe)
 
 			fileName := fileName[0 : len(fileName)-3]
