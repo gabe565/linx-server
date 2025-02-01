@@ -38,11 +38,11 @@ cleanup-every = '1h0m0s'
 tls-cert = ''
 tls-key = ''
 # AWS S3 configuration
-s3_endpoint = ''
-s3_region = ''
-s3_bucket = ''
+s3-endpoint = ''
+s3-region = ''
+s3-bucket = ''
 # Force path-style addressing for S3 (e.g. https://s3.amazonaws.com/linx/example.txt)
-s3_force_path_style = false
+s3-force-path-style = false
 # Path to directory containing .md files to render as custom pages
 custom-pages-dir = ''
 # Use X-Real-IP/X-Forwarded-For headers
@@ -50,12 +50,12 @@ real-ip = false
 # Add arbitrary headers to the response
 add-headers = []
 # Value of default Content-Security-Policy header
-content_security_policy = "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; frame-ancestors 'self';"
+content-security-policy = "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; frame-ancestors 'self';"
 # Value of Content-Security-Policy header for file access
-file_content_security_policy = "default-src 'none'; img-src 'self'; object-src 'self'; media-src 'self'; style-src 'self' 'unsafe-inline'; frame-ancestors 'self';"
+file-content-security-policy = "default-src 'none'; img-src 'self'; object-src 'self'; media-src 'self'; style-src 'self' 'unsafe-inline'; frame-ancestors 'self';"
 # Value of default Referrer-Policy header
-referrer_policy = 'same-origin'
+referrer-policy = 'same-origin'
 # Value of Referrer-Policy header for file access
-file_referrer_policy = 'same-origin'
+file-referrer-policy = 'same-origin'
 # Value of X-Frame-Options header
-x_frame_options = 'SAMEORIGIN'
+x-frame-options = 'SAMEORIGIN'

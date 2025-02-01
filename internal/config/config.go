@@ -55,20 +55,20 @@ type Config struct {
 	TLSCert string `toml:"tls-cert" comment:"HTTPS configuration"`
 	TLSKey  string `toml:"tls-key"`
 
-	S3Endpoint       string `toml:"s3_endpoint" comment:"AWS S3 configuration"`
-	S3Region         string `toml:"s3_region"`
-	S3Bucket         string `toml:"s3_bucket"`
-	S3ForcePathStyle bool   `toml:"s3_force_path_style" comment:"Force path-style addressing for S3 (e.g. https://s3.amazonaws.com/linx/example.txt)"`
+	S3Endpoint       string `toml:"s3-endpoint" comment:"AWS S3 configuration"`
+	S3Region         string `toml:"s3-region"`
+	S3Bucket         string `toml:"s3-bucket"`
+	S3ForcePathStyle bool   `toml:"s3-force-path-style" comment:"Force path-style addressing for S3 (e.g. https://s3.amazonaws.com/linx/example.txt)"`
 
 	CustomPagesDir string `toml:"custom-pages-dir" comment:"Path to directory containing .md files to render as custom pages"`
 
 	RealIp                    bool       `toml:"real-ip" comment:"Use X-Real-IP/X-Forwarded-For headers"`
 	AddHeaders                HeaderList `toml:"add-headers" comment:"Add arbitrary headers to the response"`
-	ContentSecurityPolicy     string     `toml:"content_security_policy" comment:"Value of default Content-Security-Policy header"`
-	FileContentSecurityPolicy string     `toml:"file_content_security_policy" comment:"Value of Content-Security-Policy header for file access"`
-	ReferrerPolicy            string     `toml:"referrer_policy" comment:"Value of default Referrer-Policy header"`
-	FileReferrerPolicy        string     `toml:"file_referrer_policy" comment:"Value of Referrer-Policy header for file access"`
-	XFrameOptions             string     `toml:"x_frame_options" comment:"Value of X-Frame-Options header"`
+	ContentSecurityPolicy     string     `toml:"content-security-policy" comment:"Value of default Content-Security-Policy header"`
+	FileContentSecurityPolicy string     `toml:"file-content-security-policy" comment:"Value of Content-Security-Policy header for file access"`
+	ReferrerPolicy            string     `toml:"referrer-policy" comment:"Value of default Referrer-Policy header"`
+	FileReferrerPolicy        string     `toml:"file-referrer-policy" comment:"Value of Referrer-Policy header for file access"`
+	XFrameOptions             string     `toml:"x-frame-options" comment:"Value of X-Frame-Options header"`
 }
 
 func New() *Config {
