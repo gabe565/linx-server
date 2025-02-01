@@ -7,7 +7,9 @@ import (
 	"path"
 	"testing"
 
-	"github.com/andreimarcu/linx-server"
+	"github.com/andreimarcu/linx-server/internal/config"
+	"github.com/andreimarcu/linx-server/internal/server"
+	"github.com/andreimarcu/linx-server/internal/upload"
 	"github.com/zenazn/goji"
 )
 
@@ -18,17 +20,20 @@ var testCSPHeaders = map[string]string{
 }
 
 func TestContentSecurityPolicy(t *testing.T) {
-	Config.siteURL = "http://linx.example.org/"
-	Config.filesDir = path.Join(os.TempDir(), main.generateBarename())
-	Config.metaDir = Config.filesDir + "_meta"
-	Config.maxSize = 1024 * 1024 * 1024
-	Config.noLogs = true
-	Config.siteName = "linx"
-	Config.selifPath = "selif"
-	Config.contentSecurityPolicy = testCSPHeaders["Content-Security-Policy"]
-	Config.referrerPolicy = testCSPHeaders["Referrer-Policy"]
-	Config.xFrameOptions = testCSPHeaders["X-Frame-Options"]
-	mux := main.setup()
+	config.Default.SiteURL = "http://linx.example.org/"
+	config.Default.FilesDir = path.Join(os.TempDir(), upload.GenerateBarename())
+	config.Default.MetaDir = config.Default.FilesDir + "_meta"
+	config.Default.MaxSize = 1024 * 1024 * 1024
+	config.Default.NoLogs = true
+	config.Default.SiteName = "linx"
+	config.Default.SelifPath = "selif"
+	config.Default.ContentSecurityPolicy = testCSPHeaders["Content-Security-Policy"]
+	config.Default.ReferrerPolicy = testCSPHeaders["Referrer-Policy"]
+	config.Default.XFrameOptions = testCSPHeaders["X-Frame-Options"]
+	mux, err := server.Setup()
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	w := httptest.NewRecorder()
 
@@ -38,9 +43,9 @@ func TestContentSecurityPolicy(t *testing.T) {
 	}
 
 	goji.Use(ContentSecurityPolicy(CSPOptions{
-		policy:         testCSPHeaders["Content-Security-Policy"],
-		referrerPolicy: testCSPHeaders["Referrer-Policy"],
-		frame:          testCSPHeaders["X-Frame-Options"],
+		Policy:         testCSPHeaders["Content-Security-Policy"],
+		ReferrerPolicy: testCSPHeaders["Referrer-Policy"],
+		Frame:          testCSPHeaders["X-Frame-Options"],
 	}))
 
 	mux.ServeHTTP(w, req)

@@ -1,17 +1,21 @@
-{% extends "base.html" %}
+{{ template "base.html" . }}
 
-{% block title %}{{sitename}} - Paste{% endblock %}
+{{- define "title" -}}
+  {{ .SiteName }} - Paste
+{{- end -}}
 
-{% block content %}
-<form id="reply" action='{{ sitepath }}upload' method='post'>
+{{- define "content" -}}
+<form id="reply" action="{{ .SitePath }}upload" method="post">
     <div id="main" class="paste">
         <div id="info" class="info-flex">
             <div>
-                {% if not forcerandom %}<span class="hint--top hint--bounce"
-                    data-hint="Leave empty for random filename"><input class="codebox" name='filename' id="filename"
-                        type='text' value="" placeholder="filename" /></span>{% endif %}.<span
+                {{- if not .ForceRandom -}}
+                <span class="hint--top hint--bounce"
+                    data-hint="Leave empty for random filename"><input class="codebox" name="filename" id="filename"
+                        type="text" value="" placeholder="filename" /></span>
+                {{- end -}}.<span
                     class="hint--top hint--bounce" data-hint="Enable syntax highlighting by adding the extension"><input
-                        id="extension" class="codebox" name='extension' type='text' value="" placeholder="txt" /></span>
+                        id="extension" class="codebox" name="extension" type="text" value="" placeholder="txt" /></span>
             </div>
             <div>
                 <span class="hint--top hint--bounce" data-hint="Require password to access (leave empty to disable)">
@@ -20,21 +24,22 @@
 
                 <select id="expiry" name="expires">
                     <option disabled>Expires:</option>
-                    {% for expiry in expirylist %}
-                    <option value="{{ expiry.Seconds }}" {% if forloop.Last %} selected{% endif %}>{{ expiry.Human }}
+                    {{- range $i, $expiry := .ExpiryList -}}
+                    <option value="{{ $expiry.Seconds }}" {{- if eq $i (sub (len $.ExpiryList) 1) }} selected{{ end }}>
+                        {{- $expiry.Human -}}
                     </option>
-                    {% endfor %}
+                    {{- end -}}
                 </select>
                 <button type="submit">Paste</button>
             </div>
         </div>
 
         <div id="inner_content" class="padme">
-            <textarea name='content' id="content" class="editor"></textarea>
+            <textarea name="content" id="content" class="editor"></textarea>
         </div>
     </div>
 </form>
 
-<script src="{{ sitepath }}static/js/util.js"></script>
-<script src="{{ sitepath }}static/js/paste.js"></script>
-{% endblock %}
+<script src="{{ .SitePath }}static/js/util.js"></script>
+<script src="{{ .SitePath }}static/js/paste.js"></script>
+{{- end -}}

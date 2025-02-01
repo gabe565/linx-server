@@ -1,13 +1,13 @@
-{% extends "base.html" %}
+{{ template "base.html" . }}
 
-{% block head %}
-<link href='{{ sitepath }}static/css/dropzone.css' media='screen, projection' rel='stylesheet' type='text/css'>
-{% endblock %}
+{{- define "head" -}}
+<link href="{{ .SitePath }}static/css/dropzone.css" media="screen, projection" rel="stylesheet" type="text/css">
+{{- end -}}
 
-{% block content %}
+{{- define "content" -}}
 <div id="fileupload">
-    <form action="{{ sitepath }}upload" class="dropzone" id="dropzone" method="POST" enctype="multipart/form-data"
-        data-maxsize="{{ maxsize }}" data-auth="{{ auth }}">
+    <form action="{{ .SitePath }}upload" class="dropzone" id="dropzone" method="POST" enctype="multipart/form-data"
+        data-maxsize="{{ .MaxSize }}" data-auth="{{ .Auth }}">
         <div class="fallback">
             <input id="fileinput" name="file" type="file" /><br />
             <input id="submitbtn" type="submit" value="Upload">
@@ -20,17 +20,18 @@
         <div id="choices">
             <span class="hint--top hint--bounce"
                 data-hint="Replace the filename with random characters. The file extension is retained">
-                <label><input {% if forcerandom %} disabled {% endif %} name="randomize" id="randomize" type="checkbox"
+                <label><input {{- if .ForceRandom }} disabled{{ end }} name="randomize" id="randomize" type="checkbox"
                         checked /> Randomize filename</label>
             </span>
 
             <div id="expiry">
                 <label>File expiry:
                     <select name="expires" id="expires">
-                        {% for expiry in expirylist %}
-                        <option value="{{ expiry.Seconds }}" {% if forloop.Last %} selected{% endif %}>
-                            {{ expiry.Human }}</option>
-                        {% endfor %}
+                        {{- range $i, $expiry := .ExpiryList -}}
+                        <option value="{{ $expiry.Seconds }}" {{- if eq $i (sub (len $.ExpiryList) 1) }} selected{{ end }}>
+                            {{- $expiry.Human -}}
+                        </option>
+                        {{- end -}}
                     </select>
                 </label>
             </div>
@@ -51,6 +52,6 @@
     <div class="clear"></div>
 </div>
 
-<script src="{{ sitepath }}static/js/dropzone.js"></script>
-<script src="{{ sitepath }}static/js/upload.js"></script>
-{% endblock %}
+<script src="{{ .SitePath }}static/js/dropzone.js"></script>
+<script src="{{ .SitePath }}static/js/upload.js"></script>
+{{- end -}}

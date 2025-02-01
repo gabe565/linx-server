@@ -2,13 +2,13 @@
 <html>
 
 <head>
-	<title>{% block title %}{{ sitename }}{% endblock %}</title>
-	<meta charset='utf-8' content='text/html' http-equiv='content-type'>
-	<meta name='viewport' content='width=device-width, initial-scale=0.8'>
-	<link href='{{ sitepath }}static/css/linx.css?v=1' media='screen, projection' rel='stylesheet' type='text/css'>
-	<link href='{{ sitepath }}static/css/hint.css' rel='stylesheet' type='text/css'>
-	<link href='{{ sitepath }}static/images/favicon.gif' rel='icon' type='image/gif'>
-	{% block head %}{% endblock %}
+	<title>{{ block "title" . }}{{ .SiteName }}{{ end }}</title>
+	<meta charset="utf-8" content="text/html" http-equiv="content-type">
+	<meta name="viewport" content="width=device-width, initial-scale=0.8">
+	<link href="{{ .SitePath }}static/css/linx.css?v=1" media="screen, projection" rel="stylesheet" type="text/css">
+	<link href="{{ .SitePath }}static/css/hint.css" rel="stylesheet" type="text/css">
+	<link href="{{ .SitePath }}static/images/favicon.gif" rel="icon" type="image/gif">
+	{{- block "head" . }}{{ end -}}
 </head>
 
 <body>
@@ -16,19 +16,19 @@
 		<div id="container">
 			<div id="header">
 				<div id="navigation" class="right">
-					{% if auth != "header" %}
-					<a href="{{ sitepath }}">Upload</a> |
-					<a href="{{ sitepath }}paste/">Paste</a> |
-					{% endif %}
-					<a href="{{ sitepath }}API/">API</a>
-					{% for custom_file_name, custom_page_name in custom_pages_names sorted %}
-					| <a href="{{ sitepath }}{{ custom_file_name }}/">{{ custom_page_name }}</a>
-					{% endfor %}
+					{{- if ne .Auth "header" -}}
+					<a href="{{ .SitePath }}">Upload</a> |
+					<a href="{{ .SitePath }}paste/">Paste</a> |
+					{{ end -}}
+					<a href="{{ .SitePath }}API/">API</a>
+					{{- range $path, $name := .CustomPagesNames }}
+					| <a href="{{ .SitePath }}{{ $path }}/">{{ $name }}</a>
+					{{- end -}}
 				</div>
-				<h2><a href="{{ sitepath }}" title="{{ sitename }}">{{ sitename }}</a></h2>
+				<h2><a href="{{ .SitePath }}" title="{{ .SiteName }}">{{ .SiteName }}</a></h2>
 			</div>
 
-			{% block content %}{% endblock %}
+			{{- block "content" . }}{{ end -}}
 
 			<div id="footer">
 				<a href="https://github.com/andreimarcu/linx-server">linx-server</a>

@@ -1,16 +1,19 @@
-{% extends "base.html" %}
+{{ template "display.html" . }}
 
-{% block main %}
+{{- define "main" -}}
 <div class="normal display-file">
-    <p class="center">You are requesting <a href="{{ sitepath }}{{ selifpath }}{{ filename }}">{{ filename }}</a>, <a href="{{ sitepath }}{{ selifpath }}{{ filename }}">click here</a> to download.</p>
+    <p class="center">
+		You are requesting <a href="{{ .SitePath }}{{ .SelifPath }}{{ .FileName }}">{{ .FileName }}</a>,
+		<a href="{{ .SitePath }}{{ .SelifPath }}{{ .FileName }}">click here</a> to download.
+	</p>
 
-{% if files|length > 0 %}
+{{- if ne (len .Files) 0 -}}
 <p>Contents of the archive:</p>
 <ul>
-	{% for file in files %}
-	<li>{{ file }}</li>
-	{% endfor %}
+	{{- range .Files -}}
+	<li>{{ . }}</li>
+	{{- end -}}
 </ul>
-{% endif %}
+{{- end -}}
 </div>
-{% endblock %}
+{{- end -}}

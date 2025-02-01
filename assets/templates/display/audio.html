@@ -1,12 +1,12 @@
-{% extends "base.html" %}
+{{ template "display.html" . }}
 
-{% block head %}
-<meta property="og:audio" content="{{ siteurl }}{{ sitepath }}{{ selifpath }}{{ filename }}" />
-{% endblock %}
+{{- define "head" -}}
+<meta property="og:audio" content="{{ .SiteURL }}{{ .SitePath }}{{ .SelifPath }}{{ .FileName }}" />
+{{- end -}}
 
-{% block main %}
-<audio class="display-audio" controls preload='auto'>
-    <source src='{{ sitepath }}{{ selifpath }}{{ filename }}'>
-    <a href='{{ sitepath }}{{ selifpath }}{{ filename }}'>Download it instead</a>
+{{- define "main" -}}
+<audio class="display-audio" controls preload="auto">
+    <source src="{{ .SitePath }}{{ .SelifPath }}{{ .FileName }}">
+    <a href="{{ .SitePath }}{{ .SelifPath }}{{ .FileName }}">Download it instead</a>
 </audio>
-{% endblock %}
+{{- end -}}

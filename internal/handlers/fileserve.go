@@ -85,7 +85,7 @@ func StaticHandler(c web.C, w http.ResponseWriter, r *http.Request) {
 		}
 
 		filePath := strings.TrimPrefix(path, config.Default.SitePath+"static/")
-		file, err := assets.Static.Open(filePath)
+		file, err := assets.Static.Open("static/" + filePath)
 		if err != nil {
 			NotFound(c, w, r)
 			return

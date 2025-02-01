@@ -1,11 +1,11 @@
 package config
 
 import (
+	"html/template"
 	"strings"
 	"time"
 
 	"github.com/andreimarcu/linx-server/internal/backends"
-	"github.com/flosch/pongo2"
 )
 
 type HeaderList []string
@@ -59,8 +59,7 @@ type Config struct {
 var (
 	Default            Config
 	StorageBackend     backends.StorageBackend
-	Templates          = make(map[string]*pongo2.Template)
-	TemplateSet        *pongo2.TemplateSet
+	Templates          map[string]*template.Template
 	TimeStarted        time.Time
 	TimeStartedStr     string
 	RemoteAuthKeys     []string

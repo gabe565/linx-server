@@ -15,7 +15,6 @@ import (
 	"github.com/andreimarcu/linx-server/internal/config"
 	"github.com/andreimarcu/linx-server/internal/headers"
 	"github.com/andreimarcu/linx-server/internal/templates"
-	"github.com/flosch/pongo2"
 	"github.com/zenazn/goji/web"
 )
 
@@ -130,9 +129,9 @@ func FileAccessHeader(c web.C, w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		_ = templates.Render(config.Templates["access.html"], pongo2.Context{
-			"filename":   fileName,
-			"accesspath": fileName,
+		_ = templates.Render("access.html", map[string]any{
+			"FileName":   fileName,
+			"AccessPath": fileName,
 		}, r, w)
 
 		return

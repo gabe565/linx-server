@@ -1,14 +1,16 @@
-{% extends "base.html" %}
+{{ template "base.html" . }}
 
-{% block title %}{{sitename}} - API{% endblock %}
+{{- define "title" -}}
+  {{ .SiteName }} - API
+{{- end -}}
 
-{% block head %}
-<link href="{{ sitepath }}static/css/github-markdown.css" rel="stylesheet" type="text/css">
-{% endblock %}
+{{- define "head" -}}
+<link href="{{ .SitePath }}static/css/github-markdown.css" rel="stylesheet" type="text/css">
+{{- end -}}
 
-{% block content %}
+{{- define "content" -}}
 <div id="main">
-	<div id='inner_content'>
+	<div id="inner_content">
 		<div class="normal markdown-body">
 
 			<h2>API</h2>
@@ -17,23 +19,23 @@
 			<p>To simplify uploading and deleting files, you can use <a target="_blank"
 					href="https://github.com/andreimarcu/linx-client">linx-client</a>, which uses this API.</p>
 
-			{% if auth != "none" %}
+			{{- if ne .Auth "none" -}}
 			<h3>Keys</h3>
 			<p>This instance uses API Keys, therefore you will need to provide a key for uploading and deleting
 				files.<br /> To do so, add the <code>Linx-Api-Key</code> header with your key.</p>
-			{% endif %}
+			{{- end -}}
 
 			<h3>Uploading a file</h3>
 
-			<p>To upload a file, make a PUT request to <code>{{ siteurl }}upload/</code> and you will get the url of
+			<p>To upload a file, make a PUT request to <code>{{ .SiteURL }}upload/</code> and you will get the url of
 				your upload back.</p>
 
 			<p><strong>Optional headers with the request</strong></p>
 
-			{% if not forcerandom %}
+			{{- if not .ForceRandom -}}
 			<p>Randomize the filename<br />
 				<code>Linx-Randomize: yes</code></p>
-			{% endif %}
+			{{- end -}}
 
 			<p>Specify a custom deletion key<br />
 				<code>Linx-Delete-Key: mysecret</code></p>
@@ -65,35 +67,35 @@
 
 			<p>Uploading myphoto.jpg</p>
 
-			{% if auth != "none" %}
-			<pre><code>$ curl -H &#34;Linx-Api-Key: mysecretkey&#34; -T myphoto.jpg {{ siteurl }}upload/  
-{{ siteurl }}{% if not forcerandom %}myphoto.jpg{% else %}7z4h4ut.jpg{% endif %}</code></pre>
-			{% else %}
-			<pre><code>$ curl -T myphoto.jpg {{ siteurl }}upload/  
-{{ siteurl }}{% if not forcerandom %}myphoto.jpg{% else %}wtq7pan.jpg{% endif %}</code></pre>
-			{% endif %}
+			{{- if ne .Auth "none" -}}
+			<pre><code>$ curl -H &#34;Linx-Api-Key: mysecretkey&#34; -T myphoto.jpg {{ .SiteURL }}upload/
+{{ .SiteURL }}{{ if not .ForceRandom }}myphoto.jpg{{ else }}7z4h4ut.jpg{{ end }}</code></pre>
+			{{- else -}}
+			<pre><code>$ curl -T myphoto.jpg {{ .SiteURL }}upload/
+{{ .SiteURL }}{{ if not .ForceRandom }}myphoto.jpg{{ else }}wtq7pan.jpg{{ end }}</code></pre>
+			{{- end -}}
 
 			<p>Uploading myphoto.jpg with an expiry of 20 minutes</p>
 
-			{% if auth != "none" %}
-			<pre><code>$ curl -H &#34;Linx-Api-Key: mysecretkey&#34; -H &#34;Linx-Expiry: 1200&#34; -T myphoto.jpg {{ siteurl }}upload/
-{{ siteurl }}{% if not forcerandom %}myphoto.jpg{% else %}jm295snf.jpg{% endif %}</code></pre>
-			{% else %}
-			<pre><code>$ curl -H &#34;Linx-Expiry: 1200&#34; -T myphoto.jpg {{ siteurl }}upload/
-{{ siteurl }}{% if not forcerandom %}myphoto.jpg{% else %}1doym9u2.jpg{% endif %}</code></pre>
-			{% endif %}
+			{{- if ne .Auth "none" -}}
+			<pre><code>$ curl -H &#34;Linx-Api-Key: mysecretkey&#34; -H &#34;Linx-Expiry: 1200&#34; -T myphoto.jpg {{ .SiteURL }}upload/
+{{ .SiteURL }}{{ if not .ForceRandom }}myphoto.jpg{{- else -}}jm295snf.jpg{{- end -}}</code></pre>
+			{{- else -}}
+			<pre><code>$ curl -H &#34;Linx-Expiry: 1200&#34; -T myphoto.jpg {{ .SiteURL }}upload/
+{{ .SiteURL }}{{ if not .ForceRandom }}myphoto.jpg{{- else -}}1doym9u2.jpg{{- end -}}</code></pre>
+			{{- end -}}
 
 			<p>Uploading myphoto.jpg with a random filename and getting a json response:</p>
 
-			{% if auth != "none" %}
-			<pre><code>$ curl -H &#34;Linx-Api-Key: mysecretkey&#34; -H &#34;Accept: application/json&#34;{% if not forcerandom %} -H &#34;Linx-Randomize: yes&#34;{% endif %} -T myphoto.jpg {{ siteurl }}upload/  
+			{{- if ne .Auth "none" -}}
+			<pre><code>$ curl -H &#34;Linx-Api-Key: mysecretkey&#34; -H &#34;Accept: application/json&#34;{{ if not .ForceRandom }} -H &#34;Linx-Randomize: yes&#34;{{- end -}} -T myphoto.jpg {{ .SiteURL }}upload/
 {&#34;delete_key&#34;:&#34;...&#34;,&#34;expiry&#34;:&#34;0&#34;,&#34;filename&#34;:&#34;f34h4iu.jpg&#34;,&#34;mimetype&#34;:&#34;image/jpeg&#34;,
-&#34;sha256sum&#34;:&#34;...&#34;,&#34;size&#34;:&#34;...&#34;,&#34;url&#34;:&#34;{{ siteurl }}f34h4iu.jpg&#34;}</code></pre>
-			{% else %}
-			<pre><code>$ curl -H &#34;Accept: application/json&#34;{% if not forcerandom %} -H &#34;Linx-Randomize: yes&#34;{% endif %} -T myphoto.jpg {{ siteurl }}upload/  
+&#34;sha256sum&#34;:&#34;...&#34;,&#34;size&#34;:&#34;...&#34;,&#34;url&#34;:&#34;{{ .SiteURL }}f34h4iu.jpg&#34;}</code></pre>
+			{{- else -}}
+			<pre><code>$ curl -H &#34;Accept: application/json&#34;{{ if not .ForceRandom }} -H &#34;Linx-Randomize: yes&#34;{{- end -}} -T myphoto.jpg {{ .SiteURL }}upload/
 {&#34;delete_key&#34;:&#34;...&#34;,&#34;expiry&#34;:&#34;0&#34;,&#34;filename&#34;:&#34;f34h4iu.jpg&#34;,&#34;mimetype&#34;:&#34;image/jpeg&#34;,
-&#34;sha256sum&#34;:&#34;...&#34;,&#34;size&#34;:&#34;...&#34;,&#34;url&#34;:&#34;{{ siteurl }}f34h4iu.jpg&#34;}</code></pre>
-			{% endif %}
+&#34;sha256sum&#34;:&#34;...&#34;,&#34;size&#34;:&#34;...&#34;,&#34;url&#34;:&#34;{{ .SiteURL }}f34h4iu.jpg&#34;}</code></pre>
+			{{- end -}}
 
 			<h3>Overwriting a file</h3>
 
@@ -104,30 +106,30 @@
 
 			<p>To overwrite myphoto.jpg</p>
 
-			{% if auth != "none" %}
-			<pre><code>$ curl -H &#34;Linx-Api-Key: mysecretkey&#34; -H &#34;Linx-Delete-Key: mysecret&#34; -T myphoto.jpg {{ siteurl }}upload/
-{{ siteurl }}myphoto.jpg</code></pre>
-			{% else %}
-			<pre><code>$ curl -H &#34;Linx-Delete-Key: mysecret&#34; -T myphoto.jpg {{ siteurl }}upload/
-{{ siteurl }}myphoto.jpg</code></pre>
-			{% endif %}
+			{{- if ne .Auth "none" -}}
+			<pre><code>$ curl -H &#34;Linx-Api-Key: mysecretkey&#34; -H &#34;Linx-Delete-Key: mysecret&#34; -T myphoto.jpg {{ .SiteURL }}upload/
+{{ .SiteURL }}myphoto.jpg</code></pre>
+			{{- else -}}
+			<pre><code>$ curl -H &#34;Linx-Delete-Key: mysecret&#34; -T myphoto.jpg {{ .SiteURL }}upload/
+{{ .SiteURL }}myphoto.jpg</code></pre>
+			{{- end -}}
 
 			<h3>Deleting a file</h3>
 
-			<p>To delete a file you uploaded, make a DELETE request to <code>{{ siteurl }}yourfile.ext</code> with the
+			<p>To delete a file you uploaded, make a DELETE request to <code>{{ .SiteURL }}yourfile.ext</code> with the
 				delete key set as the <code>Linx-Delete-Key</code> header.</p>
 
 			<p><strong>Example</strong></p>
 
 			<p>To delete myphoto.jpg</p>
 
-			{% if auth != "none" %}
-			<pre><code>$ curl -H &#34;Linx-Api-Key: mysecretkey&#34; -H &#34;Linx-Delete-Key: mysecret&#34; -X DELETE {{ siteurl }}myphoto.jpg
+			{{- if ne .Auth "none" -}}
+			<pre><code>$ curl -H &#34;Linx-Api-Key: mysecretkey&#34; -H &#34;Linx-Delete-Key: mysecret&#34; -X DELETE {{ .SiteURL }}myphoto.jpg
 DELETED</code></pre>
-			{% else %}
-			<pre><code>$ curl -H &#34;Linx-Delete-Key: mysecret&#34; -X DELETE {{ siteurl }}myphoto.jpg
+			{{- else -}}
+			<pre><code>$ curl -H &#34;Linx-Delete-Key: mysecret&#34; -X DELETE {{ .SiteURL }}myphoto.jpg
 DELETED</code></pre>
-			{% endif %}
+			{{- end -}}
 
 			<h3>Information about a file</h3>
 
@@ -146,9 +148,9 @@ DELETED</code></pre>
 
 			<p><strong>Example</strong></p>
 
-			<pre><code>$ curl -H &#34;Accept: application/json&#34; {{ siteurl }}myphoto.jpg
+			<pre><code>$ curl -H &#34;Accept: application/json&#34; {{ .SiteURL }}myphoto.jpg
 {&#34;expiry&#34;:&#34;0&#34;,&#34;filename&#34;:&#34;myphoto.jpg&#34;,&#34;mimetype&#34;:&#34;image/jpeg&#34;,&#34;sha256sum&#34;:&#34;...&#34;,&#34;size&#34;:&#34;...&#34;}</code></pre>
 		</div>
 	</div>
 </div>
-{% endblock %}
+{{- end -}}

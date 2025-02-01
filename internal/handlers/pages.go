@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
+	"html/template"
 	"net/http"
 	"strings"
 
@@ -11,7 +12,6 @@ import (
 	"github.com/andreimarcu/linx-server/internal/expiry"
 	"github.com/andreimarcu/linx-server/internal/headers"
 	"github.com/andreimarcu/linx-server/internal/templates"
-	"github.com/flosch/pongo2"
 	"github.com/zenazn/goji/web"
 )
 
@@ -25,10 +25,10 @@ const (
 )
 
 func Index(c web.C, w http.ResponseWriter, r *http.Request) {
-	err := templates.Render(config.Templates["index.html"], pongo2.Context{
-		"maxsize":     config.Default.MaxSize,
-		"expirylist":  expiry.ListExpirationTimes(),
-		"forcerandom": config.Default.ForceRandomFilename,
+	err := templates.Render("index.html", map[string]any{
+		"MaxSize":     config.Default.MaxSize,
+		"ExpiryList":  expiry.ListExpirationTimes(),
+		"ForceRandom": config.Default.ForceRandomFilename,
 	}, r, w)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -36,9 +36,9 @@ func Index(c web.C, w http.ResponseWriter, r *http.Request) {
 }
 
 func Paste(c web.C, w http.ResponseWriter, r *http.Request) {
-	err := templates.Render(config.Templates["paste.html"], pongo2.Context{
-		"expirylist":  expiry.ListExpirationTimes(),
-		"forcerandom": config.Default.ForceRandomFilename,
+	err := templates.Render("paste.html", map[string]any{
+		"ExpiryList":  expiry.ListExpirationTimes(),
+		"ForceRandom": config.Default.ForceRandomFilename,
 	}, r, w)
 	if err != nil {
 		Oops(c, w, r, RespHTML, "")
@@ -46,9 +46,9 @@ func Paste(c web.C, w http.ResponseWriter, r *http.Request) {
 }
 
 func APIDoc(c web.C, w http.ResponseWriter, r *http.Request) {
-	err := templates.Render(config.Templates["API.html"], pongo2.Context{
-		"siteurl":     headers.GetSiteURL(r),
-		"forcerandom": config.Default.ForceRandomFilename,
+	err := templates.Render("API.html", map[string]any{
+		"SiteURL":     headers.GetSiteURL(r),
+		"ForceRandom": config.Default.ForceRandomFilename,
 	}, r, w)
 	if err != nil {
 		Oops(c, w, r, RespHTML, "")
@@ -57,12 +57,12 @@ func APIDoc(c web.C, w http.ResponseWriter, r *http.Request) {
 
 func MakeCustomPage(fileName string) func(c web.C, w http.ResponseWriter, r *http.Request) {
 	return func(c web.C, w http.ResponseWriter, r *http.Request) {
-		err := templates.Render(config.Templates["custom_page.html"], pongo2.Context{
-			"siteurl":     headers.GetSiteURL(r),
-			"forcerandom": config.Default.ForceRandomFilename,
-			"contents":    custompages.CustomPages[fileName],
-			"filename":    fileName,
-			"pagename":    custompages.Names[fileName],
+		err := templates.Render("custom_page.html", map[string]any{
+			"SiteURL":     headers.GetSiteURL(r),
+			"ForceRandom": config.Default.ForceRandomFilename,
+			"Contents":    template.HTML(custompages.CustomPages[fileName]),
+			"FileName":    fileName,
+			"PageName":    custompages.Names[fileName],
 		}, r, w)
 		if err != nil {
 			Oops(c, w, r, RespHTML, "")
@@ -72,7 +72,7 @@ func MakeCustomPage(fileName string) func(c web.C, w http.ResponseWriter, r *htt
 
 func NotFound(c web.C, w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(404)
-	err := templates.Render(config.Templates["404.html"], pongo2.Context{}, r, w)
+	err := templates.Render("404.html", nil, r, w)
 	if err != nil {
 		Oops(c, w, r, RespHTML, "")
 	}
@@ -85,7 +85,7 @@ func Oops(c web.C, w http.ResponseWriter, r *http.Request, rt RespType, msg stri
 
 	if rt == RespHTML {
 		w.WriteHeader(500)
-		templates.Render(config.Templates["oops.html"], pongo2.Context{"msg": msg}, r, w)
+		templates.Render("oops.html", map[string]any{"Msg": msg}, r, w)
 		return
 	} else if rt == RespPLAIN {
 		w.WriteHeader(500)
@@ -112,7 +112,7 @@ func Oops(c web.C, w http.ResponseWriter, r *http.Request, rt RespType, msg stri
 func BadRequest(c web.C, w http.ResponseWriter, r *http.Request, rt RespType, msg string) {
 	if rt == RespHTML {
 		w.WriteHeader(http.StatusBadRequest)
-		err := templates.Render(config.Templates["400.html"], pongo2.Context{"msg": msg}, r, w)
+		err := templates.Render("400.html", map[string]any{"Msg": msg}, r, w)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
@@ -141,7 +141,7 @@ func BadRequest(c web.C, w http.ResponseWriter, r *http.Request, rt RespType, ms
 
 func Unauthorized(c web.C, w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(401)
-	err := templates.Render(config.Templates["401.html"], pongo2.Context{}, r, w)
+	err := templates.Render("401.html", nil, r, w)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}

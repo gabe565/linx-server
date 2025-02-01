@@ -1,9 +1,11 @@
-{% extends "base.html" %}
+{{ template "base.html" . }}
 
-{% block title %}{{sitename}} - 404 Not Found{% endblock %}
+{{- define "title" -}}
+  {{ .SiteName }} - 404 Not Found
+{{- end -}}
 
-{% block content %}
+{{- define "content" -}}
 <div class="error-404">
-  <a href="{{ sitepath }}"><img src='{{ sitepath }}static/images/404.jpg'></a>
+  <a href="{{ .SitePath }}"><img src="{{ .SitePath }}static/images/404.jpg"></a>
 </div>
-{% endblock %}
+{{- end -}}

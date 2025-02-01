@@ -1,7 +1,7 @@
-{% extends "base.html" %}
+{{ template "base.html" . }}
 
-{% block content %}
+{{- define "content" -}}
 <div id="main">
 	400 Bad Request
 </div>
-{% endblock %}
+{{- end -}}

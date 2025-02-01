@@ -1,14 +1,16 @@
-{% extends "base.html" %}
+{{ template "base.html" . }}
 
-{% block title %}{{sitename}} - Password protected file{% endblock %}
+{{- define "title" -}}
+  {{ .SiteName }} - Password protected file
+{{- end -}}
 
-{% block content %}
+{{- define "content" -}}
 <div id="main" class="oopscontent">
-    <form action="{{ unlockpath }}" method="POST" enctype="multipart/form-data">
-        {{ filename }} is protected with a password: <br /><br />
+    <form action="{{ .UnlockPath }}" method="POST" enctype="multipart/form-data">
+        {{- .FileName }} is protected with a password: <br /><br />
         <input name="access_key" type="password" />
         <input id="submitbtn" type="submit" value="Unlock">
         <br /><br />
     </form>
 </div>
-{% endblock %}
+{{- end -}}

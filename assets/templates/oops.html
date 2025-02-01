@@ -1,10 +1,9 @@
-{% extends "base.html" %}
+{{ template "base.html" . }}
 
-{% block content %}
+{{- define "content" -}}
 <div id="main">
-    <div id='inner_content' class='oopscontent'>
-    	<p>{{ msg }}</p>
+    <div id="inner_content" class="oopscontent">
+    	<p>{{ .Msg }}</p>
     </div>
 </div>
-{% endblock %}
-
+{{- end -}}

@@ -1,46 +1,56 @@
-{% extends "base.html" %}
+{{ template "display.html" . }}
 
-{% block head %}
-    <link href="{{ sitepath }}static/css/story.css" rel="stylesheet" type="text/css">
-{% endblock %}
+{{- define "head" -}}
+    <link href="{{ .SitePath }}static/css/story.css" rel="stylesheet" type="text/css">
+{{- end -}}
 
-{% block innercontentmore %} class="scrollable"{% endblock %}
-{% block mainmore %} class="storycontent" {% endblock %}
+{{- define "innercontentmore" }} class="scrollable"{{- end -}}
+{{- define "mainmore" }} class="storycontent" {{- end -}}
 
-{% block infoleft %}
+{{- define "infoleft" -}}
     <div id="editform">
-        <form id="reply" action='{{ sitepath }}upload' method='post'>
+        <form id="reply" action="{{ .SitePath }}upload" method="post">
             <div class="info-flex">
                 <div>
-                    {% if not forcerandom %}<input class="codebox" name='filename' id="filename" type='text' value="" placeholder="filename">{% endif %}.<input id="extension" class="codebox" name='extension' type='text' value="story" placeholder="txt">
+                    {{- if not .ForceRandom -}}
+                    <input class="codebox" name="filename" id="filename" type="text" value="" placeholder="filename">
+                    {{- end -}}.<input id="extension" class="codebox" name="extension" type="text" value="story" placeholder="txt">
                 </div>
                 <div class="info-actions">
                     <select id="expiry" name="expires">
                         <option disabled>Expires:</option>
-                        {% for expiry in expirylist %}
-                        <option value="{{ expiry.Seconds }}"{% if forloop.Last %} selected{% endif %}>{{ expiry.Human }}</option>
-                        {% endfor %}
+                        {{- range $i, $expiry := .ExpiryList -}}
+                        <option value="{{ $expiry.Seconds }}" {{- if eq $i (sub (len $.ExpiryList) 1) }} selected{{ end }}>{{- $expiry.Human -}}</option>
+                        {{- end -}}
                     </select>
                     <button type="submit" id="save">Save</button>
                 </div>
             </div>
 
-            <textarea name='content' id="newcontent" class="editor"></textarea>
+            <textarea name="content" id="newcontent" class="editor"></textarea>
         </form>
     </div>
-{% endblock %}
+{{- end -}}
 
-{%block infomore %}
+{{- define "infomore" }}
 <label>wrap <input id="wordwrap" type="checkbox" checked></label> | 
-{% endblock %}
+{{ end -}}
 
-{% block main %}
+{{- define "main" -}}
 <div id="normal-content" class="normal">
-    <pre id="normal-code"><code id="codeb" class="story">{% for line in lines %}{% if line|make_list|first == ">" %}<span class="storygreen">{{ line }}</span>{% else %}<span class="storyred">{{ line }}</span>{% endif %}{% endfor %}</code></pre>
-    <textarea id="inplace-editor" class="editor">{{ extra.contents }}</textarea>
+    <pre id="normal-code"><code id="codeb" class="story">
+        {{- range .Lines -}}
+        {{- if hasPrefix ">" . -}}
+        <span class="storygreen">{{ . }}</span>
+        {{- else -}}
+        <span class="storyred">{{ . }}</span>
+        {{- end -}}
+        {{- end -}}
+    </code></pre>
+    <textarea id="inplace-editor" class="editor">{{ .Extra.Contents }}</textarea>
 </div>
 
 
-<script src="{{ sitepath }}static/js/util.js"></script>
-<script src="{{ sitepath }}static/js/bin.js?v=1"></script>
-{% endblock %}
+<script src="{{ .SitePath }}static/js/util.js"></script>
+<script src="{{ .SitePath }}static/js/bin.js?v=1"></script>
+{{- end -}}

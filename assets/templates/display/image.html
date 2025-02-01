@@ -1,11 +1,11 @@
-{% extends "base.html" %}
+{{ template "display.html" . }}
 
-{% block head %}
-<meta property="og:image" content="{{ siteurl }}{{ sitepath }}{{ selifpath }}{{ filename }}" />
-{% endblock %}
+{{- define "head" -}}
+<meta property="og:image" content="{{ .SiteURL }}{{ .SitePath }}{{ .SelifPath }}{{ .FileName }}" />
+{{- end -}}
 
-{% block main %}
-<a href="{{ sitepath }}{{ selifpath }}{{ filename }}">
-    <img class="display-image" src="{{ sitepath }}{{ selifpath }}{{ filename }}" />
+{{- define "main" -}}
+<a href="{{ .SitePath }}{{ .SelifPath }}{{ .FileName }}">
+    <img class="display-image" src="{{ .SitePath }}{{ .SelifPath }}{{ .FileName }}" />
 </a>
-{% endblock %}
+{{- end -}}

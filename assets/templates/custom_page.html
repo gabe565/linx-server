@@ -1,19 +1,20 @@
-{% extends "base.html" %}
+{{ template "base.html" . }}
 
-{% block title %}{{sitename}} - {{ pagename }}{% endblock %}
+{{- define "title" -}}
+  {{ .SiteName }} - {{ .PageName }}
+{{- end -}}
 
-{% block head %}
-<link href="{{ sitepath }}static/css/github-markdown.css" rel="stylesheet" type="text/css">
-{% endblock %}
+{{- define "head" -}}
+<link href="{{ .SitePath }}static/css/github-markdown.css" rel="stylesheet" type="text/css">
+{{- end -}}
 
-{% block content %}
+{{- define "content" -}}
 <div id="main">
-	<div id='inner_content'>
+	<div id="inner_content">
 		<div class="normal markdown-body">
-			<h2>{{ pagename }}</h2>
-
-			{{ contents|safe }}
+			<h2>{{ .PageName }}</h2>
+			{{- .Contents -}}
 		</div>
 	</div>
 </div>
-{% endblock %}
+{{- end -}}

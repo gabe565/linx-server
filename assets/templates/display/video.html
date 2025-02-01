@@ -1,12 +1,12 @@
-{% extends "base.html" %}
+{{ template "display.html" . }}
 
-{% block head %}
-<meta property="og:video" content="{{ siteurl }}{{ sitepath }}{{ selifpath }}{{ filename }}" />
-{% endblock %}
+{{- define "head" -}}
+<meta property="og:video" content="{{ .SiteURL }}{{ .SitePath }}{{ .SelifPath }}{{ .FileName }}" />
+{{- end -}}
 
-{% block main %}
+{{- define "main" -}}
 <video class="display-video" controls autoplay>
-    <source src="{{ sitepath }}{{ selifpath }}{{ filename }}" />
-    <a href='{{ sitepath }}{{ selifpath }}{{ filename }}'>Download it instead</a>
+    <source src="{{ .SitePath }}{{ .SelifPath }}{{ .FileName }}" />
+    <a href="{{ .SitePath }}{{ .SelifPath }}{{ .FileName }}">Download it instead</a>
 </video>
-{% endblock %}
+{{- end -}}

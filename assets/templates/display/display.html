@@ -1,0 +1,35 @@
+{{ template "base.html" . }}
+
+{{- define "title" -}}
+  {{ .SiteName }} - {{ .FileName }}
+{{- end -}}
+
+{{- define "content" -}}
+<div id="info" class="dinfo info-flex">
+    <div id="filename">
+        {{- .FileName -}}
+    </div>
+
+    <div class="info-actions">
+        {{- with .Expiry -}}
+        <span>expires in {{ . }}</span> |
+        {{ end -}}
+        {{- block "infomore" . }}{{ end -}}
+        <span>{{ .Size }}</span> |
+        <a href="{{ .FileName }}/torrent" download>torrent</a> |
+        <a href="{{ .SitePath }}{{ .SelifPath }}{{ .FileName }}" download>get</a>
+    </div>
+
+    {{- block "infoleft" . }}{{ end -}}
+</div>
+
+<div id="main" {{- block "mainmore" . }}{{ end -}}>
+
+    <div id="inner_content" {{- block "innercontentmore" . }}{{ end }}>
+        {{- block "main" . }}{{ end -}}
+    </div>
+
+</div>
+
+<script src="{{ .SitePath }}static/js/clipboard.js"></script>
+{{- end -}}

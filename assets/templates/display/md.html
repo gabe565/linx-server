@@ -1,11 +1,11 @@
-{% extends "base.html" %}
+{{ template "display.html" . }}
 
-{% block head %}
-<link href="{{ sitepath }}static/css/github-markdown.css" rel="stylesheet" type="text/css">
-{% endblock %}
+{{- define "head" -}}
+<link href="{{ .SitePath }}static/css/github-markdown.css" rel="stylesheet" type="text/css">
+{{- end -}}
 
-{% block main %}
+{{- define "main" -}}
 <div class="normal markdown-body">
-	{{ extra.contents|safe }}
+	{{- .Extra.Contents -}}
 </div>
-{% endblock %}
+{{- end -}}
