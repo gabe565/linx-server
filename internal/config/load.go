@@ -32,7 +32,7 @@ func (c *Config) Load(cmd *cobra.Command) error {
 	}
 	if strings.Contains(cfgFile, "$HOME") {
 		home, err := os.UserHomeDir()
-		if err == nil {
+		if err != nil {
 			return err
 		}
 
