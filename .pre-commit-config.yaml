@@ -1,11 +1,17 @@
 repos:
+  - repo: https://github.com/TekWizely/pre-commit-golang
+    rev: v1.0.0-rc.1
+    hooks:
+      - id: go-mod-tidy-repo
+      - id: golangci-lint-mod
+        args: [--fix]
+
   - repo: local
     hooks:
       - id: usage-docs
         name: usage-docs
         entry: go run ./internal/generate/docs
         language: system
-        types: [go]
         pass_filenames: false
       - id: config-example
         name: config-example
