@@ -14,10 +14,11 @@ import (
 	"gabe565.com/linx-server/cmd/genkey"
 	"gabe565.com/linx-server/internal/config"
 	"gabe565.com/linx-server/internal/server"
+	"gabe565.com/utils/cobrax"
 	"github.com/spf13/cobra"
 )
 
-func New() *cobra.Command {
+func New(options ...cobrax.Option) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "linx-server",
 		Short: "Self-hosted file/media sharing website",
@@ -28,6 +29,9 @@ func New() *cobra.Command {
 		genkey.New(),
 	)
 	config.Default.RegisterServeFlags(cmd)
+	for _, option := range options {
+		option(cmd)
+	}
 	return cmd
 }
 

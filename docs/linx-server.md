@@ -43,6 +43,7 @@ linx-server [flags]
       --site-url string                       Site base url
       --tls-cert string                       Path to ssl certificate (for https)
       --tls-key string                        Path to ssl key (for https)
+  -v, --version                               version for linx-server
       --x-frame-options string                Value of X-Frame-Options header (default "SAMEORIGIN")
 ```
 

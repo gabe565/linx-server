@@ -4,10 +4,14 @@ import (
 	"os"
 
 	"gabe565.com/linx-server/cmd"
+	"gabe565.com/utils/cobrax"
 )
 
+var version = "beta"
+
 func main() {
-	if err := cmd.New().Execute(); err != nil {
+	root := cmd.New(cobrax.WithVersion(version))
+	if err := root.Execute(); err != nil {
 		os.Exit(1)
 	}
 }

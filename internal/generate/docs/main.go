@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"gabe565.com/linx-server/cmd"
+	"gabe565.com/utils/cobrax"
 	"github.com/spf13/cobra/doc"
 )
 
@@ -18,7 +19,7 @@ func main() {
 		panic(err)
 	}
 
-	root := cmd.New()
+	root := cmd.New(cobrax.WithVersion("beta"))
 	root.DisableAutoGenTag = true
 	if err := doc.GenMarkdownTree(root, output); err != nil {
 		panic(err)
