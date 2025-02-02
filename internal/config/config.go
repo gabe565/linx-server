@@ -39,7 +39,7 @@ type Config struct {
 	MaxSize               Bytes    `toml:"max-size" comment:"Maximum upload file size in bytes"`
 	MaxExpiry             Duration `toml:"max-expiry" comment:"Maximum expiration time. A value of 0 means no expiry."`
 	AllowHotlink          bool     `toml:"allow-hotlink" comment:"Allow hot-linking of files"`
-	RemoteUploads         bool     `toml:"remote-uploads" comment:"Enable remote uploads"`
+	RemoteUploads         bool     `toml:"remote-uploads" comment:"Enable remote uploads (/upload?url=https://...)"`
 	NoDirectAgents        bool     `toml:"no-direct-agents" comment:"Disable serving files directly for wget/curl user agents"`
 	ForceRandomFilename   bool     `toml:"force-random-filename" comment:"Force all uploads to use a random filename"`
 	AccessKeyCookieExpiry uint64   `toml:"access-key-cookie-expiry" comment:"Expiration time for access key cookies in seconds (set 0 to use session cookies)"`

@@ -15,7 +15,7 @@ max-size = '4 GiB'
 max-expiry = '0s'
 # Allow hot-linking of files
 allow-hotlink = false
-# Enable remote uploads
+# Enable remote uploads (/upload?url=https://...)
 remote-uploads = false
 # Disable serving files directly for wget/curl user agents
 no-direct-agents = false

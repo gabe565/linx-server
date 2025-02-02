@@ -33,7 +33,7 @@ linx-server [flags]
       --real-ip                               Use X-Real-IP/X-Forwarded-For headers
       --referrer-policy string                Value of default Referrer-Policy header (default "same-origin")
       --remote-auth-file string               Path to a file containing newline-separated scrypted auth keys for remote uploads
-      --remote-uploads                        Enable remote uploads
+      --remote-uploads                        Enable remote uploads (/upload?url=https://...)
       --s3-bucket string                      S3 bucket to use for files and metadata
       --s3-endpoint string                    S3 endpoint
       --s3-force-path-style                   Force path-style addressing for S3 (e.g. https://s3.amazonaws.com/linx/example.txt)

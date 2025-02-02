@@ -72,7 +72,7 @@ func (c *Config) RegisterServeFlags(cmd *cobra.Command) {
 	fs.StringVar(&c.TLSKey, FlagTLSKey, c.TLSKey, "Path to ssl key (for https)")
 	fs.BoolVar(&c.RealIP, FlagRealIP, c.RealIP, "Use X-Real-IP/X-Forwarded-For headers")
 	fs.BoolVar(&c.Fastcgi, FlagFastcgi, c.Fastcgi, "Serve through fastcgi")
-	fs.BoolVar(&c.RemoteUploads, FlagRemoteUploads, c.RemoteUploads, "Enable remote uploads")
+	fs.BoolVar(&c.RemoteUploads, FlagRemoteUploads, c.RemoteUploads, "Enable remote uploads (/upload?url=https://...)")
 	fs.StringVar(&c.AuthFile, FlagAuthFile, c.AuthFile, "Path to a file containing newline-separated scrypted auth keys")
 	fs.StringVar(&c.RemoteAuthFile, FlagRemoteAuthFile, c.RemoteAuthFile, "Path to a file containing newline-separated scrypted auth keys for remote uploads")
 	fs.StringVar(&c.ContentSecurityPolicy, FlagContentSecurityPolicy, c.ContentSecurityPolicy, "Value of default Content-Security-Policy header")
