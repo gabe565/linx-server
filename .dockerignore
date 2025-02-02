@@ -1,0 +1,11 @@
+.dockerignore
+.git/
+.github/
+.gitignore
+.golangci.yaml
+.pre-commit-config.yaml
+Dockerfile
+README.md
+compose.yaml
+dist/
+docs/
