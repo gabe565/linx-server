@@ -22,7 +22,7 @@
 					{{ end -}}
 					<a href="{{ .SitePath }}API">API</a>
 					{{- range $path, $name := .CustomPagesNames }}
-					| <a href="{{ .SitePath }}{{ $path }}/">{{ $name }}</a>
+					| <a href="{{ $.SitePath }}{{ $path }}/">{{ $name }}</a>
 					{{- end -}}
 				</div>
 				<h2><a href="{{ .SitePath }}" title="{{ .SiteName }}">{{ .SiteName }}</a></h2>
