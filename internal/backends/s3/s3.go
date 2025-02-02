@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"gabe565.com/linx-server/internal/backends"
@@ -132,38 +133,42 @@ func (b Backend) ServeFile(key string, w http.ResponseWriter, r *http.Request) e
 
 func mapMetadata(m backends.Metadata) map[string]string {
 	return map[string]string{
-		"Expiry":    strconv.FormatInt(m.Expiry.Unix(), 10),
-		"Deletekey": m.DeleteKey,
-		"Size":      strconv.FormatInt(m.Size, 10),
-		"Mimetype":  m.Mimetype,
-		"Sha256sum": m.Sha256sum,
-		"AccessKey": m.AccessKey,
+		"expiry":    strconv.FormatInt(m.Expiry.Unix(), 10),
+		"deletekey": m.DeleteKey,
+		"size":      strconv.FormatInt(m.Size, 10),
+		"mimetype":  m.Mimetype,
+		"sha256sum": m.Sha256sum,
+		"accesskey": m.AccessKey,
 	}
 }
 
 func unmapMetadata(input map[string]string) (backends.Metadata, error) {
-	m := backends.Metadata{
-		DeleteKey: input["Deletekey"],
-		AccessKey: input["AccessKey"],
-		Sha256sum: input["Sha256sum"],
-		Mimetype:  input["Mimetype"],
+	var m backends.Metadata
+	for k, v := range input {
+		k = strings.ToLower(k)
+		switch k {
+		case "deletekey", "delete_key":
+			m.DeleteKey = v
+		case "accesskey":
+			m.AccessKey = v
+		case "sha256sum":
+			m.Sha256sum = v
+		case "mimetype":
+			m.Mimetype = v
+		case "expiry":
+			expiry, err := strconv.ParseInt(v, 10, 64)
+			if err != nil {
+				return m, err
+			}
+			m.Expiry = time.Unix(expiry, 0)
+		case "size":
+			var err error
+			m.Size, err = strconv.ParseInt(input["size"], 10, 64)
+			if err != nil {
+				return m, err
+			}
+		}
 	}
-
-	expiry, err := strconv.ParseInt(input["Expiry"], 10, 64)
-	if err != nil {
-		return m, err
-	}
-	m.Expiry = time.Unix(expiry, 0)
-
-	m.Size, err = strconv.ParseInt(input["Size"], 10, 64)
-	if err != nil {
-		return m, err
-	}
-
-	if m.DeleteKey == "" {
-		m.DeleteKey = input["Delete_key"]
-	}
-
 	return m, nil
 }
 
