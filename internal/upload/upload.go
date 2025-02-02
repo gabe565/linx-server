@@ -11,7 +11,6 @@ import (
 	"net/url"
 	"path"
 	"path/filepath"
-	"regexp"
 	"slices"
 	"strconv"
 	"strings"
@@ -27,6 +26,7 @@ import (
 	"github.com/dchest/uniuri"
 	"github.com/gabriel-vasile/mimetype"
 	"github.com/go-chi/chi/v5"
+	"github.com/gosimple/slug"
 )
 
 //nolint:gochecknoglobals
@@ -306,7 +306,6 @@ func Process(ctx context.Context, upReq Request) (Upload, error) {
 	}
 
 	upload.Filename = barename + "." + extension
-	upload.Filename = strings.ReplaceAll(upload.Filename, " ", "_")
 
 	fileexists, err := config.StorageBackend.Exists(ctx, upload.Filename)
 	if err != nil {
@@ -401,9 +400,6 @@ func GenerateJSONresponse(upload Upload, r *http.Request) []byte {
 
 //nolint:gochecknoglobals
 var (
-	bareRe = regexp.MustCompile(`[^A-Za-z0-9\- ]`)
-	extRe  = regexp.MustCompile(`[^A-Za-z0-9\-.]`)
-
 	compressedExts = []string{
 		".bz2",
 		".gz",
@@ -429,11 +425,17 @@ func BarePlusExt(filename string) (string, string) {
 		}
 	}
 
-	extension = extRe.ReplaceAllString(extension, "")
-	barename = bareRe.ReplaceAllString(barename, "")
+	extension = strings.Map(func(r rune) rune {
+		switch {
+		case 'a' <= r && r <= 'z', '0' <= r && r <= '9', r == '-', r == '.':
+			return r
+		default:
+			return -1
+		}
+	}, extension)
+	barename = slug.Make(barename)
 
-	extension = strings.Trim(extension, "-.")
-	barename = strings.Trim(barename, "-")
+	extension = strings.Trim(extension, ".")
 
 	return barename, extension
 }
