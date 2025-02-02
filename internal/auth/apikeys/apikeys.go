@@ -41,7 +41,9 @@ func ReadAuthKeys(authFile string) []string {
 	if err != nil {
 		log.Fatal("Failed to open authfile: ", err)
 	}
-	defer f.Close()
+	defer func() {
+		_ = f.Close()
+	}()
 
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {

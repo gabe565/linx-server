@@ -18,4 +18,8 @@ func main() {
 	if err := encoder.Encode(conf); err != nil {
 		panic(err)
 	}
+
+	if err := f.Close(); err != nil {
+		panic(err)
+	}
 }

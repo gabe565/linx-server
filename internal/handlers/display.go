@@ -62,6 +62,9 @@ func FileDisplay(w http.ResponseWriter, r *http.Request, fileName string, metada
 		if err != nil {
 			Oops(w, r, RespHTML, err.Error())
 		}
+		defer func() {
+			_ = reader.Close()
+		}()
 
 		if metadata.Size < maxDisplayFileSizeBytes {
 			bytes, err := io.ReadAll(reader)
@@ -77,6 +80,9 @@ func FileDisplay(w http.ResponseWriter, r *http.Request, fileName string, metada
 		if err != nil {
 			Oops(w, r, RespHTML, err.Error())
 		}
+		defer func() {
+			_ = reader.Close()
+		}()
 
 		if metadata.Size < maxDisplayFileSizeBytes {
 			bytes, err := io.ReadAll(reader)
@@ -94,6 +100,9 @@ func FileDisplay(w http.ResponseWriter, r *http.Request, fileName string, metada
 		if err != nil {
 			Oops(w, r, RespHTML, err.Error())
 		}
+		defer func() {
+			_ = reader.Close()
+		}()
 
 		if metadata.Size < maxDisplayFileSizeBytes {
 			bytes, err := io.ReadAll(reader)

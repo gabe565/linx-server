@@ -91,7 +91,9 @@ func FileTorrentHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	defer f.Close()
+	defer func() {
+		_ = f.Close()
+	}()
 
 	if expiry.IsTSExpired(metadata.Expiry) {
 		if err := config.StorageBackend.Delete(fileName); err != nil {

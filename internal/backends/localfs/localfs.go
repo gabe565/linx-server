@@ -53,7 +53,9 @@ func (b Backend) Head(key string) (backends.Metadata, error) {
 	} else if err != nil {
 		return metadata, backends.ErrBadMetadata
 	}
-	defer f.Close()
+	defer func() {
+		_ = f.Close()
+	}()
 
 	decoder := json.NewDecoder(f)
 

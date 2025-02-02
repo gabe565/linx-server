@@ -102,6 +102,9 @@ func (b Backend) ServeFile(key string, w http.ResponseWriter, r *http.Request) e
 			Key:    aws.String(key),
 		})
 	}
+	defer func() {
+		_ = result.Body.Close()
+	}()
 
 	if err != nil {
 		if aerr, ok := err.(awserr.Error); ok { //nolint:errorlint
