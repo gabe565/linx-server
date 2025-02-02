@@ -2,6 +2,7 @@ package upload
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -105,7 +106,7 @@ func POSTHandler(w http.ResponseWriter, r *http.Request) {
 		upReq.randomBarename = true
 	}
 
-	upload, err := Process(upReq)
+	upload, err := Process(r.Context(), upReq)
 
 	if strings.EqualFold("application/json", r.Header.Get("Accept")) {
 		if errors.Is(err, ErrFileTooLarge) || errors.Is(err, backends.ErrFileEmpty) {
@@ -140,7 +141,7 @@ func PUTHandler(w http.ResponseWriter, r *http.Request) {
 	upReq.filename = chi.URLParam(r, "name")
 	upReq.src = http.MaxBytesReader(w, r.Body, int64(config.Default.MaxSize))
 
-	upload, err := Process(upReq)
+	upload, err := Process(r.Context(), upReq)
 
 	if strings.EqualFold("application/json", r.Header.Get("Accept")) {
 		if errors.Is(err, ErrFileTooLarge) || errors.Is(err, backends.ErrFileEmpty) {
@@ -227,7 +228,7 @@ func Remote(w http.ResponseWriter, r *http.Request) {
 	upReq.randomBarename = r.FormValue("randomize") == InputYes
 	upReq.expiry = ParseExpiry(r.FormValue("expiry"))
 
-	upload, err := Process(upReq)
+	upload, err := Process(r.Context(), upReq)
 
 	if strings.EqualFold("application/json", r.Header.Get("Accept")) {
 		if err != nil {
@@ -269,7 +270,7 @@ func HeaderProcess(r *http.Request, upReq *Request) {
 
 var ErrProhibitedFilename = errors.New("prohibited filename")
 
-func Process(upReq Request) (Upload, error) {
+func Process(ctx context.Context, upReq Request) (Upload, error) {
 	var upload Upload
 	if upReq.size > int64(config.Default.MaxSize) {
 		return upload, ErrFileTooLarge
@@ -307,14 +308,14 @@ func Process(upReq Request) (Upload, error) {
 	upload.Filename = strings.Join([]string{barename, extension}, ".")
 	upload.Filename = strings.ReplaceAll(upload.Filename, " ", "")
 
-	fileexists, err := config.StorageBackend.Exists(upload.Filename)
+	fileexists, err := config.StorageBackend.Exists(ctx, upload.Filename)
 	if err != nil {
 		return upload, err
 	}
 
 	// Check if the delete key matches, in which case overwrite
 	if fileexists {
-		metad, merr := config.StorageBackend.Head(upload.Filename)
+		metad, merr := config.StorageBackend.Head(ctx, upload.Filename)
 		if merr == nil {
 			if upReq.deleteKey == metad.DeleteKey {
 				fileexists = false
@@ -348,7 +349,7 @@ func Process(upReq Request) (Upload, error) {
 		upload.Filename = strings.Join([]string{barename, extension}, ".")
 
 		var err error
-		fileexists, err = config.StorageBackend.Exists(upload.Filename)
+		fileexists, err = config.StorageBackend.Exists(ctx, upload.Filename)
 		if err != nil {
 			return upload, err
 		}
@@ -370,7 +371,7 @@ func Process(upReq Request) (Upload, error) {
 		upReq.deleteKey = uniuri.NewLen(30)
 	}
 
-	upload.Metadata, err = config.StorageBackend.Put(upload.Filename, io.MultiReader(bytes.NewReader(header), upReq.src), fileExpiry, upReq.deleteKey, upReq.accessKey)
+	upload.Metadata, err = config.StorageBackend.Put(ctx, upload.Filename, io.MultiReader(bytes.NewReader(header), upReq.src), fileExpiry, upReq.deleteKey, upReq.accessKey)
 	if err != nil {
 		return upload, err
 	}

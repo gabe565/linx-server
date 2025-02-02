@@ -16,7 +16,7 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	filename := chi.URLParam(r, "name")
 
 	// Ensure that file exists and delete key is correct
-	metadata, err := config.StorageBackend.Head(filename)
+	metadata, err := config.StorageBackend.Head(r.Context(), filename)
 	if errors.Is(err, backends.ErrNotFound) {
 		NotFound(w, r) // 404 - file doesn't exist
 		return
@@ -26,7 +26,7 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if metadata.DeleteKey == requestKey {
-		err := config.StorageBackend.Delete(filename)
+		err := config.StorageBackend.Delete(r.Context(), filename)
 		if err != nil {
 			Oops(w, r, RespPLAIN, "Could not delete")
 			return

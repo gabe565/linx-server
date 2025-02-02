@@ -1,6 +1,7 @@
 package expiry
 
 import (
+	"context"
 	"time"
 
 	"gabe565.com/linx-server/internal/config"
@@ -24,8 +25,8 @@ type ExpirationTime struct {
 }
 
 // Determine if the given filename is expired
-func IsFileExpired(filename string) (bool, error) {
-	metadata, err := config.StorageBackend.Head(filename)
+func IsFileExpired(ctx context.Context, filename string) (bool, error) {
+	metadata, err := config.StorageBackend.Head(ctx, filename)
 	if err != nil {
 		return false, err
 	}

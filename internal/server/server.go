@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"os"
@@ -46,7 +47,10 @@ func Setup() (*chi.Mux, error) {
 	config.Default.SelifPath = strings.Trim(config.Default.SelifPath, "/") + "/"
 
 	if config.Default.S3Bucket != "" {
-		config.StorageBackend = s3.NewS3Backend(config.Default.S3Bucket, config.Default.S3Region, config.Default.S3Endpoint, config.Default.S3ForcePathStyle)
+		config.StorageBackend, err = s3.NewS3Backend(context.Background(), config.Default.S3Bucket, config.Default.S3Region, config.Default.S3Endpoint, config.Default.S3ForcePathStyle)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create S3 backend: %w", err)
+		}
 	} else {
 		config.StorageBackend = localfs.NewLocalfsBackend(config.Default.MetaPath, config.Default.FilesPath)
 		if config.Default.CleanupEvery.Duration > 0 {

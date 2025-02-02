@@ -1,6 +1,7 @@
 package cleanup
 
 import (
+	"context"
 	"errors"
 	"log"
 	"log/slog"
@@ -13,14 +14,14 @@ import (
 func Cleanup(filesDir string, metaDir string, noLogs bool) error {
 	fileBackend := localfs.NewLocalfsBackend(metaDir, filesDir)
 
-	files, err := fileBackend.List()
+	files, err := fileBackend.List(context.Background())
 	if err != nil {
 		return err
 	}
 
 	var errs []error
 	for _, filename := range files {
-		metadata, err := fileBackend.Head(filename)
+		metadata, err := fileBackend.Head(context.Background(), filename)
 		if err != nil {
 			if !noLogs {
 				log.Printf("Failed to find metadata for %s", filename)
@@ -31,7 +32,7 @@ func Cleanup(filesDir string, metaDir string, noLogs bool) error {
 			if !noLogs {
 				log.Printf("Delete %s", filename)
 			}
-			if err := fileBackend.Delete(filename); err != nil {
+			if err := fileBackend.Delete(context.Background(), filename); err != nil {
 				errs = append(errs, err)
 			}
 		}

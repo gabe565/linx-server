@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -23,7 +24,7 @@ import (
 func FileServeHandler(w http.ResponseWriter, r *http.Request) {
 	fileName := chi.URLParam(r, "name")
 
-	metadata, err := CheckFile(fileName)
+	metadata, err := CheckFile(r.Context(), fileName)
 	if errors.Is(err, backends.ErrNotFound) {
 		NotFound(w, r)
 		return
@@ -90,14 +91,14 @@ func StaticHandler(w http.ResponseWriter, r *http.Request) {
 	http.ServeContent(w, r, path, config.TimeStarted, file.(io.ReadSeeker))
 }
 
-func CheckFile(filename string) (backends.Metadata, error) {
-	metadata, err := config.StorageBackend.Head(filename)
+func CheckFile(ctx context.Context, filename string) (backends.Metadata, error) {
+	metadata, err := config.StorageBackend.Head(ctx, filename)
 	if err != nil {
 		return metadata, err
 	}
 
 	if expiry.IsTSExpired(metadata.Expiry) {
-		if err := config.StorageBackend.Delete(filename); err != nil {
+		if err := config.StorageBackend.Delete(ctx, filename); err != nil {
 			slog.Error("Failed to delete expired file", "path", filename)
 		}
 		return metadata, backends.ErrNotFound

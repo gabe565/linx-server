@@ -1,6 +1,7 @@
 package localfs
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"io"
@@ -28,14 +29,14 @@ type MetadataJSON struct {
 	ArchiveFiles []string `json:"archive_files,omitempty"`
 }
 
-func (b Backend) Delete(key string) error {
+func (b Backend) Delete(_ context.Context, key string) error {
 	return errors.Join(
 		os.Remove(path.Join(b.filesPath, key)),
 		os.Remove(path.Join(b.metaPath, key)),
 	)
 }
 
-func (b Backend) Exists(key string) (bool, error) {
+func (b Backend) Exists(_ context.Context, key string) (bool, error) {
 	_, err := os.Stat(path.Join(b.filesPath, key))
 	exists := true
 	if err != nil && os.IsNotExist(err) {
@@ -45,7 +46,7 @@ func (b Backend) Exists(key string) (bool, error) {
 	return exists, err
 }
 
-func (b Backend) Head(key string) (backends.Metadata, error) {
+func (b Backend) Head(_ context.Context, key string) (backends.Metadata, error) {
 	var metadata backends.Metadata
 	f, err := os.Open(path.Join(b.metaPath, key))
 	if os.IsNotExist(err) {
@@ -75,8 +76,8 @@ func (b Backend) Head(key string) (backends.Metadata, error) {
 	return metadata, nil
 }
 
-func (b Backend) Get(key string) (backends.Metadata, io.ReadCloser, error) {
-	metadata, err := b.Head(key)
+func (b Backend) Get(ctx context.Context, key string) (backends.Metadata, io.ReadCloser, error) {
+	metadata, err := b.Head(ctx, key)
 	if err != nil {
 		return metadata, nil, err
 	}
@@ -86,7 +87,7 @@ func (b Backend) Get(key string) (backends.Metadata, io.ReadCloser, error) {
 }
 
 func (b Backend) ServeFile(key string, w http.ResponseWriter, r *http.Request) error {
-	if _, err := b.Head(key); err != nil {
+	if _, err := b.Head(r.Context(), key); err != nil {
 		return err
 	}
 
@@ -129,7 +130,7 @@ func (b Backend) writeMetadata(key string, metadata backends.Metadata) error {
 	return os.Rename(tmpPath, path.Join(b.metaPath, key))
 }
 
-func (b Backend) Put(key string, r io.Reader, expiry time.Time, deleteKey, accessKey string) (backends.Metadata, error) {
+func (b Backend) Put(_ context.Context, key string, r io.Reader, expiry time.Time, deleteKey, accessKey string) (backends.Metadata, error) {
 	var m backends.Metadata
 	tmpPath := path.Join(b.filesPath, "."+key)
 
@@ -177,11 +178,11 @@ func (b Backend) Put(key string, r io.Reader, expiry time.Time, deleteKey, acces
 	return m, os.Rename(tmpPath, path.Join(b.filesPath, key))
 }
 
-func (b Backend) PutMetadata(key string, m backends.Metadata) error {
+func (b Backend) PutMetadata(_ context.Context, key string, m backends.Metadata) error {
 	return b.writeMetadata(key, m)
 }
 
-func (b Backend) Size(key string) (int64, error) {
+func (b Backend) Size(_ context.Context, key string) (int64, error) {
 	fileInfo, err := os.Stat(path.Join(b.filesPath, key))
 	if err != nil {
 		return 0, err
@@ -189,7 +190,7 @@ func (b Backend) Size(key string) (int64, error) {
 	return fileInfo.Size(), nil
 }
 
-func (b Backend) List() ([]string, error) {
+func (b Backend) List(_ context.Context) ([]string, error) {
 	files, err := os.ReadDir(b.filesPath)
 	if err != nil {
 		return nil, err

@@ -77,7 +77,7 @@ func CreateTorrent(fileName string, f io.Reader, r *http.Request) ([]byte, error
 func FileTorrentHandler(w http.ResponseWriter, r *http.Request) {
 	fileName := chi.URLParam(r, "name")
 
-	metadata, f, err := config.StorageBackend.Get(fileName)
+	metadata, f, err := config.StorageBackend.Get(r.Context(), fileName)
 	if err != nil {
 		switch {
 		case errors.Is(err, backends.ErrNotFound):
@@ -96,7 +96,7 @@ func FileTorrentHandler(w http.ResponseWriter, r *http.Request) {
 	}()
 
 	if expiry.IsTSExpired(metadata.Expiry) {
-		if err := config.StorageBackend.Delete(fileName); err != nil {
+		if err := config.StorageBackend.Delete(r.Context(), fileName); err != nil {
 			slog.Error("Failed to delete expired file", "path", fileName)
 		}
 		handlers.NotFound(w, r)

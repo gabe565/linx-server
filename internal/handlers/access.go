@@ -100,7 +100,7 @@ func FileAccessHeader(w http.ResponseWriter, r *http.Request) {
 
 	fileName := chi.URLParam(r, "name")
 
-	metadata, err := CheckFile(fileName)
+	metadata, err := CheckFile(r.Context(), fileName)
 	if errors.Is(err, backends.ErrNotFound) {
 		NotFound(w, r)
 		return

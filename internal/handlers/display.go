@@ -58,7 +58,7 @@ func FileDisplay(w http.ResponseWriter, r *http.Request, fileName string, metada
 	case metadata.Mimetype == "application/pdf":
 		tpl = "display/pdf.html"
 	case extension == "story":
-		metadata, reader, err := config.StorageBackend.Get(fileName)
+		metadata, reader, err := config.StorageBackend.Get(r.Context(), fileName)
 		if err != nil {
 			Oops(w, r, RespHTML, err.Error())
 		}
@@ -76,7 +76,7 @@ func FileDisplay(w http.ResponseWriter, r *http.Request, fileName string, metada
 		}
 
 	case extension == "md":
-		metadata, reader, err := config.StorageBackend.Get(fileName)
+		metadata, reader, err := config.StorageBackend.Get(r.Context(), fileName)
 		if err != nil {
 			Oops(w, r, RespHTML, err.Error())
 		}
@@ -96,7 +96,7 @@ func FileDisplay(w http.ResponseWriter, r *http.Request, fileName string, metada
 		}
 
 	case strings.HasPrefix(metadata.Mimetype, "text/"), util.SupportedBinExtension(extension):
-		metadata, reader, err := config.StorageBackend.Get(fileName)
+		metadata, reader, err := config.StorageBackend.Get(r.Context(), fileName)
 		if err != nil {
 			Oops(w, r, RespHTML, err.Error())
 		}
