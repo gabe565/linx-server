@@ -11,7 +11,7 @@ RUN set -ex \
 FROM alpine:3.21.2
 WORKDIR /data
 
-COPY --from=build /app/linx-server /usr/local/bin/linx-server
+COPY --from=build /app/linx-server /usr/bin/linx-server
 
 RUN mkdir -p /data/files && mkdir -p /data/meta && chown -R 65534:65534 /data
 VOLUME ["/data/files", "/data/meta"]
