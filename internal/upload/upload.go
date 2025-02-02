@@ -400,9 +400,13 @@ func GenerateJSONresponse(upload Upload, r *http.Request) []byte {
 
 //nolint:gochecknoglobals
 var compressedExts = []string{
-	".bz2",
 	".gz",
 	".xz",
+	".bz2",
+	".zst",
+	".lzma",
+	".lzo",
+	".z",
 }
 
 func BarePlusExt(filename string) (string, string) {
