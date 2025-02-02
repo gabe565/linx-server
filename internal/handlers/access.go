@@ -5,7 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"path"
-	"regexp"
+	"slices"
 	"strings"
 	"time"
 
@@ -31,10 +31,10 @@ const (
 	ParamName  = "access_key"
 )
 
+//nolint:gochecknoglobals
 var (
 	errInvalidAccessKey = errors.New("invalid access key")
-
-	cliUserAgentRe = regexp.MustCompile("(?i)(lib)?curl|wget")
+	cliUserAgents       = []string{"curl", "wget"}
 )
 
 func CheckAccessKey(r *http.Request, metadata *backends.Metadata) (AccessKeySource, error) {
@@ -93,9 +93,15 @@ func SetAccessKeyCookies(w http.ResponseWriter, r *http.Request, fileName, value
 }
 
 func FileAccessHeader(w http.ResponseWriter, r *http.Request) {
-	if !config.Default.NoDirectAgents && cliUserAgentRe.MatchString(r.Header.Get("User-Agent")) && !strings.EqualFold("application/json", r.Header.Get("Accept")) {
-		FileServeHandler(w, r)
-		return
+	if !config.Default.NoDirectAgents && !strings.EqualFold(r.Header.Get("Accept"), "application/json") {
+		ua := r.Header.Get("User-Agent")
+		isCLI := slices.ContainsFunc(cliUserAgents, func(s string) bool {
+			return strings.Contains(strings.ToLower(ua), s)
+		})
+		if isCLI {
+			FileServeHandler(w, r)
+			return
+		}
 	}
 
 	fileName := chi.URLParam(r, "name")
