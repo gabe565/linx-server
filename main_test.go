@@ -881,7 +881,11 @@ func TestPutAndSpecificDelete(t *testing.T) {
 
 func TestExtension(t *testing.T) {
 	barename, extension := upload.BarePlusExt("test.jpg.gz")
-	assert.Equal(t, "test-jpg", barename)
+	assert.Equal(t, "test", barename)
+	assert.Equal(t, "jpg.gz", extension)
+
+	barename, extension = upload.BarePlusExt("test.gz")
+	assert.Equal(t, "test", barename)
 	assert.Equal(t, "gz", extension)
 
 	barename, extension = upload.BarePlusExt("test.tar.gz")

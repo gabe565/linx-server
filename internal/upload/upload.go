@@ -399,29 +399,22 @@ func GenerateJSONresponse(upload Upload, r *http.Request) []byte {
 }
 
 //nolint:gochecknoglobals
-var (
-	compressedExts = []string{
-		".bz2",
-		".gz",
-		".xz",
-	}
-
-	archiveExts = []string{
-		".tar",
-	}
-)
+var compressedExts = []string{
+	".bz2",
+	".gz",
+	".xz",
+}
 
 func BarePlusExt(filename string) (string, string) {
 	filename = strings.TrimSpace(filename)
 	filename = strings.ToLower(filename)
 
 	extension := path.Ext(filename)
-	barename := filename[:len(filename)-len(extension)]
+	barename := strings.TrimSuffix(filename, extension)
 	if slices.Contains(compressedExts, extension) {
-		ext2 := path.Ext(barename)
-		if slices.Contains(archiveExts, ext2) {
-			barename = barename[:len(barename)-len(ext2)]
+		if ext2 := path.Ext(barename); ext2 != "" {
 			extension = ext2 + extension
+			barename = strings.TrimSuffix(barename, ext2)
 		}
 	}
 
