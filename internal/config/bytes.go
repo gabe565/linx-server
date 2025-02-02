@@ -18,7 +18,7 @@ func (b *Bytes) Set(s string) error {
 }
 
 func (b Bytes) Type() string {
-	return "string"
+	return typeString
 }
 
 func (b Bytes) MarshalText() ([]byte, error) {

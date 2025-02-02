@@ -3,8 +3,8 @@
 {{- define "main" -}}
 <div class="normal display-file">
     <p class="center">
-		You are requesting <a href="{{ .SitePath }}{{ .SelifPath }}/{{ .FileName }}">{{ .FileName }}</a>,
-		<a href="{{ .SitePath }}{{ .SelifPath }}/{{ .FileName }}">click here</a> to download.
+		You are requesting <a href="{{ .SitePath }}{{ .SelifPath }}{{ .FileName }}">{{ .FileName }}</a>,
+		<a href="{{ .SitePath }}{{ .SelifPath }}{{ .FileName }}">click here</a> to download.
 	</p>
 
 {{- if ne (len .Files) 0 -}}

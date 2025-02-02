@@ -5,7 +5,6 @@ files-dir = 'files'
 meta-dir = 'meta'
 site-name = ''
 site-url = ''
-site-path = ''
 # Path relative to site base url where files are accessed directly
 selif-path = 'selif'
 # Serve through fastcgi

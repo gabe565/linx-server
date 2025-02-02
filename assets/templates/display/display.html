@@ -17,7 +17,7 @@
         {{- block "infomore" . }}{{ end -}}
         <span>{{ .Size }}</span> |
         <a href="{{ .SitePath }}torrent/{{ .FileName }}" download>torrent</a> |
-        <a href="{{ .SitePath }}{{ .SelifPath }}/{{ .FileName }}" download>get</a>
+        <a href="{{ .SitePath }}{{ .SelifPath }}{{ .FileName }}" download>get</a>
     </div>
 
     {{- block "infoleft" . }}{{ end -}}

@@ -57,7 +57,7 @@ func Render(name string, data map[string]any, r *http.Request, writer io.Writer)
 		data["SiteName"] = config.Default.SiteName
 	}
 
-	data["SitePath"] = config.Default.SitePath
+	data["SitePath"] = config.Default.SiteURL.Path
 	data["SelifPath"] = config.Default.SelifPath
 	data["CustomPagesNames"] = custompages.Names
 

@@ -23,7 +23,6 @@ import (
 	"gabe565.com/linx-server/internal/expiry"
 	"gabe565.com/linx-server/internal/handlers"
 	"gabe565.com/linx-server/internal/headers"
-	"gabe565.com/utils/must"
 	"github.com/dchest/uniuri"
 	"github.com/gabriel-vasile/mimetype"
 	"github.com/go-chi/chi/v5"
@@ -60,7 +59,7 @@ type Upload struct {
 }
 
 func POSTHandler(w http.ResponseWriter, r *http.Request) {
-	siteURL := must.Must2(headers.GetSiteURL(r)).String()
+	siteURL := headers.GetSiteURL(r).String()
 	if !csrf.StrictReferrerCheck(r, siteURL, []string{"Linx-Delete-Key", "Linx-Expiry", "Linx-Randomize", "X-Requested-With"}) {
 		handlers.BadRequest(w, r, handlers.RespAUTO, "")
 		return
@@ -129,7 +128,7 @@ func POSTHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		http.Redirect(w, r, config.Default.SitePath+upload.Filename, http.StatusSeeOther)
+		http.Redirect(w, r, headers.GetFileURL(r, upload.Filename).String(), http.StatusSeeOther)
 	}
 }
 
@@ -164,7 +163,7 @@ func PUTHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		fmt.Fprintf(w, "%s\n", must.Must2(headers.GetFileURL(r, upload.Filename)))
+		fmt.Fprintf(w, "%s\n", headers.GetFileURL(r, upload.Filename))
 	}
 }
 
@@ -194,7 +193,7 @@ func Remote(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.FormValue("url") == "" {
-		http.Redirect(w, r, config.Default.SitePath, http.StatusSeeOther)
+		http.Redirect(w, r, config.Default.SiteURL.String(), http.StatusSeeOther)
 		return
 	}
 
@@ -245,11 +244,13 @@ func Remote(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		var u *url.URL
 		if directURL {
-			http.Redirect(w, r, config.Default.SitePath+config.Default.SelifPath+upload.Filename, http.StatusSeeOther)
+			u = headers.GetSelifURL(r, upload.Filename)
 		} else {
-			http.Redirect(w, r, config.Default.SitePath+upload.Filename, http.StatusSeeOther)
+			u = headers.GetFileURL(r, upload.Filename)
 		}
+		http.Redirect(w, r, u.String(), http.StatusSeeOther)
 	}
 }
 
@@ -383,8 +384,8 @@ func GenerateBarename() string {
 
 func GenerateJSONresponse(upload Upload, r *http.Request) []byte {
 	js, _ := json.Marshal(map[string]string{
-		"url":        must.Must2(headers.GetFileURL(r, upload.Filename)).String(),
-		"direct_url": must.Must2(headers.GetSelifURL(r, upload.Filename)).String(),
+		"url":        headers.GetFileURL(r, upload.Filename).String(),
+		"direct_url": headers.GetSelifURL(r, upload.Filename).String(),
 		"filename":   upload.Filename,
 		"delete_key": upload.Metadata.DeleteKey,
 		"access_key": upload.Metadata.AccessKey,

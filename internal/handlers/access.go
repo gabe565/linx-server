@@ -3,7 +3,6 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
-	"log"
 	"net/http"
 	"path"
 	"regexp"
@@ -77,11 +76,7 @@ func CheckAccessKey(r *http.Request, metadata *backends.Metadata) (AccessKeySour
 }
 
 func SetAccessKeyCookies(w http.ResponseWriter, r *http.Request, fileName, value string, expires time.Time) {
-	u, err := headers.GetSiteURL(r)
-	if err != nil {
-		log.Printf("cant parse siteURL: %v", err)
-		return
-	}
+	u := headers.GetSiteURL(r)
 	cookie := http.Cookie{
 		Name:     HeaderName,
 		Value:    value,

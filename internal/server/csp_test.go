@@ -3,6 +3,7 @@ package server
 import (
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"testing"
 
 	"gabe565.com/linx-server/internal/config"
@@ -17,7 +18,8 @@ func TestContentSecurityPolicy(t *testing.T) {
 		"X-Frame-Options":         "SAMEORIGIN",
 	}
 
-	config.Default.SiteURL = "http://linx.example.org/"
+	// config.Default.SiteURL = "http://linx.example.org/"
+	config.Default.SiteURL.URL = url.URL{Scheme: "http", Host: "linx.example.org"}
 	config.Default.FilesDir = t.TempDir()
 	config.Default.MetaDir = config.Default.FilesDir + "_meta"
 	config.Default.MaxSize = 1024 * 1024 * 1024

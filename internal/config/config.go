@@ -24,7 +24,7 @@ func (h *HeaderList) Set(value string) error {
 }
 
 func (h *HeaderList) Type() string {
-	return "string"
+	return typeString
 }
 
 type Config struct {
@@ -32,8 +32,7 @@ type Config struct {
 	FilesDir  string `toml:"files-dir" comment:"Path to files directory"`
 	MetaDir   string `toml:"meta-dir" comment:"Path to metadata directory"`
 	SiteName  string `toml:"site-name"`
-	SiteURL   string `toml:"site-url"`
-	SitePath  string `toml:"site-path"`
+	SiteURL   URL    `toml:"site-url"`
 	SelifPath string `toml:"selif-path" comment:"Path relative to site base url where files are accessed directly"`
 	Fastcgi   bool   `toml:"fastcgi" comment:"Serve through fastcgi"`
 
@@ -123,3 +122,5 @@ func getDefaultFile() (string, error) {
 func (c *Config) MaxExpirySeconds() uint64 {
 	return uint64(c.MaxExpiry.Seconds())
 }
+
+const typeString = "string"

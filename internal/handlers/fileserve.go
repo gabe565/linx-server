@@ -45,9 +45,9 @@ func FileServeHandler(w http.ResponseWriter, r *http.Request) {
 	if !config.Default.AllowHotlink {
 		referer := r.Header.Get("Referer")
 		u, _ := url.Parse(referer)
-		p, _ := headers.GetSiteURL(r)
+		p := headers.GetSiteURL(r)
 		if referer != "" && !csrf.SameOrigin(u, p) {
-			http.Redirect(w, r, config.Default.SitePath+fileName, http.StatusSeeOther)
+			http.Redirect(w, r, headers.GetFileURL(r, fileName).String(), http.StatusSeeOther)
 			return
 		}
 	}

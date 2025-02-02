@@ -1,11 +1,11 @@
 {{ template "display.html" . }}
 
 {{- define "head" -}}
-<meta property="og:image" content="{{ .SiteURL }}{{ .SitePath }}{{ .SelifPath }}/{{ .FileName }}" />
+<meta property="og:image" content="{{ .SiteURL }}{{ .SitePath }}{{ .SelifPath }}{{ .FileName }}" />
 {{- end -}}
 
 {{- define "main" -}}
-<a href="{{ .SitePath }}{{ .SelifPath }}/{{ .FileName }}">
-    <img class="display-image" src="{{ .SitePath }}{{ .SelifPath }}/{{ .FileName }}" />
+<a href="{{ .SitePath }}{{ .SelifPath }}{{ .FileName }}">
+    <img class="display-image" src="{{ .SitePath }}{{ .SelifPath }}{{ .FileName }}" />
 </a>
 {{- end -}}

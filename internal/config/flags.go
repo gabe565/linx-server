@@ -64,7 +64,7 @@ func (c *Config) RegisterServeFlags(cmd *cobra.Command) {
 	fs.BoolVar(&c.BasicAuth, FlagBasicAuth, c.BasicAuth, "Allow logging in with basic auth password")
 	fs.BoolVar(&c.AllowHotlink, FlagAllowHotlink, c.AllowHotlink, "Allow hot-linking of files")
 	fs.StringVar(&c.SiteName, FlagSiteName, c.SiteName, "Name of the site")
-	fs.StringVar(&c.SiteURL, FlagSiteURL, c.SiteURL, "Site base url")
+	fs.Var(&c.SiteURL, FlagSiteURL, "Site base url")
 	fs.StringVar(&c.SelifPath, FlagSelifPath, c.SelifPath, "Path relative to site base url where files are accessed directly")
 	fs.Var(&c.MaxSize, FlagMaxSize, "Maximum upload file size in bytes")
 	fs.DurationVar(&c.MaxExpiry.Duration, FlagMaxExpiry, c.MaxExpiry.Duration, "Maximum expiration time. A value of 0 means no expiry.")

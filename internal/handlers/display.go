@@ -38,11 +38,7 @@ func FileDisplay(w http.ResponseWriter, r *http.Request, fileName string, metada
 	tpl := "display/file.html"
 	switch {
 	case strings.EqualFold("application/json", r.Header.Get("Accept")):
-		directURL, err := headers.GetSelifURL(r, fileName)
-		if err != nil {
-			Oops(w, r, RespHTML, "")
-			return
-		}
+		directURL := headers.GetSelifURL(r, fileName)
 		js, _ := json.Marshal(map[string]string{
 			"filename":   fileName,
 			"direct_url": directURL.String(),
@@ -110,13 +106,8 @@ func FileDisplay(w http.ResponseWriter, r *http.Request, fileName string, metada
 		}
 	}
 
-	siteURL, err := headers.GetSelifURL(r, fileName)
-	if err != nil {
-		Oops(w, r, RespHTML, err.Error())
-		return
-	}
-
-	err = templates.Render(tpl, map[string]any{
+	siteURL := headers.GetSelifURL(r, fileName)
+	err := templates.Render(tpl, map[string]any{
 		"MIME":        metadata.Mimetype,
 		"FileName":    fileName,
 		"Size":        sizeHuman,

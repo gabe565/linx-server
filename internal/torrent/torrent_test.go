@@ -1,8 +1,8 @@
 package torrent
 
 import (
-	"fmt"
 	"os"
+	"path"
 	"path/filepath"
 	"testing"
 
@@ -35,8 +35,9 @@ func TestCreateTorrent(t *testing.T) {
 	assert.NotEmpty(t, decoded.Info.Pieces, "expected at least one piece")
 	assert.NotZero(t, decoded.Info.Length, "invalid length")
 
-	tracker := fmt.Sprintf("%s%s/%s", config.Default.SiteURL, config.Default.SelifPath, filepath.Base(tmpFile))
-	assert.Equal(t, tracker, decoded.URLList[0])
+	tracker := config.Default.SiteURL.URL
+	tracker.Path = path.Join(tracker.Path, config.Default.SelifPath, filepath.Base(tmpFile))
+	assert.Equal(t, tracker.String(), decoded.URLList[0])
 }
 
 func TestCreateTorrentWithImage(t *testing.T) {

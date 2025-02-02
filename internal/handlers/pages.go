@@ -13,7 +13,6 @@ import (
 	"gabe565.com/linx-server/internal/expiry"
 	"gabe565.com/linx-server/internal/headers"
 	"gabe565.com/linx-server/internal/templates"
-	"gabe565.com/utils/must"
 )
 
 type RespType int
@@ -48,7 +47,7 @@ func Paste(w http.ResponseWriter, r *http.Request) {
 
 func APIDoc(w http.ResponseWriter, r *http.Request) {
 	err := templates.Render("API.html", map[string]any{
-		"SiteURL":     must.Must2(headers.GetSiteURL(r)).String(),
+		"SiteURL":     headers.GetSiteURL(r).String(),
 		"ForceRandom": config.Default.ForceRandomFilename,
 	}, r, w)
 	if err != nil {
@@ -59,7 +58,7 @@ func APIDoc(w http.ResponseWriter, r *http.Request) {
 func MakeCustomPage(fileName string) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		err := templates.Render("custom_page.html", map[string]any{
-			"SiteURL":     must.Must2(headers.GetSiteURL(r)).String(),
+			"SiteURL":     headers.GetSiteURL(r).String(),
 			"ForceRandom": config.Default.ForceRandomFilename,
 			"Contents":    template.HTML(custompages.CustomPages[fileName]), //nolint:gosec
 			"FileName":    fileName,

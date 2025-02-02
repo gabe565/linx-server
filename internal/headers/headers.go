@@ -30,45 +30,38 @@ func AddHeaders(headers []string) func(http.Handler) http.Handler {
 	return fn
 }
 
-func GetSiteURL(r *http.Request) (*url.URL, error) {
-	if config.Default.SiteURL != "" || r == nil {
-		return url.Parse(config.Default.SiteURL)
+func GetSiteURL(r *http.Request) *url.URL {
+	switch {
+	case config.Default.SiteURL.Host != "", r == nil:
+		u := config.Default.SiteURL.URL
+		return &u
+	default:
+		u := config.Default.SiteURL.URL
+		u.Host = r.Host
+
+		if scheme := r.Header.Get("X-Forwarded-Proto"); scheme != "" {
+			u.Scheme = scheme
+		} else if config.Default.TLSCert != "" || (r.TLS != nil && r.TLS.HandshakeComplete) {
+			u.Scheme = "https"
+		} else {
+			u.Scheme = "http"
+		}
+
+		return &u
 	}
-
-	u := &url.URL{Host: r.Host}
-
-	if config.Default.SitePath != "" {
-		u.Path = config.Default.SitePath
-	}
-
-	if scheme := r.Header.Get("X-Forwarded-Proto"); scheme != "" {
-		u.Scheme = scheme
-	} else if config.Default.TLSCert != "" || (r.TLS != nil && r.TLS.HandshakeComplete) {
-		u.Scheme = "https"
-	} else {
-		u.Scheme = "http"
-	}
-
-	return u, nil
 }
 
-func GetFileURL(r *http.Request, filename string) (*url.URL, error) {
-	u, err := GetSiteURL(r)
-	if err != nil {
-		return nil, err
-	}
+func GetFileURL(r *http.Request, filename string) *url.URL {
+	u := GetSiteURL(r)
 	u.Path = path.Join(u.Path, filename)
-	return u, nil
+	return u
 }
 
-func GetSelifURL(r *http.Request, filename string) (*url.URL, error) {
-	u, err := GetSiteURL(r)
-	if err != nil {
-		return nil, err
-	}
+func GetSelifURL(r *http.Request, filename string) *url.URL {
+	u := GetSiteURL(r)
 	u.Path = path.Join(u.Path, config.Default.SelifPath)
 	if filename != "" {
 		u.Path = path.Join(u.Path, filename)
 	}
-	return u, nil
+	return u
 }
