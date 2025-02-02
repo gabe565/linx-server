@@ -402,7 +402,7 @@ func GenerateJSONresponse(upload Upload, r *http.Request) []byte {
 //nolint:gochecknoglobals
 var (
 	bareRe = regexp.MustCompile(`[^A-Za-z0-9\- ]`)
-	extRe  = regexp.MustCompile(`[^A-Za-z0-9\-\.]`)
+	extRe  = regexp.MustCompile(`[^A-Za-z0-9\-.]`)
 
 	compressedExts = []string{
 		".bz2",
