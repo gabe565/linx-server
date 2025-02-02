@@ -27,7 +27,7 @@ const (
 
 func Index(w http.ResponseWriter, r *http.Request) {
 	err := templates.Render("index.html", map[string]any{
-		"MaxSize":     config.Default.MaxSize,
+		"MaxSize":     int(config.Default.MaxSize),
 		"ExpiryList":  expiry.ListExpirationTimes(),
 		"ForceRandom": config.Default.ForceRandomFilename,
 	}, r, w)
