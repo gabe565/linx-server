@@ -25,5 +25,5 @@ func run(cmd *cobra.Command, _ []string) error {
 
 	cmd.SilenceUsage = true
 
-	return cleanup.Cleanup(config.Default.FilesDir, config.Default.MetaDir, config.Default.NoLogs)
+	return cleanup.Cleanup(config.Default.FilesPath, config.Default.MetaPath, config.Default.NoLogs)
 }

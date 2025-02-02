@@ -42,8 +42,8 @@ func setup(t *testing.T, preserveSiteURL bool) *chi.Mux {
 		require.NoError(t, err)
 		config.Default.SiteURL.URL = *u
 	}
-	config.Default.FilesDir = t.TempDir()
-	config.Default.MetaDir = config.Default.FilesDir + "_meta"
+	config.Default.FilesPath = t.TempDir()
+	config.Default.MetaPath = config.Default.FilesPath + "_meta"
 	config.Default.MaxSize = 1024 * 1024 * 1024
 	config.Default.NoLogs = true
 	config.Default.SiteName = "linx"

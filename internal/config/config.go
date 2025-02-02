@@ -29,8 +29,8 @@ func (h *HeaderList) Type() string {
 
 type Config struct {
 	Bind      string `toml:"bind"`
-	FilesDir  string `toml:"files-dir" comment:"Path to files directory"`
-	MetaDir   string `toml:"meta-dir" comment:"Path to metadata directory"`
+	FilesPath string `toml:"files-path" comment:"Path to files directory"`
+	MetaPath  string `toml:"meta-path" comment:"Path to metadata directory"`
 	SiteName  string `toml:"site-name"`
 	SiteURL   URL    `toml:"site-url"`
 	SelifPath string `toml:"selif-path" comment:"Path relative to site base url where files are accessed directly"`
@@ -73,8 +73,8 @@ type Config struct {
 func New() *Config {
 	return &Config{
 		Bind:                      "127.0.0.1:8080",
-		FilesDir:                  "files",
-		MetaDir:                   "meta",
+		FilesPath:                 "files",
+		MetaPath:                  "meta",
 		SelifPath:                 "selif",
 		MaxSize:                   4 * bytefmt.GiB,
 		CleanupEvery:              Duration{time.Hour},

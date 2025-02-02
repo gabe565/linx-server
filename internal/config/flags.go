@@ -10,8 +10,8 @@ import (
 const (
 	FlagConfig                    = "config"
 	FlagBind                      = "bind"
-	FlagFiles                     = "files-dir"
-	FlagMeta                      = "meta-dir"
+	FlagFilesPath                 = "files-path"
+	FlagMetaPath                  = "meta-path"
 	FlagNoLogs                    = "no-logs"
 	FlagBasicAuth                 = "basic-auth"
 	FlagAllowHotlink              = "allow-hotlink"
@@ -51,8 +51,8 @@ func (c *Config) RegisterBasicFlags(cmd *cobra.Command) {
 		confPath = strings.Replace(confPath, home, "$HOME", 1)
 	}
 	fs.StringP(FlagConfig, "c", confPath, "Path to the config file")
-	fs.StringVar(&c.FilesDir, FlagFiles, c.FilesDir, "Path to files directory")
-	fs.StringVar(&c.MetaDir, FlagMeta, c.MetaDir, "Path to metadata directory")
+	fs.StringVar(&c.FilesPath, FlagFilesPath, c.FilesPath, "Path to files directory")
+	fs.StringVar(&c.MetaPath, FlagMetaPath, c.MetaPath, "Path to metadata directory")
 	fs.BoolVar(&c.NoLogs, FlagNoLogs, c.NoLogs, "Remove logging of each request")
 }
 

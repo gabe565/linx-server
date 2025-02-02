@@ -27,12 +27,12 @@ import (
 
 func Setup() (*chi.Mux, error) {
 	// make directories if needed
-	err := os.MkdirAll(config.Default.FilesDir, 0o755)
+	err := os.MkdirAll(config.Default.FilesPath, 0o755)
 	if err != nil {
 		return nil, fmt.Errorf("could not create files directory: %w", err)
 	}
 
-	err = os.MkdirAll(config.Default.MetaDir, 0o700)
+	err = os.MkdirAll(config.Default.MetaPath, 0o700)
 	if err != nil {
 		return nil, fmt.Errorf("could not create metadata directory: %w", err)
 	}
@@ -48,9 +48,9 @@ func Setup() (*chi.Mux, error) {
 	if config.Default.S3Bucket != "" {
 		config.StorageBackend = s3.NewS3Backend(config.Default.S3Bucket, config.Default.S3Region, config.Default.S3Endpoint, config.Default.S3ForcePathStyle)
 	} else {
-		config.StorageBackend = localfs.NewLocalfsBackend(config.Default.MetaDir, config.Default.FilesDir)
+		config.StorageBackend = localfs.NewLocalfsBackend(config.Default.MetaPath, config.Default.FilesPath)
 		if config.Default.CleanupEvery.Duration > 0 {
-			go cleanup.PeriodicCleanup(config.Default.CleanupEvery.Duration, config.Default.FilesDir, config.Default.MetaDir, config.Default.NoLogs)
+			go cleanup.PeriodicCleanup(config.Default.CleanupEvery.Duration, config.Default.FilesPath, config.Default.MetaPath, config.Default.NoLogs)
 		}
 	}
 

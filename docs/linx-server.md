@@ -22,12 +22,12 @@ linx-server [flags]
       --fastcgi                               Serve through fastcgi
       --file-content-security-policy string   Value of Content-Security-Policy header for file access (default "default-src 'none'; img-src 'self'; object-src 'self'; media-src 'self'; style-src 'self' 'unsafe-inline'; frame-ancestors 'self';")
       --file-referrer-policy string           Value of Referrer-Policy header for file access (default "same-origin")
-      --files-dir string                      Path to files directory (default "files")
+      --files-path string                     Path to files directory (default "files")
       --force-random-filename                 Force all uploads to use a random filename
   -h, --help                                  help for linx-server
       --max-expiry duration                   Maximum expiration time. A value of 0 means no expiry.
       --max-size string                       Maximum upload file size in bytes (default "4 GiB")
-      --meta-dir string                       Path to metadata directory (default "meta")
+      --meta-path string                      Path to metadata directory (default "meta")
       --no-direct-agents                      Disable serving files directly for wget/curl user agents
       --no-logs                               Remove logging of each request
       --real-ip                               Use X-Real-IP/X-Forwarded-For headers

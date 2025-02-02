@@ -20,8 +20,8 @@ func TestContentSecurityPolicy(t *testing.T) {
 
 	// config.Default.SiteURL = "http://linx.example.org/"
 	config.Default.SiteURL.URL = url.URL{Scheme: "http", Host: "linx.example.org"}
-	config.Default.FilesDir = t.TempDir()
-	config.Default.MetaDir = config.Default.FilesDir + "_meta"
+	config.Default.FilesPath = t.TempDir()
+	config.Default.MetaPath = config.Default.FilesPath + "_meta"
 	config.Default.MaxSize = 1024 * 1024 * 1024
 	config.Default.NoLogs = true
 	config.Default.SiteName = "linx"
