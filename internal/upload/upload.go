@@ -306,7 +306,7 @@ func Process(ctx context.Context, upReq Request) (Upload, error) {
 	}
 
 	upload.Filename = barename + "." + extension
-	upload.Filename = strings.ReplaceAll(upload.Filename, " ", "")
+	upload.Filename = strings.ReplaceAll(upload.Filename, " ", "_")
 
 	fileexists, err := config.StorageBackend.Exists(ctx, upload.Filename)
 	if err != nil {
@@ -401,7 +401,7 @@ func GenerateJSONresponse(upload Upload, r *http.Request) []byte {
 
 //nolint:gochecknoglobals
 var (
-	bareRe = regexp.MustCompile(`[^A-Za-z0-9\-]`)
+	bareRe = regexp.MustCompile(`[^A-Za-z0-9\- ]`)
 	extRe  = regexp.MustCompile(`[^A-Za-z0-9\-\.]`)
 
 	compressedExts = []string{
