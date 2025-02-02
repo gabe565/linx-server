@@ -305,7 +305,7 @@ func Process(ctx context.Context, upReq Request) (Upload, error) {
 		}
 	}
 
-	upload.Filename = strings.Join([]string{barename, extension}, ".")
+	upload.Filename = barename + "." + extension
 	upload.Filename = strings.ReplaceAll(upload.Filename, " ", "")
 
 	fileexists, err := config.StorageBackend.Exists(ctx, upload.Filename)
@@ -346,7 +346,7 @@ func Process(ctx context.Context, upReq Request) (Upload, error) {
 				barename = barename[:len(barename)-1] + strconv.Itoa(counter+1)
 			}
 		}
-		upload.Filename = strings.Join([]string{barename, extension}, ".")
+		upload.Filename = barename + "." + extension
 
 		var err error
 		fileexists, err = config.StorageBackend.Exists(ctx, upload.Filename)
