@@ -1,5 +1,6 @@
 #dzone {
   display: none;
+  cursor: pointer;
 }
 
 .fallback {
