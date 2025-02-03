@@ -16,6 +16,7 @@ func GenerateMetadata(r io.Reader) (backends.Metadata, error) {
 	// we read when detecting the file type. These bytes are still needed
 	// to hash the file and determine its size and cannot be discarded.
 	var buf bytes.Buffer
+	buf.Grow(512)
 	var m backends.Metadata
 	teeReader := io.TeeReader(r, &buf)
 
