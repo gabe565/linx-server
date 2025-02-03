@@ -128,7 +128,8 @@ func Setup() (*chi.Mux, error) {
 		r.Get("/paste", http.RedirectHandler(path.Join(config.Default.SiteURL.Path, "API/"), http.StatusSeeOther).ServeHTTP)
 	}
 
-	r.Get("/API", handlers.APIDoc)
+	r.Get("/api", handlers.APIDoc)
+	r.Get("/API", http.RedirectHandler(path.Join(config.Default.SiteURL.Path, "api"), http.StatusPermanentRedirect).ServeHTTP)
 
 	if config.Default.RemoteUploads {
 		r.Get("/upload", upload.Remote)

@@ -899,7 +899,7 @@ func TestInferSiteURL(t *testing.T) {
 	r := setup(t, true)
 	w := httptest.NewRecorder()
 
-	req, err := http.NewRequest(http.MethodGet, "/linxtest/API", nil)
+	req, err := http.NewRequest(http.MethodGet, "/linxtest/api", nil)
 	req.Host = "example.com:8080"
 	require.NoError(t, err)
 
@@ -911,7 +911,7 @@ func TestInferSiteURLProxied(t *testing.T) {
 	r := setup(t, true)
 	w := httptest.NewRecorder()
 
-	req, err := http.NewRequest(http.MethodGet, "/API", nil)
+	req, err := http.NewRequest(http.MethodGet, "/api", nil)
 	req.Header.Add("X-Forwarded-Proto", "https")
 	req.Host = "example.com:8080"
 	require.NoError(t, err)
@@ -926,7 +926,7 @@ func TestInferSiteURLHTTPS(t *testing.T) {
 	r := setup(t, true)
 	w := httptest.NewRecorder()
 
-	req, err := http.NewRequest(http.MethodGet, "/API", nil)
+	req, err := http.NewRequest(http.MethodGet, "/api", nil)
 	req.Host = "example.com"
 	require.NoError(t, err)
 
@@ -938,7 +938,7 @@ func TestInferSiteURLHTTPSFastCGI(t *testing.T) {
 	r := setup(t, true)
 	w := httptest.NewRecorder()
 
-	req, err := http.NewRequest(http.MethodGet, "/API", nil)
+	req, err := http.NewRequest(http.MethodGet, "/api", nil)
 	req.Host = "example.com"
 	req.TLS = &tls.ConnectionState{HandshakeComplete: true}
 	require.NoError(t, err)
