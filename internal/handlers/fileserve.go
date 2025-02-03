@@ -3,7 +3,6 @@ package handlers
 import (
 	"context"
 	"errors"
-	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
@@ -59,7 +58,7 @@ func FileServeHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", metadata.Mimetype)
 	w.Header().Set("Content-Length", strconv.FormatInt(metadata.Size, 10))
-	w.Header().Set("Etag", fmt.Sprintf("\"%s\"", metadata.Sha256sum))
+	w.Header().Set("Etag", strconv.Quote(metadata.Sha256sum))
 	w.Header().Set("Cache-Control", "public, no-cache")
 
 	modtime := time.Unix(0, 0)
@@ -87,7 +86,7 @@ func AssetHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Etag", fmt.Sprintf("\"%s\"", config.TimeStartedStr))
+	w.Header().Set("Etag", strconv.Quote(config.TimeStartedStr))
 	w.Header().Set("Cache-Control", "public, max-age=86400")
 	http.ServeContent(w, r, path, config.TimeStarted, file.(io.ReadSeeker))
 }

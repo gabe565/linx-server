@@ -184,7 +184,7 @@ func Remote(w http.ResponseWriter, r *http.Request) {
 			if config.Default.BasicAuth {
 				rs := ""
 				if config.Default.SiteName != "" {
-					rs = fmt.Sprintf(` realm="%s"`, config.Default.SiteName)
+					rs = " realm=" + strconv.Quote(config.Default.SiteName)
 				}
 				w.Header().Set("WWW-Authenticate", `Basic`+rs)
 			}

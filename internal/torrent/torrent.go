@@ -4,10 +4,10 @@ import (
 	"bytes"
 	"crypto/sha1" //nolint:gosec
 	"errors"
-	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
+	"strconv"
 	"time"
 
 	"gabe565.com/linx-server/internal/backends"
@@ -109,6 +109,6 @@ func FileTorrentHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set(`Content-Disposition`, fmt.Sprintf(`attachment; filename="%s.torrent"`, fileName))
+	w.Header().Set(`Content-Disposition`, "attachment; filename="+strconv.Quote(fileName+".torrent"))
 	http.ServeContent(w, r, "", time.Now(), bytes.NewReader(encoded))
 }

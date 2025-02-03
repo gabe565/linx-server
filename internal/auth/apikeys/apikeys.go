@@ -3,11 +3,11 @@ package apikeys
 import (
 	"bufio"
 	"encoding/base64"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"slices"
+	"strconv"
 
 	"golang.org/x/crypto/scrypt"
 )
@@ -91,7 +91,7 @@ func (a Middleware) badAuthorizationHandler(w http.ResponseWriter, _ *http.Reque
 	if a.o.BasicAuth {
 		rs := ""
 		if a.o.SiteName != "" {
-			rs = fmt.Sprintf(` realm="%s"`, a.o.SiteName)
+			rs = " realm=" + strconv.Quote(a.o.SiteName)
 		}
 		w.Header().Set("WWW-Authenticate", `Basic`+rs)
 	}
