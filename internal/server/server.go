@@ -147,9 +147,7 @@ func Setup() (*chi.Mux, error) {
 
 	r.Get("/{name}", handlers.FileAccessHandler)
 	r.Post("/{name}", handlers.FileAccessHandler)
-	r.Route(path.Join("/", config.Default.SelifPath), func(r chi.Router) {
-		r.Get("/{name}", handlers.FileServeHandler)
-	})
+	r.Get(path.Join("/", config.Default.SelifPath, "{name}"), handlers.FileServeHandler)
 	r.Get("/torrent/{name}", torrent.FileTorrentHandler)
 	r.Get("/{name}/torrent", func(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/torrent/"+chi.URLParam(r, "name"), http.StatusMovedPermanently)
