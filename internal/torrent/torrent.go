@@ -56,10 +56,12 @@ func CreateTorrent(fileName string, f io.Reader, r *http.Request) ([]byte, error
 
 	for {
 		n, err := io.ReadFull(f, chunk)
-		if err == io.EOF {
-			break
-		} else if err != nil && !errors.Is(err, io.ErrUnexpectedEOF) {
-			return []byte{}, err
+		if err != nil {
+			if err == io.EOF {
+				break
+			} else if !errors.Is(err, io.ErrUnexpectedEOF) {
+				return []byte{}, err
+			}
 		}
 
 		t.Info.Length += n

@@ -49,9 +49,10 @@ func (b Backend) Exists(_ context.Context, key string) (bool, error) {
 func (b Backend) Head(_ context.Context, key string) (backends.Metadata, error) {
 	var metadata backends.Metadata
 	f, err := os.Open(path.Join(b.metaPath, key))
-	if os.IsNotExist(err) {
-		return metadata, backends.ErrNotFound
-	} else if err != nil {
+	if err != nil {
+		if os.IsNotExist(err) {
+			return metadata, backends.ErrNotFound
+		}
 		return metadata, backends.ErrBadMetadata
 	}
 	defer func() {

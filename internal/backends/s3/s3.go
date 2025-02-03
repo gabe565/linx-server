@@ -184,10 +184,11 @@ func (b Backend) Put(ctx context.Context, key string, r io.Reader, expiry time.T
 	}()
 
 	bytes, err := io.Copy(tmpDst, r)
+	if err != nil {
+		return m, err
+	}
 	if bytes == 0 {
 		return m, backends.ErrFileEmpty
-	} else if err != nil {
-		return m, err
 	}
 
 	_, err = tmpDst.Seek(0, 0)

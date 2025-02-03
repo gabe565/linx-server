@@ -17,10 +17,11 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 
 	// Ensure that file exists and delete key is correct
 	metadata, err := config.StorageBackend.Head(r.Context(), filename)
-	if errors.Is(err, backends.ErrNotFound) {
-		NotFound(w, r) // 404 - file doesn't exist
-		return
-	} else if err != nil {
+	if err != nil {
+		if errors.Is(err, backends.ErrNotFound) {
+			NotFound(w, r) // 404 - file doesn't exist
+			return
+		}
 		Unauthorized(w, r) // 401 - no metadata available
 		return
 	}

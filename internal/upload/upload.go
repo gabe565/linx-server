@@ -107,10 +107,11 @@ func POSTHandler(w http.ResponseWriter, r *http.Request) {
 	upload, err := Process(r.Context(), upReq)
 
 	if strings.EqualFold("application/json", r.Header.Get("Accept")) {
-		if errors.Is(err, ErrFileTooLarge) || errors.Is(err, backends.ErrFileEmpty) {
-			handlers.BadRequest(w, r, handlers.RespJSON, err.Error())
-			return
-		} else if err != nil {
+		if err != nil {
+			if errors.Is(err, ErrFileTooLarge) || errors.Is(err, backends.ErrFileEmpty) {
+				handlers.BadRequest(w, r, handlers.RespJSON, err.Error())
+				return
+			}
 			handlers.Oops(w, r, handlers.RespJSON, "Could not upload file: "+err.Error())
 			return
 		}
@@ -119,10 +120,11 @@ func POSTHandler(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 		_, _ = w.Write(js)
 	} else {
-		if errors.Is(err, ErrFileTooLarge) || errors.Is(err, backends.ErrFileEmpty) {
-			handlers.BadRequest(w, r, handlers.RespHTML, err.Error())
-			return
-		} else if err != nil {
+		if err != nil {
+			if errors.Is(err, ErrFileTooLarge) || errors.Is(err, backends.ErrFileEmpty) {
+				handlers.BadRequest(w, r, handlers.RespHTML, err.Error())
+				return
+			}
 			handlers.Oops(w, r, handlers.RespHTML, "Could not upload file: "+err.Error())
 			return
 		}
@@ -142,10 +144,11 @@ func PUTHandler(w http.ResponseWriter, r *http.Request) {
 	upload, err := Process(r.Context(), upReq)
 
 	if strings.EqualFold("application/json", r.Header.Get("Accept")) {
-		if errors.Is(err, ErrFileTooLarge) || errors.Is(err, backends.ErrFileEmpty) {
-			handlers.BadRequest(w, r, handlers.RespJSON, err.Error())
-			return
-		} else if err != nil {
+		if err != nil {
+			if errors.Is(err, ErrFileTooLarge) || errors.Is(err, backends.ErrFileEmpty) {
+				handlers.BadRequest(w, r, handlers.RespJSON, err.Error())
+				return
+			}
 			handlers.Oops(w, r, handlers.RespJSON, "Could not upload file: "+err.Error())
 			return
 		}
@@ -154,10 +157,11 @@ func PUTHandler(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 		_, _ = w.Write(js)
 	} else {
-		if errors.Is(err, ErrFileTooLarge) || errors.Is(err, backends.ErrFileEmpty) {
-			handlers.BadRequest(w, r, handlers.RespPLAIN, err.Error())
-			return
-		} else if err != nil {
+		if err != nil {
+			if errors.Is(err, ErrFileTooLarge) || errors.Is(err, backends.ErrFileEmpty) {
+				handlers.BadRequest(w, r, handlers.RespPLAIN, err.Error())
+				return
+			}
 			handlers.Oops(w, r, handlers.RespPLAIN, "Could not upload file: "+err.Error())
 			return
 		}
