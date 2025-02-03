@@ -141,7 +141,6 @@ func FileAccessHandler(w http.ResponseWriter, r *http.Request) {
 			"FileName":   fileName,
 			"AccessPath": fileName,
 		}, r, w)
-
 		return
 	}
 

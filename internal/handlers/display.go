@@ -61,6 +61,7 @@ func FileDisplay(w http.ResponseWriter, r *http.Request, fileName string, metada
 		metadata, reader, err := config.StorageBackend.Get(r.Context(), fileName)
 		if err != nil {
 			Oops(w, r, RespHTML, err.Error())
+			return
 		}
 		defer func() {
 			_ = reader.Close()
@@ -80,6 +81,7 @@ func FileDisplay(w http.ResponseWriter, r *http.Request, fileName string, metada
 		metadata, reader, err := config.StorageBackend.Get(r.Context(), fileName)
 		if err != nil {
 			Oops(w, r, RespHTML, err.Error())
+			return
 		}
 		defer func() {
 			_ = reader.Close()
@@ -111,5 +113,6 @@ func FileDisplay(w http.ResponseWriter, r *http.Request, fileName string, metada
 	}, r, w)
 	if err != nil {
 		Oops(w, r, RespHTML, "")
+		return
 	}
 }

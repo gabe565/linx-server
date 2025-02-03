@@ -40,7 +40,6 @@ func FileServeHandler(w http.ResponseWriter, r *http.Request) {
 			SetAccessKeyCookies(w, r, fileName, "", time.Unix(0, 0))
 		}
 		Unauthorized(w, r)
-
 		return
 	}
 

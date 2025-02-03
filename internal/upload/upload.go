@@ -204,6 +204,7 @@ func Remote(w http.ResponseWriter, r *http.Request) {
 	grabURL, err := url.Parse(r.FormValue("url"))
 	if err != nil {
 		handlers.Oops(w, r, handlers.RespAUTO, "Invalid URL: "+err.Error())
+		return
 	}
 	directURL := r.FormValue("direct_url") == InputYes
 

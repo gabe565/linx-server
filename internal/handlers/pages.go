@@ -42,6 +42,7 @@ func Paste(w http.ResponseWriter, r *http.Request) {
 	}, r, w)
 	if err != nil {
 		Oops(w, r, RespHTML, "")
+		return
 	}
 }
 
@@ -52,6 +53,7 @@ func APIDoc(w http.ResponseWriter, r *http.Request) {
 	}, r, w)
 	if err != nil {
 		Oops(w, r, RespHTML, "")
+		return
 	}
 }
 
@@ -66,6 +68,7 @@ func MakeCustomPage(fileName string) func(w http.ResponseWriter, r *http.Request
 		}, r, w)
 		if err != nil {
 			Oops(w, r, RespHTML, "")
+			return
 		}
 	}
 }
@@ -75,6 +78,7 @@ func NotFound(w http.ResponseWriter, r *http.Request) {
 	err := templates.Render("404.html", nil, r, w)
 	if err != nil {
 		Oops(w, r, RespHTML, "")
+		return
 	}
 }
 
@@ -107,8 +111,10 @@ func Oops(w http.ResponseWriter, r *http.Request, rt RespType, msg string) {
 	case rt == RespAUTO:
 		if strings.EqualFold("application/json", r.Header.Get("Accept")) {
 			Oops(w, r, RespJSON, msg)
+			return
 		} else {
 			Oops(w, r, RespHTML, msg)
+			return
 		}
 	}
 }
@@ -137,8 +143,10 @@ func BadRequest(w http.ResponseWriter, r *http.Request, rt RespType, msg string)
 	case rt == RespAUTO:
 		if strings.EqualFold("application/json", r.Header.Get("Accept")) {
 			BadRequest(w, r, RespJSON, msg)
+			return
 		} else {
 			BadRequest(w, r, RespHTML, msg)
+			return
 		}
 	}
 }
