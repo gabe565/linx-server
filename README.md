@@ -30,19 +30,17 @@ Self-hosted file/media sharing website.
 ## Getting started
 
 ### Using Docker
-1. Create directories `files` and `meta` and run `chown -R 65534:65534 meta && chown -R 65534:65534 files` 
-2. Create a config file (example provided in repo), we'll refer to it as __linx-server.conf__ in the following examples
+1. Create `data` directory and run `chown -R 65534:65534 data`
+2. Optionally, create a config file ([example](config_example.toml)), we'll refer to it as `config.toml` in the following examples
 
 Example running
 ```shell
 docker run \
   -p 8080:8080 \
-  -v /path/to/linx-server.conf:/data/linx-server.conf \
-  -v /path/to/meta:/data/meta \
-  -v /path/to/files:/data/files \
-  ghcr.io/gabe565/linx-server \
-  --config=/data/linx-server.conf
-``` 
+  -v /path/to/config.toml:/data/config.toml \
+  -v /path/to/data:/data \
+  ghcr.io/gabe565/linx-server
+```
 
 Example with Docker Compose:
 ```yaml
@@ -50,11 +48,10 @@ services:
   linx-server:
     container_name: linx-server
     image: ghcr.io/gabe565/linx-server
-    command: --config=/data/linx-server.conf
+    command: --config=/data/config.toml
     volumes:
-      - /path/to/files:/data/files
-      - /path/to/meta:/data/meta
-      - /path/to/linx-server.conf:/data/linx-server.conf
+      - /path/to/data:/data
+      - /path/to/config.toml:/data/config.toml
     ports:
       - "8080:8080"
     restart: unless-stopped
@@ -63,14 +60,14 @@ Ideally, you would use a reverse proxy such as nginx or caddy to handle TLS cert
 
 ### Using a binary release
 
-1. Grab the latest binary from the [releases](https://github.com/gabe565/linx-server/releases), then run ```go install```
-2. Run ```linx-server --config=path/to/linx-server.conf```
+1. Grab the latest binary from the [releases](https://github.com/gabe565/linx-server/releases)
+2. Run `linx-server --config=path/to/config.toml`
 
-  
+
 ## Usage
 
 ### Configuration
-All configuration options are accepted either as arguments or can be placed in a file as such (see example file linx-server.conf.example in repo):  
+All configuration options are accepted either as arguments or can be placed in a file as such (see [example](config_example.toml)):
 ```toml
 bind = '127.0.0.1:8080'
 site-name = 'myLinx'
@@ -78,7 +75,7 @@ max-size = '4 MiB'
 max-expiry = '24h'
 # ... etc
 ```
-...and then run `linx-server --config=path/to/linx-server.toml`
+...and then run `linx-server --config=path/to/config.toml`
 
 ### Options
 See the [example configuration file](config_example.toml) or the [command-line docs](docs/linx-server.md).
@@ -113,7 +110,7 @@ server {
     }
 }
 ```
-And run linx-server with the ```fastcgi = true``` option.
+And run linx-server with the `fastcgi = true` option.
 
 ## Author
 - Andrei Marcu, https://andreim.net

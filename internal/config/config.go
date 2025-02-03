@@ -71,7 +71,7 @@ type Config struct {
 }
 
 func New() *Config {
-	return &Config{
+	c := &Config{
 		Bind:                      "127.0.0.1:8080",
 		FilesPath:                 "files",
 		MetaPath:                  "meta",
@@ -84,6 +84,13 @@ func New() *Config {
 		FileReferrerPolicy:        "same-origin",
 		XFrameOptions:             "SAMEORIGIN",
 	}
+	if os.Getenv("LINX_DEFAULTS") == "container" {
+		c.Bind = ":8080"
+		c.FilesPath = "/data/files"
+		c.MetaPath = "/data/meta"
+		c.SiteName = "linx"
+	}
+	return c
 }
 
 //nolint:gochecknoglobals

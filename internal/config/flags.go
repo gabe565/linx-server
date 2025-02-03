@@ -46,9 +46,12 @@ const (
 
 func (c *Config) RegisterBasicFlags(cmd *cobra.Command) {
 	fs := cmd.Flags()
-	confPath, _ := getDefaultFile()
-	if home, err := os.UserHomeDir(); err == nil {
-		confPath = strings.Replace(confPath, home, "$HOME", 1)
+	confPath := os.Getenv("LINX_CONFIG")
+	if confPath == "" {
+		confPath, _ = getDefaultFile()
+		if home, err := os.UserHomeDir(); err == nil && home != "/" {
+			confPath = strings.Replace(confPath, home, "$HOME", 1)
+		}
 	}
 	fs.StringP(FlagConfig, "c", confPath, "Path to the config file")
 	fs.StringVar(&c.FilesPath, FlagFilesPath, c.FilesPath, "Path to files directory")

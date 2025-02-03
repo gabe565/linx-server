@@ -25,7 +25,7 @@ EOT
 FROM alpine:3.21.2
 WORKDIR /data
 
-COPY --from=build /app/linx-server /usr/bin/linx-server
+COPY --from=build /app/linx-server /usr/bin
 
 RUN <<EOT
   set -eux
@@ -34,9 +34,10 @@ RUN <<EOT
   chown -R 65534:65534 /data
 EOT
 
-VOLUME ["/data/files", "/data/meta"]
+VOLUME "/data"
 
 EXPOSE 8080
 USER nobody
-ENTRYPOINT ["/usr/bin/linx-server", "--bind=0.0.0.0:8080", "--files-path=/data/files/", "--meta-path=/data/meta/"]
-CMD ["--site-name=linx", "--allow-hotlink"]
+ENV LINX_DEFAULTS=container
+ENV LINX_CONFIG=/data/config.toml
+ENTRYPOINT ["/usr/bin/linx-server"]
