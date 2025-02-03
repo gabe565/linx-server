@@ -5,6 +5,7 @@ import { handleTab } from "./util";
 export const initBin = () => {
   const navlist = document.getElementById("info").getElementsByClassName("info-actions")[0];
   const codeb = document.getElementById("codeb");
+  const content = codeb.textContent;
 
   const initHighlight = async () => {
     if (await loadLanguage(codeb.dataset.language)) {
@@ -55,6 +56,7 @@ export const initBin = () => {
     normalcontent.removeChild(document.getElementById("normal-code"));
 
     const editordiv = document.getElementById("inplace-editor");
+    editordiv.textContent = content;
     editordiv.style.display = "block";
     editordiv.addEventListener("keydown", handleTab);
   };

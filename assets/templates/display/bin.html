@@ -36,7 +36,7 @@
 {{- define "main" -}}
 <div id="normal-content" class="normal fixed">
     <pre id="normal-code"><code id="codeb" data-language="{{ .Extra.LangHL }}" class="language-{{ .Extra.LangHL }}">{{ .Extra.Contents }}</code></pre>
-    <textarea id="inplace-editor" class="editor">{{ .Extra.Contents }}</textarea>
+    <textarea id="inplace-editor" class="editor"></textarea>
 </div>
 
 {{- .Manifest.PreloadJS .SitePath (printf "node_modules/highlight.js/es/languages/%s.js" .Extra.LangHL) -}}
