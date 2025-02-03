@@ -1,5 +1,9 @@
 version: 2
 project_name: linx-server
+before:
+  hooks:
+    - go run ./internal/generate/completions --date={{ .CommitDate }}
+    - go run ./internal/generate/manpages --version={{ .Version }} --date={{ .CommitDate }}
 builds:
   - binary: linx-server
     env:
@@ -36,6 +40,10 @@ archives:
           mode: 0644
       - src: README.md
         info: *info
+      - src: manpages/*
+        info: *info
+      - src: completions/*
+        info: *info
 checksum:
   name_template: "checksums.txt"
 snapshot:
@@ -68,6 +76,10 @@ brews:
     directory: Formula
     install: |
       bin.install "linx-server"
+      man1.install Dir["manpages/*"]
+      bash_completion.install "completions/linx-server.bash" => "linx-server"
+      zsh_completion.install "completions/linx-server.zsh" => "_linx-server"
+      fish_completion.install "completions/linx-server.fish"
 nfpms:
   - id: packages
     vendor: Gabe Cook
@@ -78,6 +90,23 @@ nfpms:
     formats:
       - deb
       - rpm
+    contents:
+      - src: ./manpages/
+        dst: /usr/share/man/man1
+        file_info:
+          mode: 0644
+      - src: ./completions/linx-server.bash
+        dst: /usr/share/bash-completion/completions/linx-server
+        file_info:
+          mode: 0644
+      - src: ./completions/linx-server.fish
+        dst: /usr/share/fish/vendor_completions.d/linx-server.fish
+        file_info:
+          mode: 0644
+      - src: ./completions/linx-server.zsh
+        dst:  /usr/share/zsh/vendor-completions/_linx-server
+        file_info:
+          mode: 0644
 publishers:
   - name: fury.io
     ids:
@@ -99,6 +128,12 @@ aurs:
       install -Dm755 "./linx-server" "${pkgdir}/usr/bin/linx-server"
       # license
       install -Dm644 "./LICENSE" "${pkgdir}/usr/share/licenses/linx-server/LICENSE"
+      # man pages
+      install -Dm644 -t"${pkgdir}/usr/share/man/man1" manpages/*
+      # completions
+      install -Dm644 "./completions/linx-server.bash" "${pkgdir}/usr/share/bash-completion/completions/linx-server"
+      install -Dm644 "./completions/linx-server.zsh" "${pkgdir}/usr/share/zsh/site-functions/_linx-server"
+      install -Dm644 "./completions/linx-server.fish" "${pkgdir}/usr/share/fish/vendor_completions.d/linx-server.fish"
     commit_author:
       name: goreleaserbot
       email: bot@goreleaser.com
