@@ -57,24 +57,6 @@ func FileDisplay(w http.ResponseWriter, r *http.Request, fileName string, metada
 		tpl = "display/audio.html"
 	case metadata.Mimetype == "application/pdf":
 		tpl = "display/pdf.html"
-	case extension == "story":
-		metadata, reader, err := config.StorageBackend.Get(r.Context(), fileName)
-		if err != nil {
-			Oops(w, r, RespHTML, err.Error())
-		}
-		defer func() {
-			_ = reader.Close()
-		}()
-
-		if metadata.Size < maxDisplayFileSizeBytes {
-			bytes, err := io.ReadAll(reader)
-			if err == nil {
-				extra["Contents"] = string(bytes)
-				lines = strings.Split(string(bytes), "\n")
-				tpl = "display/story.html"
-			}
-		}
-
 	case extension == "md":
 		metadata, reader, err := config.StorageBackend.Get(r.Context(), fileName)
 		if err != nil {
@@ -94,7 +76,6 @@ func FileDisplay(w http.ResponseWriter, r *http.Request, fileName string, metada
 				tpl = "display/md.html"
 			}
 		}
-
 	case strings.HasPrefix(metadata.Mimetype, "text/"), util.SupportedBinExtension(extension):
 		metadata, reader, err := config.StorageBackend.Get(r.Context(), fileName)
 		if err != nil {

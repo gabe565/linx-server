@@ -336,14 +336,6 @@ span {
   -moz-box-sizing: border-box;
 }
 
-.storygreen {
-  color: #789922;
-}
-
-.storyred {
-  color: #800000;
-}
-
 /* Content display {{{ */
 .display-audio,
 .display-file {
@@ -367,10 +359,6 @@ span {
 
 .scrollable {
   overflow: auto;
-}
-
-.storycontent {
-  background-color: #f0e0d6 !important;
 }
 
 #editform,
