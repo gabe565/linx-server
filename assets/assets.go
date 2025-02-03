@@ -10,7 +10,7 @@ import (
 	"gabe565.com/utils/must"
 )
 
-//go:embed static/dist
+//go:embed static/dist static/dist/.vite
 var static embed.FS
 
 func Static() fs.FS {
@@ -60,7 +60,7 @@ func (m ManifestMap) PreloadJS(sitePath, name string) template.HTML {
 var Manifest ManifestMap
 
 func LoadManifest() error {
-	f, err := Static().Open("manifest.json")
+	f, err := Static().Open(".vite/manifest.json")
 	if err != nil {
 		return err
 	}

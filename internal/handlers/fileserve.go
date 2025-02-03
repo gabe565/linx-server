@@ -75,12 +75,16 @@ func FileServeHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func AssetHandler(w http.ResponseWriter, r *http.Request) {
-	path := r.URL.Path
-	if path == "/favicon.ico" {
-		path = "/images/favicon.gif"
+	path := strings.TrimPrefix(r.URL.Path, "/")
+	switch {
+	case path == "favicon.ico":
+		path = "images/favicon.gif"
+	case strings.HasPrefix(path, ".vite/"):
+		NotFound(w, r)
+		return
 	}
 
-	file, err := assets.Static().Open(strings.TrimPrefix(path, "/"))
+	file, err := assets.Static().Open(path)
 	if err != nil {
 		NotFound(w, r)
 		return

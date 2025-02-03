@@ -8,7 +8,7 @@ export default defineConfig({
     },
   },
   build: {
-    manifest: "manifest.json",
+    manifest: true,
     rollupOptions: {
       input: "src/main.js",
     },
