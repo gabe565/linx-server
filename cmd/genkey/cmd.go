@@ -14,6 +14,8 @@ func New() *cobra.Command {
 		Short: "Generate auth file hashed keys",
 		Args:  cobra.ExactArgs(1),
 		RunE:  run,
+
+		ValidArgsFunction: cobra.NoFileCompletions,
 	}
 	return cmd
 }

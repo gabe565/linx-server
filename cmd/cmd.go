@@ -26,13 +26,18 @@ func New(options ...cobrax.Option) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "linx-server",
 		Short: "Self-hosted file/media sharing website",
+		Args:  cobra.NoArgs,
 		RunE:  run,
+
+		ValidArgsFunction: cobra.NoFileCompletions,
 	}
 	cmd.AddCommand(
 		cleanup.New(),
 		genkey.New(),
 	)
 	config.Default.RegisterServeFlags(cmd)
+	config.RegisterBasicCompletions(cmd)
+	config.RegisterServeCompletions(cmd)
 	for _, option := range options {
 		option(cmd)
 	}

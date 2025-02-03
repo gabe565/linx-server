@@ -12,8 +12,11 @@ func New() *cobra.Command {
 		Short: "Manually clean up expired files",
 		Args:  cobra.NoArgs,
 		RunE:  run,
+
+		ValidArgsFunction: cobra.NoFileCompletions,
 	}
 	config.Default.RegisterBasicFlags(cmd)
+	config.RegisterBasicCompletions(cmd)
 	cmd.Flags().Lookup(config.FlagNoLogs).Usage = "Disable logging of deleted files"
 	return cmd
 }
