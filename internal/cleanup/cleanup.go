@@ -40,9 +40,11 @@ func Cleanup(filesDir string, metaDir string, noLogs bool) error {
 	return errors.Join(errs...)
 }
 
-func PeriodicCleanup(minutes time.Duration, filesDir string, metaDir string, noLogs bool) {
-	c := time.Tick(minutes)
-	for range c {
+func PeriodicCleanup(d time.Duration, filesDir string, metaDir string, noLogs bool) {
+	ticker := time.NewTicker(time.Second)
+	defer ticker.Stop()
+	for range ticker.C {
+		ticker.Reset(d)
 		if err := Cleanup(filesDir, metaDir, noLogs); err != nil {
 			slog.Error("Cleanup failed", "error", err)
 		}
