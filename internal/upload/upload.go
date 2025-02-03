@@ -9,6 +9,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"os"
 	"path"
 	"path/filepath"
 	"slices"
@@ -16,6 +17,7 @@ import (
 	"strings"
 	"time"
 
+	"gabe565.com/linx-server/assets"
 	"gabe565.com/linx-server/internal/auth/apikeys"
 	"gabe565.com/linx-server/internal/backends"
 	"gabe565.com/linx-server/internal/config"
@@ -32,13 +34,9 @@ import (
 //nolint:gochecknoglobals
 var (
 	ErrFileTooLarge = errors.New("file too large")
-	fileDenylist    = map[string]bool{
-		"favicon.ico":     true,
-		"index.htm":       true,
-		"index.html":      true,
-		"index.php":       true,
-		"robots.txt":      true,
-		"crossdomain.xml": true,
+	fileDenylist    = []string{
+		"favicon.ico",
+		"crossdomain.xml",
 	}
 )
 
@@ -354,7 +352,13 @@ func Process(ctx context.Context, upReq Request) (Upload, error) {
 		}
 	}
 
-	if fileDenylist[strings.ToLower(upload.Filename)] {
+	if strings.HasPrefix(upload.Filename, "index.") {
+		return upload, ErrProhibitedFilename
+	}
+	if slices.Contains(fileDenylist, upload.Filename) {
+		return upload, ErrProhibitedFilename
+	}
+	if _, err := assets.Static().Open(strings.TrimPrefix(upload.Filename, "/")); err == nil || !os.IsNotExist(err) {
 		return upload, ErrProhibitedFilename
 	}
 
