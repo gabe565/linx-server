@@ -145,8 +145,8 @@ func Setup() (*chi.Mux, error) {
 
 	r.Delete("/{name}", handlers.Delete)
 
-	r.Get("/{name}", handlers.FileAccessHeader)
-	r.Post("/{name}", handlers.FileAccessHeader)
+	r.Get("/{name}", handlers.FileAccessHandler)
+	r.Post("/{name}", handlers.FileAccessHandler)
 	r.Route(path.Join("/", config.Default.SelifPath), func(r chi.Router) {
 		r.Get("/{name}", handlers.FileServeHandler)
 	})

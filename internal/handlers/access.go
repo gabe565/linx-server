@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"gabe565.com/linx-server/assets"
 	"gabe565.com/linx-server/internal/backends"
 	"gabe565.com/linx-server/internal/config"
 	"gabe565.com/linx-server/internal/headers"
@@ -92,7 +93,14 @@ func SetAccessKeyCookies(w http.ResponseWriter, r *http.Request, fileName, value
 	http.SetCookie(w, &cookie)
 }
 
-func FileAccessHeader(w http.ResponseWriter, r *http.Request) {
+func FileAccessHandler(w http.ResponseWriter, r *http.Request) {
+	fileName := chi.URLParam(r, "name")
+
+	if _, err := assets.Static().Open(fileName); err == nil {
+		AssetHandler(w, r)
+		return
+	}
+
 	if !config.Default.NoDirectAgents && !strings.EqualFold(r.Header.Get("Accept"), "application/json") {
 		ua := r.Header.Get("User-Agent")
 		isCLI := slices.ContainsFunc(cliUserAgents, func(s string) bool {
@@ -103,8 +111,6 @@ func FileAccessHeader(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-
-	fileName := chi.URLParam(r, "name")
 
 	metadata, err := CheckFile(r.Context(), fileName)
 	if errors.Is(err, backends.ErrNotFound) {
