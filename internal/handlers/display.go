@@ -29,7 +29,7 @@ func FileDisplay(w http.ResponseWriter, r *http.Request, fileName string, metada
 	if metadata.Expiry != expiry.NeverExpire {
 		expiryHuman = humanize.RelTime(time.Now(), metadata.Expiry, "", "")
 	}
-	sizeHuman := bytefmt.Encode(metadata.Size)
+	sizeHuman := bytefmt.NewEncoder().SetPrecision(0).Encode(metadata.Size)
 	extra := make(map[string]any)
 	var lines []string
 
