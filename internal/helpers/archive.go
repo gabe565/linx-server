@@ -36,7 +36,7 @@ func ListArchiveFiles(mimetype string, size int64, r ReadSeekerAt) ([]string, er
 				files = append(files, hdr.Name)
 			}
 		}
-	case "application/x-gzip":
+	case "application/gzip", "application/x-gzip":
 		gzf, err := gzip.NewReader(r)
 		if err != nil {
 			return files, err
@@ -55,7 +55,7 @@ func ListArchiveFiles(mimetype string, size int64, r ReadSeekerAt) ([]string, er
 				files = append(files, hdr.Name)
 			}
 		}
-	case "application/x-bzip":
+	case "application/x-bzip", "application/x-bzip2":
 		bzf := bzip2.NewReader(r)
 		tReadr := tar.NewReader(bzf)
 		for {
