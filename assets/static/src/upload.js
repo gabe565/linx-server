@@ -5,22 +5,18 @@ export const initUpload = async () => {
       const dzone = document.getElementById("dzone");
       dzone.style.display = "block";
     },
-    addedfile: (file) => {
+    addedfile: async (file) => {
       if (!myDropzone.options.autoProcessQueue) {
-        const xhr = new XMLHttpRequest();
-        xhr.onload = () => {
-          if (xhr.readyState !== XMLHttpRequest.DONE) {
-            return;
-          }
-          if (xhr.status < 400) {
-            myDropzone.processQueue();
-            myDropzone.options.autoProcessQueue = true;
-          } else {
-            myDropzone.cancelUpload(file);
-          }
-        };
-        xhr.open("HEAD", "auth", true);
-        xhr.send();
+        const res = await fetch("auth", {
+          method: "HEAD",
+          redirect: "manual",
+        });
+        if (res.status < 400) {
+          myDropzone.options.autoProcessQueue = true;
+          myDropzone.processQueue();
+        } else {
+          myDropzone.cancelUpload(file);
+        }
       }
       const upload = document.createElement("div");
       upload.className = "upload";
@@ -101,19 +97,19 @@ export const initUpload = async () => {
       const deleteAction = document.createElement("span");
       deleteAction.innerHTML = "Delete";
       deleteAction.className = "cancel";
-      deleteAction.addEventListener("click", () => {
-        const xhr = new XMLHttpRequest();
-        xhr.open("DELETE", resp.url, true);
-        xhr.setRequestHeader("Linx-Delete-Key", resp.delete_key);
-        xhr.onreadystatechange = () => {
-          if (xhr.readyState === 4 && xhr.status === 200) {
-            const text = document.createTextNode("Deleted ");
-            file.fileLabel.insertBefore(text, file.fileLabelLink);
-            file.fileLabel.className = "deleted";
-            file.fileActions.removeChild(file.cancelActionElement);
-          }
-        };
-        xhr.send();
+      deleteAction.addEventListener("click", async () => {
+        const res = await fetch(resp.url, {
+          method: "DELETE",
+          headers: {
+            "Linx-Delete-Key": resp.delete_key,
+          },
+        });
+        if (res.status === 200) {
+          const text = document.createTextNode("Deleted ");
+          file.fileLabel.insertBefore(text, file.fileLabelLink);
+          file.fileLabel.className = "deleted";
+          file.fileActions.removeChild(file.cancelActionElement);
+        }
       });
       file.fileActions.removeChild(file.cancelActionElement);
       file.cancelActionElement = deleteAction;
