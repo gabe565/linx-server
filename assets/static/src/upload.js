@@ -49,32 +49,8 @@ export const initUpload = async () => {
       document.getElementById("uploads").appendChild(upload);
     },
     uploadprogress: (file, p) => {
-      p = parseInt(p);
-      file.progressElement.innerHTML = p + "%";
-      file.uploadElement.setAttribute(
-        "style",
-        "background-image: -webkit-linear-gradient(left, #F2F4F7 " +
-          p +
-          "%, #E2E2E2 " +
-          p +
-          "%); background-image: -moz-linear-gradient(left, #F2F4F7 " +
-          p +
-          "%, #E2E2E2 " +
-          p +
-          "%); background-image: -ms-linear-gradient(left, #F2F4F7 " +
-          p +
-          "%, #E2E2E2 " +
-          p +
-          "%); background-image: -o-linear-gradient(left, #F2F4F7 " +
-          p +
-          "%, #E2E2E2 " +
-          p +
-          "%); background-image: linear-gradient(left, #F2F4F7 " +
-          p +
-          "%, #E2E2E2 " +
-          p +
-          "%)",
-      );
+      file.progressElement.innerHTML = `${Math.round(p)}%`;
+      file.uploadElement.style.backgroundImage = `linear-gradient(to right, #F2F4F7 ${p}%, #E2E2E2 ${p}%)`;
     },
     sending: (file, xhr, formData) => {
       const randomize = document.getElementById("randomize");

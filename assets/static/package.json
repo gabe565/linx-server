@@ -10,6 +10,7 @@
     "format": "prettier . --write --ignore-path .gitignore"
   },
   "dependencies": {
+    "autoprefixer": "^10.4.20",
     "dropzone": "^6.0.0-beta.2",
     "eslint": "^9.19.0",
     "github-markdown-css": "^5.8.1",

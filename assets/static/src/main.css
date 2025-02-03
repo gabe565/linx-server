@@ -54,8 +54,6 @@ body {
 
   padding: 6px 5px 8px 5px;
 
-  -moz-box-shadow: 1px 1px 1px 1px #ccc;
-  -webkit-box-shadow: 1px 1px 1px 1px #ccc;
   box-shadow: 1px 1px 1px 1px #ccc;
 
   text-align: center;
@@ -75,8 +73,6 @@ body {
 }
 
 .dinfo {
-  -moz-box-shadow: 1px 1px 1px 1px #ccc;
-  -webkit-box-shadow: 1px 1px 1px 1px #ccc;
   box-shadow: 1px 1px 1px 1px #ccc;
   margin-bottom: 15px;
 }
@@ -332,8 +328,6 @@ span {
   border-radius: 2px;
   padding: 2px;
   box-sizing: border-box;
-  -webkit-box-sizing: border-box;
-  -moz-box-sizing: border-box;
 }
 
 /* Content display {{{ */

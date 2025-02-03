@@ -1,3 +1,4 @@
+import autoprefixer from "autoprefixer";
 import { defineConfig } from "vite";
 
 export default defineConfig({
@@ -10,6 +11,11 @@ export default defineConfig({
     manifest: "manifest.json",
     rollupOptions: {
       input: "src/main.js",
+    },
+  },
+  css: {
+    postcss: {
+      plugins: [autoprefixer()],
     },
   },
 });
