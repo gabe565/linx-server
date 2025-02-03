@@ -17,7 +17,9 @@ type ReadSeekerAt interface {
 
 func ListArchiveFiles(mimetype string, size int64, r ReadSeekerAt) ([]string, error) {
 	var files []string
-	defer slices.Sort(files)
+	defer func() {
+		slices.Sort(files)
+	}()
 	var err error
 	switch mimetype {
 	case "application/x-tar":
