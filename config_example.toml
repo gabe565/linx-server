@@ -1,8 +1,8 @@
 bind = '127.0.0.1:8080'
 # Path to files directory
-files-path = 'files'
+files-path = 'data/files'
 # Path to metadata directory
-meta-path = 'meta'
+meta-path = 'data/meta'
 site-name = ''
 site-url = ''
 # Path relative to site base url where files are accessed directly

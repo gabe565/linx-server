@@ -10,9 +10,9 @@ linx-server cleanup [flags]
 
 ```
   -c, --config string       Path to the config file (default "$HOME/.config/linx-server/config.toml")
-      --files-path string   Path to files directory (default "files")
+      --files-path string   Path to files directory (default "data/files")
   -h, --help                help for cleanup
-      --meta-path string    Path to metadata directory (default "meta")
+      --meta-path string    Path to metadata directory (default "data/meta")
       --no-logs             Disable logging of deleted files
 ```
 

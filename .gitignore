@@ -29,15 +29,11 @@ _testmain.go
 *.prof
 
 linx-server
-cmd/cleanup/linx-cleanup
-cmd/genkey/linx-genkey
-linx-server.conf
-files/
-meta/
-binaries/
-custom_pages/
-authfile
-.idea/
+config.toml
+/data/
+/custom_pages/
+/authfile
+/.idea/
 dist/
 /completions/
 /manpages/

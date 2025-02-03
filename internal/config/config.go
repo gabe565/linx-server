@@ -73,8 +73,8 @@ type Config struct {
 func New() *Config {
 	c := &Config{
 		Bind:                      "127.0.0.1:8080",
-		FilesPath:                 "files",
-		MetaPath:                  "meta",
+		FilesPath:                 "data/files",
+		MetaPath:                  "data/meta",
 		SelifPath:                 "selif",
 		MaxSize:                   4 * bytefmt.GiB,
 		CleanupEvery:              Duration{time.Hour},
