@@ -59,13 +59,17 @@ func Setup() (*chi.Mux, error) {
 	}
 
 	// Template setup
-	config.Templates, err = templates.Load(assets.Template)
+	config.Templates, err = templates.Load(assets.Templates())
 	if err != nil {
 		return nil, fmt.Errorf("could not load templates: %w", err)
 	}
 
 	config.TimeStarted = time.Now()
 	config.TimeStartedStr = strconv.FormatInt(config.TimeStarted.Unix(), 10)
+
+	if err := assets.LoadManifest(); err != nil {
+		return nil, fmt.Errorf("failed to load Vite manifest: %w", err)
+	}
 
 	// Routing setup
 	r := chi.NewRouter()
@@ -140,9 +144,6 @@ func Setup() (*chi.Mux, error) {
 
 	r.Delete("/{name}", handlers.Delete)
 
-	r.Get("/static/*", handlers.StaticHandler)
-	r.Get("/favicon.ico", handlers.StaticHandler)
-	r.Get("/robots.txt", handlers.StaticHandler)
 	r.Get("/{name}", handlers.FileAccessHeader)
 	r.Post("/{name}", handlers.FileAccessHeader)
 	r.Route(path.Join("/", config.Default.SelifPath), func(r chi.Router) {
@@ -160,7 +161,7 @@ func Setup() (*chi.Mux, error) {
 		}
 	}
 
-	r.NotFound(handlers.NotFound)
+	r.NotFound(handlers.AssetHandler)
 
 	return r, nil
 }

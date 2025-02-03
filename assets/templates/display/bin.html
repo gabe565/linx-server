@@ -1,12 +1,5 @@
 {{ template "display.html" . }}
 
-{{- define "head" -}}
-    <link href="{{ .SitePath }}static/css/highlight/tomorrow.css" rel="stylesheet" type="text/css">
-    {{- if ne .Extra.LangHL "text" -}}
-    <link href="{{ .SitePath }}static/css/highlight/lines.css" rel="stylesheet" type="text/css">
-    {{- end -}}
-{{- end -}}
-
 {{- define "innercontentmore" }} class="scrollable"{{- end -}}
 
 {{- define "infoleft" -}}
@@ -42,16 +35,9 @@
 
 {{- define "main" -}}
 <div id="normal-content" class="normal fixed">
-    <pre id="normal-code"><code id="codeb" class="{{ .Extra.LangHL }}">{{ .Extra.Contents }}</code></pre>
+    <pre id="normal-code"><code id="codeb" data-language="{{ .Extra.LangHL }}" class="language-{{ .Extra.LangHL }}">{{ .Extra.Contents }}</code></pre>
     <textarea id="inplace-editor" class="editor">{{ .Extra.Contents }}</textarea>
 </div>
 
-
-{{- if ne .Extra.LangHL "text" -}}
-<script src="{{ .SitePath }}static/js/highlight/highlight.pack.js"></script>
-<script src="{{ .SitePath }}static/js/bin_hljs.js"></script>
-{{- end -}}
-
-<script src="{{ .SitePath }}static/js/util.js"></script>
-<script src="{{ .SitePath }}static/js/bin.js?v=1"></script>
+{{- .Manifest.PreloadJS .SitePath (printf "node_modules/highlight.js/es/languages/%s.js" .Extra.LangHL) -}}
 {{- end -}}

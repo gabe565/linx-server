@@ -108,7 +108,7 @@ func FileAccessHeader(w http.ResponseWriter, r *http.Request) {
 
 	metadata, err := CheckFile(r.Context(), fileName)
 	if errors.Is(err, backends.ErrNotFound) {
-		NotFound(w, r)
+		AssetHandler(w, r)
 		return
 	} else if err != nil {
 		Oops(w, r, RespAUTO, "Corrupt metadata.")

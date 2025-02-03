@@ -1,9 +1,5 @@
 {{ template "display.html" . }}
 
-{{- define "head" -}}
-<link href="{{ .SitePath }}static/css/github-markdown.css" rel="stylesheet" type="text/css">
-{{- end -}}
-
 {{- define "main" -}}
 <div class="normal markdown-body">
 	{{- .Extra.Contents -}}

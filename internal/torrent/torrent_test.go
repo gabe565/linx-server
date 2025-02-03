@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"gabe565.com/linx-server/assets"
 	"gabe565.com/linx-server/internal/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -43,16 +44,12 @@ func TestCreateTorrent(t *testing.T) {
 func TestCreateTorrentWithImage(t *testing.T) {
 	var decoded Torrent
 
-	f, err := os.Open("../../assets/static/images/404.jpg")
+	f, err := assets.Static().Open("images/404.jpg")
 	require.NoError(t, err)
-	t.Cleanup(func() { _ = f.Close() })
 
 	encoded, err := CreateTorrent("test.jpg", f, nil)
 	require.NoError(t, err)
 
 	require.NoError(t, bencode.DecodeBytes(encoded, &decoded))
-
-	if decoded.Info.Pieces != "\xd6\xff\xbf'^)\x85?\xb4.\xb0\xc1|\xa3\x83\xeeX\xf9\xfd\xd7" {
-		t.Fatal("Torrent pieces did not match expected pieces for image")
-	}
+	assert.Equal(t, "\xd6\xff\xbf'^)\x85?\xb4.\xb0\xc1|\xa3\x83\xeeX\xf9\xfd\xd7", decoded.Info.Pieces)
 }

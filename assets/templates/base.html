@@ -5,9 +5,8 @@
 	<title>{{ block "title" . }}{{ .SiteName }}{{ end }}</title>
 	<meta charset="utf-8" content="text/html" http-equiv="content-type">
 	<meta name="viewport" content="width=device-width, initial-scale=0.8">
-	<link href="{{ .SitePath }}static/css/linx.css?v=1" media="screen, projection" rel="stylesheet" type="text/css">
-	<link href="{{ .SitePath }}static/css/hint.css" rel="stylesheet" type="text/css">
-	<link href="{{ .SitePath }}static/images/favicon.gif" rel="icon" type="image/gif">
+	{{- .Manifest.ImportCSS .SitePath "src/main.js" -}}
+	<link href="{{ .SitePath }}images/favicon.gif" rel="icon" type="image/gif">
 	{{- block "head" . }}{{ end -}}
 </head>
 
@@ -36,6 +35,8 @@
 
 		</div>
 	</div>
+
+	{{- .Manifest.ImportJS .SitePath "src/main.js" -}}
 </body>
 
 </html>

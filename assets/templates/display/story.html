@@ -1,9 +1,5 @@
 {{ template "display.html" . }}
 
-{{- define "head" -}}
-    <link href="{{ .SitePath }}static/css/story.css" rel="stylesheet" type="text/css">
-{{- end -}}
-
 {{- define "innercontentmore" }} class="scrollable"{{- end -}}
 {{- define "mainmore" }} class="storycontent" {{- end -}}
 
@@ -49,8 +45,4 @@
     </code></pre>
     <textarea id="inplace-editor" class="editor">{{ .Extra.Contents }}</textarea>
 </div>
-
-
-<script src="{{ .SitePath }}static/js/util.js"></script>
-<script src="{{ .SitePath }}static/js/bin.js?v=1"></script>
 {{- end -}}

@@ -24,12 +24,8 @@
 </div>
 
 <div id="main" {{- block "mainmore" . }}{{ end -}}>
-
     <div id="inner_content" {{- block "innercontentmore" . }}{{ end }}>
         {{- block "main" . }}{{ end -}}
     </div>
-
 </div>
-
-<script src="{{ .SitePath }}static/js/clipboard.js"></script>
 {{- end -}}

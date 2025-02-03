@@ -13,6 +13,14 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: assets/static/.nvmrc
+          cache: npm
+          cache-dependency-path: assets/static/package-lock.json
+      - name: Go generate
+        run: go generate -x
       - name: Test
         run: go test ./...
 
@@ -41,6 +49,12 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: assets/static/.nvmrc
+          cache: npm
+          cache-dependency-path: assets/static/package-lock.json
       - name: Set build variables
         id: vars
         run: |

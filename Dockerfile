@@ -1,12 +1,23 @@
 #syntax=docker/dockerfile:1.13
 
-FROM --platform=$BUILDPLATFORM golang:1.23.5-alpine AS build
+FROM --platform=$BUILDPLATFORM node:22-alpine AS frontend
+WORKDIR /app
+
+COPY assets/static/package*.json .
+RUN npm ci
+
+COPY assets/static .
+RUN npm run build
+
+FROM --platform=$BUILDPLATFORM golang:1.23.5-alpine AS backend
 WORKDIR /app
 
 COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
+
+COPY --from=frontend /app/dist assets/static/dist
 
 # Set Golang build envs based on Docker platform string
 ARG TARGETPLATFORM
@@ -25,7 +36,7 @@ EOT
 FROM alpine:3.21.2
 WORKDIR /data
 
-COPY --from=build /app/linx-server /usr/bin
+COPY --from=backend /app/linx-server /usr/bin
 
 RUN <<EOT
   set -eux

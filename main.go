@@ -7,6 +7,9 @@ import (
 	"gabe565.com/utils/cobrax"
 )
 
+//go:generate npm --prefix assets/static install
+//go:generate npm --prefix assets/static run build
+
 var version = "beta"
 
 func main() {

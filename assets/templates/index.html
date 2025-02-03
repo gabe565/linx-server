@@ -1,9 +1,5 @@
 {{ template "base.html" . }}
 
-{{- define "head" -}}
-<link href="{{ .SitePath }}static/css/dropzone.css" media="screen, projection" rel="stylesheet" type="text/css">
-{{- end -}}
-
 {{- define "content" -}}
 <div id="fileupload">
     <form action="{{ .SitePath }}upload" class="dropzone" id="dropzone" method="POST" enctype="multipart/form-data"
@@ -51,7 +47,4 @@
     <div id="uploads"></div>
     <div class="clear"></div>
 </div>
-
-<script src="{{ .SitePath }}static/js/dropzone.js"></script>
-<script src="{{ .SitePath }}static/js/upload.js"></script>
 {{- end -}}

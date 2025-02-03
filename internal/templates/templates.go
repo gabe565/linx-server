@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"gabe565.com/linx-server/assets"
 	"gabe565.com/linx-server/internal/config"
 	"gabe565.com/linx-server/internal/custompages"
 	"github.com/Masterminds/sprig/v3"
@@ -23,20 +24,18 @@ func Load(fsys fs.FS) (map[string]*template.Template, error) {
 			return err
 		}
 
-		name := strings.TrimPrefix(path, "templates/")
-
-		switch name {
+		switch path {
 		case "base.html", "display/display.html":
 			return nil
 		}
 
-		paths := []string{"templates/base.html"}
-		if strings.HasPrefix(name, "display/") {
-			paths = append(paths, "templates/display/display.html")
+		paths := []string{"base.html"}
+		if strings.HasPrefix(path, "display/") {
+			paths = append(paths, "display/display.html")
 		}
 		paths = append(paths, path)
 
-		t[name], err = template.New(name).Funcs(funcMap).ParseFS(fsys, paths...)
+		t[path], err = template.New(path).Funcs(funcMap).ParseFS(fsys, paths...)
 		return err
 	}); err != nil {
 		return nil, err
@@ -60,6 +59,7 @@ func Render(name string, data map[string]any, r *http.Request, writer io.Writer)
 	data["SitePath"] = config.Default.SiteURL.Path
 	data["SelifPath"] = config.Default.SelifPath
 	data["CustomPagesNames"] = custompages.Names
+	data["Manifest"] = assets.Manifest
 
 	switch {
 	case config.Default.AuthFile == "":

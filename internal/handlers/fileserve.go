@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 	"time"
 
 	"gabe565.com/linx-server/assets"
@@ -26,7 +27,7 @@ func FileServeHandler(w http.ResponseWriter, r *http.Request) {
 
 	metadata, err := CheckFile(r.Context(), fileName)
 	if errors.Is(err, backends.ErrNotFound) {
-		NotFound(w, r)
+		AssetHandler(w, r)
 		return
 	} else if err != nil {
 		Oops(w, r, RespAUTO, "Corrupt metadata.")
@@ -74,13 +75,13 @@ func FileServeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func StaticHandler(w http.ResponseWriter, r *http.Request) {
-	path := chi.URLParam(r, "*")
+func AssetHandler(w http.ResponseWriter, r *http.Request) {
+	path := r.URL.Path
 	if path == "/favicon.ico" {
-		path = "/static/images/favicon.gif"
+		path = "/images/favicon.gif"
 	}
 
-	file, err := assets.Static.Open("static/" + path)
+	file, err := assets.Static().Open(strings.TrimPrefix(path, "/"))
 	if err != nil {
 		NotFound(w, r)
 		return

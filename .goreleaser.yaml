@@ -2,6 +2,7 @@ version: 2
 project_name: linx-server
 before:
   hooks:
+    - go generate
     - go run ./internal/generate/completions --date={{ .CommitDate }}
     - go run ./internal/generate/manpages --version={{ .Version }} --date={{ .CommitDate }}
 builds:

@@ -1,0 +1,115 @@
+#dzone {
+  display: none;
+}
+
+.fallback {
+  background-color: #fafbfc;
+  padding-top: 40px;
+  padding-bottom: 20px;
+  text-align: center;
+
+  -moz-box-shadow: 1px 1px 1px 1px #ccc;
+  -webkit-box-shadow: 1px 1px 1px 1px #ccc;
+  box-shadow: 1px 1px 1px 1px #ccc;
+}
+
+#fileinput {
+  margin-top: 20px;
+}
+
+#submitbtn {
+  margin-top: 30px;
+  background-color: #fff;
+  border: 2px solid #556a7f;
+  width: 90px;
+  height: 30px;
+
+  &:hover {
+    background-color: #556a7f;
+    color: white;
+    border: 2px solid #fafbfc;
+  }
+}
+
+#dropzone {
+  width: 400px;
+  margin-left: auto;
+  margin-right: auto;
+
+  @media (max-width: 450px) {
+    width: auto;
+  }
+}
+
+#uploads {
+  margin-top: 20px;
+}
+
+div.dz-default {
+  border: 2px dashed #c9c9c9;
+  border-radius: 5px;
+  color: #c9c9c9;
+  font-size: 14px;
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    sans-serif,
+    "Apple Color Emoji",
+    "Segoe UI Emoji",
+    Segoe UI Symbol,
+    "Noto Color Emoji";
+  background-color: #fafbfc;
+  padding-top: 60px;
+  padding-bottom: 60px;
+  text-align: center;
+
+  &:hover {
+    background-color: #eff4f8;
+  }
+}
+
+div.upload {
+  background-color: #e2e2e2;
+  border: 1px solid #c9c9c9;
+  margin-bottom: 5px;
+  padding: 5px;
+}
+
+.upload {
+  font-size: 12px;
+
+  a {
+    font-size: 12px;
+    text-decoration: none;
+    border-bottom: 1px dotted #556a7f;
+    font-weight: 600;
+    color: #556a7f;
+
+    &:hover {
+      border-bottom: 1px dotted #556a7f;
+      color: #556a7f;
+    }
+  }
+
+  .deleted,
+  .error {
+    color: #e68181;
+  }
+
+  .right {
+    float: right;
+    padding-left: 5px;
+  }
+}
+
+.cancel {
+  margin-right: 5px;
+  font-size: 10px;
+  border-bottom: 1px dotted #556a7f;
+  color: #e68181;
+  cursor: pointer;
+}
+
+.dz-drag-hover div.dz-default {
+  background-color: #2c89f0;
+}
