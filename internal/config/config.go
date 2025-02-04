@@ -69,6 +69,16 @@ type Config struct {
 	ReferrerPolicy            string     `toml:"referrer-policy" comment:"Value of default Referrer-Policy header"`
 	FileReferrerPolicy        string     `toml:"file-referrer-policy" comment:"Value of Referrer-Policy header for file access"`
 	XFrameOptions             string     `toml:"x-frame-options" comment:"Value of X-Frame-Options header"`
+
+	Limit Limit `toml:"limit" comment:"Configure rate limits"`
+}
+
+type Limit struct {
+	UploadMaxRequests int      `toml:"upload-max-requests"`
+	UploadInterval    Duration `toml:"upload-interval"`
+
+	FileMaxRequests int      `toml:"file-max-requests"`
+	FileInterval    Duration `toml:"file-interval"`
 }
 
 func New() *Config {
@@ -84,6 +94,12 @@ func New() *Config {
 		ReferrerPolicy:            "same-origin",
 		FileReferrerPolicy:        "same-origin",
 		XFrameOptions:             "SAMEORIGIN",
+		Limit: Limit{
+			UploadMaxRequests: 5,
+			UploadInterval:    Duration{time.Minute},
+			FileMaxRequests:   10,
+			FileInterval:      Duration{10 * time.Second},
+		},
 	}
 	if os.Getenv("LINX_DEFAULTS") == "container" {
 		c.Bind = ":8080"

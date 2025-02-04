@@ -53,10 +53,17 @@ func (c *Config) Load(cmd *cobra.Command) error {
 
 	// Load envs
 	const envPrefix = "LINX_"
+	nested := []string{"limit"}
 	if err := k.Load(env.Provider(envPrefix, ".", func(s string) string {
 		s = strings.TrimPrefix(s, envPrefix)
 		s = strings.ToLower(s)
 		s = strings.ReplaceAll(s, "_", "-")
+		for _, name := range nested {
+			if strings.HasPrefix(s, name) {
+				s = strings.Replace(s, name+"-", name+".", 1)
+				break
+			}
+		}
 		return s
 	}), nil); err != nil {
 		return err

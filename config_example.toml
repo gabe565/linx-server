@@ -60,3 +60,10 @@ referrer-policy = 'same-origin'
 file-referrer-policy = 'same-origin'
 # Value of X-Frame-Options header
 x-frame-options = 'SAMEORIGIN'
+
+# Configure rate limits
+[limit]
+upload-max-requests = 5
+upload-interval = '1m0s'
+file-max-requests = 10
+file-interval = '10s'

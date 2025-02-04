@@ -24,6 +24,7 @@ import (
 	"gabe565.com/linx-server/internal/upload"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/httprate"
 )
 
 func Setup() (*chi.Mux, error) {
@@ -134,29 +135,41 @@ func Setup() (*chi.Mux, error) {
 	r.Get("/api", handlers.APIDoc)
 	r.Get("/API", http.RedirectHandler(path.Join(config.Default.SiteURL.Path, "api"), http.StatusPermanentRedirect).ServeHTTP)
 
-	if config.Default.RemoteUploads {
-		r.Get("/upload", upload.Remote)
+	r.Group(func(r chi.Router) {
+		r.Use(rateLimit(config.Default.Limit.UploadMaxRequests, config.Default.Limit.UploadInterval.Duration))
 
-		if config.Default.RemoteAuthFile != "" {
-			config.RemoteAuthKeys = apikeys.ReadAuthKeys(config.Default.RemoteAuthFile)
+		r.Post("/upload", upload.POSTHandler)
+		r.Put("/upload", upload.PUTHandler)
+		r.Put("/upload/{name}", upload.PUTHandler)
+		if config.Default.RemoteUploads {
+			r.Get("/upload", upload.Remote)
+
+			if config.Default.RemoteAuthFile != "" {
+				config.RemoteAuthKeys = apikeys.ReadAuthKeys(config.Default.RemoteAuthFile)
+			}
 		}
-	}
 
-	r.Post("/upload", upload.POSTHandler)
-	r.Put("/upload", upload.PUTHandler)
-	r.Put("/upload/{name}", upload.PUTHandler)
+		r.Delete("/{name}", handlers.Delete)
+	})
 
-	r.Delete("/{name}", handlers.Delete)
+	r.Group(func(r chi.Router) {
+		r.Use(rateLimit(config.Default.Limit.FileMaxRequests, config.Default.Limit.FileInterval.Duration))
 
-	r.Get("/{name}", handlers.FileAccessHandler)
-	r.Post("/{name}", handlers.FileAccessHandler)
-	r.Get(path.Join("/", config.Default.SelifPath, "{name}"), handlers.FileServeHandler)
-	if !config.Default.NoTorrent {
-		r.Get("/torrent/{name}", torrent.FileTorrentHandler)
-		r.Get("/{name}/torrent", func(w http.ResponseWriter, r *http.Request) {
-			http.Redirect(w, r, "/torrent/"+chi.URLParam(r, "name"), http.StatusMovedPermanently)
-		})
-	}
+		r.Get("/{name}", handlers.FileAccessHandler)
+		r.Post("/{name}", handlers.FileAccessHandler)
+	})
+
+	r.Group(func(r chi.Router) {
+		r.Use(rateLimit(config.Default.Limit.FileMaxRequests, config.Default.Limit.FileInterval.Duration))
+
+		r.Get(path.Join("/", config.Default.SelifPath, "{name}"), handlers.FileServeHandler)
+		if !config.Default.NoTorrent {
+			r.Get("/torrent/{name}", torrent.FileTorrentHandler)
+			r.Get("/{name}/torrent", func(w http.ResponseWriter, r *http.Request) {
+				http.Redirect(w, r, "/torrent/"+chi.URLParam(r, "name"), http.StatusMovedPermanently)
+			})
+		}
+	})
 
 	if config.Default.CustomPagesDir != "" {
 		custompages.InitializeCustomPages(config.Default.CustomPagesDir)
@@ -168,4 +181,14 @@ func Setup() (*chi.Mux, error) {
 	r.NotFound(handlers.AssetHandler)
 
 	return r, nil
+}
+
+func rateLimit(requestLimit int, windowLength time.Duration) func(next http.Handler) http.Handler {
+	limiter := httprate.NewRateLimiter(requestLimit, windowLength,
+		httprate.WithLimitHandler(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusTooManyRequests)
+			handlers.Oops(w, r, handlers.RespAUTO, "Too many requests")
+		}),
+	)
+	return limiter.Handler
 }
