@@ -18,15 +18,11 @@ body {
   font-size: 14px;
 }
 
-#container_container {
-  display: table;
-  table-layout: fixed;
-  margin-left: auto;
-  margin-right: auto;
-}
-
 #container {
-  display: table-cell;
+  display: flex;
+  flex-direction: column;
+  justify-self: center;
+  max-width: 800px;
 }
 
 @media (min-width: 600px) {
@@ -336,8 +332,6 @@ body {
 }
 
 .oopscontent {
-  width: 400px;
-
   img {
     width: 400px;
     border: 0;
