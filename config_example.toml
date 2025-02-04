@@ -25,6 +25,8 @@ force-random-filename = false
 access-key-cookie-expiry = 0
 # Remove stdout output for each request
 no-logs = false
+# Disable the torrent file endpoint
+no-torrent = false
 # Allow logging in with basic auth password
 basic-auth = false
 # Path to a file containing newline-separated scrypted auth keys

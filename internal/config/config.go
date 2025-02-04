@@ -44,6 +44,7 @@ type Config struct {
 	ForceRandomFilename   bool     `toml:"force-random-filename" comment:"Force all uploads to use a random filename"`
 	AccessKeyCookieExpiry uint64   `toml:"access-key-cookie-expiry" comment:"Expiration time for access key cookies in seconds (set 0 to use session cookies)"`
 	NoLogs                bool     `toml:"no-logs" comment:"Remove stdout output for each request"`
+	NoTorrent             bool     `toml:"no-torrent" comment:"Disable the torrent file endpoint"`
 
 	BasicAuth      bool   `toml:"basic-auth" comment:"Allow logging in with basic auth password"`
 	AuthFile       string `toml:"auth-file" comment:"Path to a file containing newline-separated scrypted auth keys"`

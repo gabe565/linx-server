@@ -60,6 +60,7 @@ func Render(name string, data map[string]any, r *http.Request, writer io.Writer)
 	data["SelifPath"] = config.Default.SelifPath
 	data["CustomPagesNames"] = custompages.Names
 	data["Manifest"] = assets.Manifest
+	data["NoTorrent"] = config.Default.NoTorrent
 
 	switch {
 	case config.Default.AuthFile == "":
