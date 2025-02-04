@@ -53,7 +53,7 @@ func (c *Config) Load(cmd *cobra.Command) error {
 
 	// Load envs
 	const envPrefix = "LINX_"
-	nested := []string{"limit"}
+	nested := []string{"tls", "auth", "s3", "limit", "header"}
 	if err := k.Load(env.Provider(envPrefix, ".", func(s string) string {
 		s = strings.TrimPrefix(s, envPrefix)
 		s = strings.ToLower(s)

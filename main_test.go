@@ -93,7 +93,7 @@ func TestIndexWeirdMaxExpiry(t *testing.T) {
 }
 
 func TestAddHeader(t *testing.T) {
-	config.Default.AddHeaders = []string{"Linx-Test: It works!"}
+	config.Default.Header.AddHeaders = map[string]string{"Linx-Test": "It works!"}
 	r := setup(t, false)
 	w := httptest.NewRecorder()
 
@@ -105,7 +105,7 @@ func TestAddHeader(t *testing.T) {
 }
 
 func TestAuthKeys(t *testing.T) {
-	config.Default.AuthFile = "/dev/null"
+	config.Default.Auth.File = "/dev/null"
 	r := setup(t, false)
 
 	for _, v := range []string{"/", "/paste"} {
@@ -922,7 +922,7 @@ func TestInferSiteURLProxied(t *testing.T) {
 }
 
 func TestInferSiteURLHTTPS(t *testing.T) {
-	config.Default.TLSCert = "/dev/null"
+	config.Default.TLS.Cert = "/dev/null"
 
 	r := setup(t, true)
 	w := httptest.NewRecorder()

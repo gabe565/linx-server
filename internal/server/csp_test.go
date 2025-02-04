@@ -27,9 +27,9 @@ func TestContentSecurityPolicy(t *testing.T) {
 	config.Default.NoLogs = true
 	config.Default.SiteName = "linx"
 	config.Default.SelifPath = "/selif"
-	config.Default.ContentSecurityPolicy = testCSPHeaders["Content-Security-Policy"]
-	config.Default.ReferrerPolicy = testCSPHeaders["Referrer-Policy"]
-	config.Default.XFrameOptions = testCSPHeaders["X-Frame-Options"]
+	config.Default.Header.ContentSecurityPolicy = testCSPHeaders["Content-Security-Policy"]
+	config.Default.Header.ReferrerPolicy = testCSPHeaders["Referrer-Policy"]
+	config.Default.Header.XFrameOptions = testCSPHeaders["X-Frame-Options"]
 	r, err := Setup()
 	require.NoError(t, err)
 

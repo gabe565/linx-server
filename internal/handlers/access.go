@@ -146,8 +146,8 @@ func FileAccessHandler(w http.ResponseWriter, r *http.Request) {
 
 	if metadata.AccessKey != "" {
 		var expiry time.Time
-		if config.Default.AccessKeyCookieExpiry != 0 {
-			expiry = time.Now().Add(time.Duration(config.Default.AccessKeyCookieExpiry) * time.Second) //nolint:gosec
+		if config.Default.Auth.CookieExpiry.Duration != 0 {
+			expiry = time.Now().Add(config.Default.Auth.CookieExpiry.Duration)
 		}
 		SetAccessKeyCookies(w, r, fileName, metadata.AccessKey, expiry)
 	}

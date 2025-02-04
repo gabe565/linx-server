@@ -47,8 +47,8 @@ func Setup() (*chi.Mux, error) {
 	}
 	config.Default.SelifPath = strings.Trim(config.Default.SelifPath, "/") + "/"
 
-	if config.Default.S3Bucket != "" {
-		config.StorageBackend, err = s3.NewS3Backend(context.Background(), config.Default.S3Bucket, config.Default.S3Region, config.Default.S3Endpoint, config.Default.S3ForcePathStyle)
+	if config.Default.S3.Bucket != "" {
+		config.StorageBackend, err = s3.NewS3Backend(context.Background(), config.Default.S3.Bucket, config.Default.S3.Region, config.Default.S3.Endpoint, config.Default.S3.ForcePathStyle)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create S3 backend: %w", err)
 		}
@@ -95,7 +95,7 @@ func Setup() (*chi.Mux, error) {
 	if config.Default.SiteURL.Path != "/" {
 		r.Use(middleware.StripPrefix(strings.TrimSuffix(config.Default.SiteURL.Path, "/")))
 	}
-	if config.Default.RealIP {
+	if config.Default.Header.RealIP {
 		r.Use(middleware.RealIP)
 	}
 
@@ -108,23 +108,23 @@ func Setup() (*chi.Mux, error) {
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.GetHead)
 	r.Use(ContentSecurityPolicy(CSPOptions{
-		Policy:         config.Default.ContentSecurityPolicy,
-		ReferrerPolicy: config.Default.ReferrerPolicy,
-		Frame:          config.Default.XFrameOptions,
+		Policy:         config.Default.Header.ContentSecurityPolicy,
+		ReferrerPolicy: config.Default.Header.ReferrerPolicy,
+		Frame:          config.Default.Header.XFrameOptions,
 	}))
-	r.Use(headers.AddHeaders(config.Default.AddHeaders))
+	r.Use(headers.AddHeaders(config.Default.Header.AddHeaders))
 
-	if config.Default.AuthFile != "" {
+	if config.Default.Auth.File != "" {
 		r.Use(apikeys.NewAPIKeysMiddleware(apikeys.AuthOptions{
-			AuthFile:      config.Default.AuthFile,
+			AuthFile:      config.Default.Auth.File,
 			UnauthMethods: []string{http.MethodGet, http.MethodHead, http.MethodOptions, http.MethodTrace},
-			BasicAuth:     config.Default.BasicAuth,
+			BasicAuth:     config.Default.Auth.Basic,
 			SiteName:      config.Default.SiteName,
 			SitePath:      config.Default.SiteURL.Path,
 		}))
 	}
 
-	if config.Default.AuthFile == "" || config.Default.BasicAuth {
+	if config.Default.Auth.File == "" || config.Default.Auth.Basic {
 		r.Get("/", handlers.Index)
 		r.Get("/paste", handlers.Paste)
 	} else {
@@ -144,8 +144,8 @@ func Setup() (*chi.Mux, error) {
 		if config.Default.RemoteUploads {
 			r.Get("/upload", upload.Remote)
 
-			if config.Default.RemoteAuthFile != "" {
-				config.RemoteAuthKeys = apikeys.ReadAuthKeys(config.Default.RemoteAuthFile)
+			if config.Default.Auth.RemoteFile != "" {
+				config.RemoteAuthKeys = apikeys.ReadAuthKeys(config.Default.Auth.RemoteFile)
 			}
 		}
 

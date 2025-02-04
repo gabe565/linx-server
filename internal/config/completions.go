@@ -67,20 +67,12 @@ func RegisterServeCompletions(cmd *cobra.Command) {
 		cmd.RegisterFlagCompletionFunc(FlagTLSKey, func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
 			return []string{"key"}, cobra.ShellCompDirectiveFilterFileExt
 		}),
-		cmd.RegisterFlagCompletionFunc(FlagContentSecurityPolicy, cobra.NoFileCompletions),
-		cmd.RegisterFlagCompletionFunc(FlagFileContentSecurityPolicy, cobra.NoFileCompletions),
-		cmd.RegisterFlagCompletionFunc(FlagReferrerPolicy, completeReferrerPolicy),
-		cmd.RegisterFlagCompletionFunc(FlagFileReferrerPolicy, completeReferrerPolicy),
-		cmd.RegisterFlagCompletionFunc(FlagXFrameOptions, func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
-			return []string{"DENY", "SAMEORIGIN"}, cobra.ShellCompDirectiveNoFileComp
-		}),
-		cmd.RegisterFlagCompletionFunc(FlagAddHeader, cobra.NoFileCompletions),
 		cmd.RegisterFlagCompletionFunc(FlagS3Endpoint, func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
 			return []string{"https://"}, cobra.ShellCompDirectiveNoFileComp
 		}),
 		cmd.RegisterFlagCompletionFunc(FlagS3Region, cobra.NoFileCompletions),
 		cmd.RegisterFlagCompletionFunc(FlagS3Bucket, cobra.NoFileCompletions),
-		cmd.RegisterFlagCompletionFunc(FlagAccessKeyCookieExpiry, cobra.NoFileCompletions),
+		cmd.RegisterFlagCompletionFunc(FlagAuthCookieExpiry, cobra.NoFileCompletions),
 		cmd.RegisterFlagCompletionFunc(FlagCustomPagesDir, func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
 			return nil, cobra.ShellCompDirectiveFilterDirs
 		}),
@@ -88,17 +80,4 @@ func RegisterServeCompletions(cmd *cobra.Command) {
 			return []string{"1h", "12h", "24h"}, cobra.ShellCompDirectiveNoFileComp
 		}),
 	))
-}
-
-func completeReferrerPolicy(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
-	return []string{
-		"no-referrer",
-		"no-referrer-when-downgrade",
-		"origin",
-		"origin-when-cross-origin",
-		"same-origin",
-		"strict-origin",
-		"strict-origin-when-cross-origin",
-		"unsafe-url",
-	}, cobra.ShellCompDirectiveNoFileComp
 }

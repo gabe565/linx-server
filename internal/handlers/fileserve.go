@@ -53,8 +53,8 @@ func FileServeHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	w.Header().Set("Content-Security-Policy", config.Default.FileContentSecurityPolicy)
-	w.Header().Set("Referrer-Policy", config.Default.FileReferrerPolicy)
+	w.Header().Set("Content-Security-Policy", config.Default.Header.FileContentSecurityPolicy)
+	w.Header().Set("Referrer-Policy", config.Default.Header.FileReferrerPolicy)
 
 	w.Header().Set("Content-Type", metadata.Mimetype)
 	w.Header().Set("Content-Length", strconv.FormatInt(metadata.Size, 10))

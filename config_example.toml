@@ -11,7 +11,7 @@ selif-path = 'selif'
 fastcgi = false
 # Maximum upload file size in bytes
 max-size = '4 GiB'
-# Maximum expiration time. A value of 0 means no expiry.
+# Maximum expiration time (a value of 0s means no expiry)
 max-expiry = '0s'
 # Allow hot-linking of files
 allow-hotlink = false
@@ -21,49 +21,52 @@ remote-uploads = false
 no-direct-agents = false
 # Force all uploads to use a random filename
 force-random-filename = false
-# Expiration time for access key cookies in seconds (set 0 to use session cookies)
-access-key-cookie-expiry = 0
 # Remove stdout output for each request
 no-logs = false
 # Disable the torrent file endpoint
 no-torrent = false
-# Allow logging in with basic auth password
-basic-auth = false
-# Path to a file containing newline-separated scrypted auth keys
-auth-file = ''
-# Path to a file containing newline-separated scrypted auth keys for remote uploads
-remote-auth-file = ''
 # How often to clean up expired files. A value of 0 means files will be cleaned up as they are accessed.
 cleanup-every = '1h0m0s'
-# HTTPS configuration
-tls-cert = ''
-tls-key = ''
-# AWS S3 configuration
-s3-endpoint = ''
-s3-region = ''
-s3-bucket = ''
-# Force path-style addressing for S3 (e.g. https://s3.amazonaws.com/linx/example.txt)
-s3-force-path-style = false
 # Path to directory containing .md files to render as custom pages
 custom-pages-dir = ''
-# Use X-Real-IP/X-Forwarded-For headers
-real-ip = false
-# Add arbitrary headers to the response
-add-headers = []
-# Value of default Content-Security-Policy header
-content-security-policy = "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; frame-ancestors 'self';"
-# Value of Content-Security-Policy header for file access
-file-content-security-policy = "default-src 'none'; img-src 'self'; object-src 'self'; media-src 'self'; style-src 'self' 'unsafe-inline'; frame-ancestors 'self';"
-# Value of default Referrer-Policy header
-referrer-policy = 'same-origin'
-# Value of Referrer-Policy header for file access
-file-referrer-policy = 'same-origin'
-# Value of X-Frame-Options header
-x-frame-options = 'SAMEORIGIN'
+
+# TLS (HTTPS) configuration
+[tls]
+  cert = ''
+  key = ''
+
+[auth]
+  # Expiration time for access key cookies (set to 0s to use session cookies)
+  cookie-expiry = '0s'
+  # Allow logging in with basic auth password
+  auth = false
+  # Path to a file containing newline-separated scrypted auth keys
+  file = ''
+  # Path to a file containing newline-separated scrypted auth keys for remote uploads
+  remote-file = ''
+
+# S3-compatible storage configuration
+[s3]
+  endpoint = ''
+  region = ''
+  bucket = ''
+  # Force path-style addressing for S3 (e.g. https://s3.amazonaws.com/linx/example.txt)
+  force-path-style = false
 
 # Configure rate limits
 [limit]
-upload-max-requests = 5
-upload-interval = '1m0s'
-file-max-requests = 10
-file-interval = '10s'
+  upload-max-requests = 5
+  upload-interval = '1m0s'
+  file-max-requests = 10
+  file-interval = '10s'
+
+# Modify request/response headers
+[header]
+  # Use X-Real-IP/X-Forwarded-For headers
+  real-ip = false
+  add-headers = {}
+  content-security-policy = "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; frame-ancestors 'self';"
+  file-content-security-policy = "default-src 'none'; img-src 'self'; object-src 'self'; media-src 'self'; style-src 'self' 'unsafe-inline'; frame-ancestors 'self';"
+  referrer-policy = 'same-origin'
+  file-referrer-policy = 'same-origin'
+  x-frame-options = 'SAMEORIGIN'

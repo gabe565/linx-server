@@ -173,9 +173,9 @@ func PUTHandler(w http.ResponseWriter, r *http.Request) {
 const InputYes = "yes"
 
 func Remote(w http.ResponseWriter, r *http.Request) {
-	if config.Default.RemoteAuthFile != "" {
+	if config.Default.Auth.RemoteFile != "" {
 		key := r.FormValue("key")
-		if key == "" && config.Default.BasicAuth {
+		if key == "" && config.Default.Auth.Basic {
 			_, password, ok := r.BasicAuth()
 			if ok {
 				key = password
@@ -183,7 +183,7 @@ func Remote(w http.ResponseWriter, r *http.Request) {
 		}
 		result, err := apikeys.CheckAuth(config.RemoteAuthKeys, key)
 		if err != nil || !result {
-			if config.Default.BasicAuth {
+			if config.Default.Auth.Basic {
 				rs := ""
 				if config.Default.SiteName != "" {
 					rs = " realm=" + strconv.Quote(config.Default.SiteName)

@@ -14,6 +14,7 @@ func main() {
 	}
 
 	encoder := toml.NewEncoder(f)
+	encoder.SetIndentTables(true)
 	conf := config.New()
 	if err := encoder.Encode(conf); err != nil {
 		panic(err)

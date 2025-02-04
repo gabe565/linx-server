@@ -96,10 +96,10 @@ func run(cmd *cobra.Command, _ []string) error {
 			ReadHeaderTimeout: 3 * time.Second,
 		}
 
-		if config.Default.TLSCert != "" {
+		if config.Default.TLS.Cert != "" {
 			group.Go(func() error {
 				log.Printf("Serving over https, bound on %s", config.Default.Bind)
-				return srv.ListenAndServeTLS(config.Default.TLSCert, config.Default.TLSKey)
+				return srv.ListenAndServeTLS(config.Default.TLS.Cert, config.Default.TLS.Key)
 			})
 		} else {
 			group.Go(func() error {

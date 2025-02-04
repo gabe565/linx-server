@@ -63,9 +63,9 @@ func Render(name string, data map[string]any, r *http.Request, writer io.Writer)
 	data["NoTorrent"] = config.Default.NoTorrent
 
 	switch {
-	case config.Default.AuthFile == "":
+	case config.Default.Auth.File == "":
 		data["Auth"] = "none"
-	case config.Default.BasicAuth:
+	case config.Default.Auth.Basic:
 		data["Auth"] = "basic"
 	default:
 		data["Auth"] = "header"

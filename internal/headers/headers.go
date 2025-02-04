@@ -4,26 +4,24 @@ import (
 	"net/http"
 	"net/url"
 	"path"
-	"strings"
 
 	"gabe565.com/linx-server/internal/config"
 )
 
 type addheaders struct {
 	h       http.Handler
-	headers []string
+	headers map[string]string
 }
 
 func (a addheaders) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	for _, header := range a.headers {
-		headerSplit := strings.SplitN(header, ": ", 2)
-		w.Header().Add(headerSplit[0], headerSplit[1])
+	for k, v := range a.headers {
+		w.Header().Set(k, v)
 	}
 
 	a.h.ServeHTTP(w, r)
 }
 
-func AddHeaders(headers []string) func(http.Handler) http.Handler {
+func AddHeaders(headers map[string]string) func(http.Handler) http.Handler {
 	fn := func(h http.Handler) http.Handler {
 		return addheaders{h, headers}
 	}
@@ -41,7 +39,7 @@ func GetSiteURL(r *http.Request) *url.URL {
 
 		if scheme := r.Header.Get("X-Forwarded-Proto"); scheme != "" {
 			u.Scheme = scheme
-		} else if config.Default.TLSCert != "" || (r.TLS != nil && r.TLS.HandshakeComplete) {
+		} else if config.Default.TLS.Cert != "" || (r.TLS != nil && r.TLS.HandshakeComplete) {
 			u.Scheme = "https"
 		} else {
 			u.Scheme = "http"
