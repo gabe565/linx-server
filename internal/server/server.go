@@ -98,6 +98,8 @@ func Setup() (*chi.Mux, error) {
 		r.Use(middleware.RealIP)
 	}
 
+	r.Use(middleware.Heartbeat("/ping"))
+
 	if !config.Default.NoLogs {
 		r.Use(middleware.Logger)
 	}
