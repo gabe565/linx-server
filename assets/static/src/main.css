@@ -1,7 +1,7 @@
 @import "hint.css/hint.css";
 @import "github-markdown-css/github-markdown-light.css";
 @import "./markdown.css";
-@import "./dropzone.css";
+@import "./upload.css";
 
 body {
   background-color: #e8ecf0;

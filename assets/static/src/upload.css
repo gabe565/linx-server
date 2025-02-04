@@ -1,41 +1,33 @@
-#dzone {
-  display: none;
-  cursor: pointer;
-}
-
-.fallback {
-  background-color: #fafbfc;
-  padding-top: 40px;
-  padding-bottom: 20px;
-  text-align: center;
-
-  box-shadow: 1px 1px 1px 1px #ccc;
-}
-
-#fileupload {
-  width: 400px;
-  margin: 0 auto;
-
-  @media (max-width: 450px) {
-    width: auto;
+#dropzone {
+  #dzone {
+    display: none;
+    cursor: pointer;
   }
-}
 
-#fileinput {
-  margin-top: 20px;
-}
+  .fallback {
+    background-color: #fafbfc;
+    padding-top: 40px;
+    padding-bottom: 20px;
+    text-align: center;
 
-#submitbtn {
-  margin-top: 30px;
-  background-color: #fff;
-  border: 2px solid #556a7f;
-  width: 90px;
-  height: 30px;
+    box-shadow: 1px 1px 1px 1px #ccc;
+  }
 
-  &:hover {
-    background-color: #556a7f;
-    color: white;
-    border: 2px solid #fafbfc;
+  #fileupload {
+    width: 400px;
+    margin: 0 auto;
+
+    @media (max-width: 450px) {
+      width: auto;
+    }
+  }
+
+  #fileinput {
+    margin-top: 20px;
+  }
+
+  #submitbtn {
+    margin-top: 30px;
   }
 }
 
