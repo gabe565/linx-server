@@ -27,7 +27,19 @@ body {
 
 #container {
   display: table-cell;
-  min-width: 200px;
+}
+
+@media (min-width: 600px) {
+  #container {
+    min-width: 500px;
+  }
+}
+
+#header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
 }
 
 #header a {
@@ -36,7 +48,19 @@ body {
 }
 
 #navigation {
-  margin-top: 4px;
+  list-style: none;
+  padding: 0 0 12px;
+  margin: 0 0 0 12px;
+
+  > li {
+    display: inline-block;
+
+    + li {
+      border-left: 1px solid gray;
+      padding-left: 8px;
+      margin-left: 8px;
+    }
+  }
 
   a {
     text-decoration: none;
@@ -79,7 +103,7 @@ body {
 
 #info {
   background-color: white;
-  padding: 5px;
+  padding: 10px;
 
   a {
     text-decoration: none;
@@ -119,9 +143,20 @@ body {
 }
 
 .info-actions {
-  margin-left: 15px;
+  list-style: none;
+  padding: 0;
+  margin: 0 0 0 9px;
   font-size: 13px;
-  text-align: right;
+
+  > li {
+    display: inline-block;
+
+    + li {
+      border-left: 1px solid #849aae;
+      padding-left: 6px;
+      margin-left: 6px;
+    }
+  }
 }
 
 #info #extension,
@@ -284,11 +319,6 @@ body {
 #access_key {
   min-width: 100%;
   line-height: 1.3em;
-}
-
-#access_key input,
-span {
-  vertical-align: middle;
 }
 
 #access_key_checkbox {

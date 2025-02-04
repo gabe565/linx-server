@@ -10,15 +10,15 @@
         {{- .FileName -}}
     </div>
 
-    <div class="info-actions">
+    <ul class="info-actions">
         {{- with .Expiry -}}
-        <span>expires in {{ . }}</span> |
-        {{ end -}}
+        <li>expires in {{ . }}</li>
+        {{- end -}}
         {{- block "infomore" . }}{{ end -}}
-        <span>{{ .Size }}</span> |
-        <a href="{{ .SitePath }}torrent/{{ .FileName }}" download>torrent</a> |
-        <a href="{{ .SitePath }}{{ .SelifPath }}{{ .FileName }}" download>get</a>
-    </div>
+        <li>{{ .Size }}</li>
+        <li><a href="{{ .SitePath }}torrent/{{ .FileName }}" download>torrent</a></li>
+        <li><a href="{{ .SitePath }}{{ .SelifPath }}{{ .FileName }}" download>get</a></li>
+    </ul>
 
     {{- block "infoleft" . }}{{ end -}}
 </div>

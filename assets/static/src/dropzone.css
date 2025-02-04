@@ -12,6 +12,15 @@
   box-shadow: 1px 1px 1px 1px #ccc;
 }
 
+#fileupload {
+  width: 400px;
+  margin: 0 auto;
+
+  @media (max-width: 450px) {
+    width: auto;
+  }
+}
+
 #fileinput {
   margin-top: 20px;
 }
@@ -31,13 +40,8 @@
 }
 
 #dropzone {
-  width: 400px;
   margin-left: auto;
   margin-right: auto;
-
-  @media (max-width: 450px) {
-    width: auto;
-  }
 }
 
 #uploads {

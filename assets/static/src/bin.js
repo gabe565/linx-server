@@ -26,7 +26,9 @@ export const initBin = () => {
   };
 
   const init = async () => {
+    const li = document.createElement("li");
     const editA = document.createElement("a");
+    li.appendChild(editA);
 
     editA.href = "#";
     editA.addEventListener("click", (e) => {
@@ -35,9 +37,7 @@ export const initBin = () => {
     });
     editA.innerHTML = "edit";
 
-    const separator = document.createTextNode(" | ");
-    navlist.insertBefore(editA, navlist.firstChild);
-    navlist.insertBefore(separator, navlist.children[1]);
+    navlist.insertBefore(li, navlist.firstChild);
 
     document.getElementById("save").addEventListener("click", paste);
     document.getElementById("wordwrap").addEventListener("click", wrap);
