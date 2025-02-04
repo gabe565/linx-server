@@ -148,6 +148,11 @@ body {
   margin: 0 0 0 9px;
   font-size: 13px;
 
+  a {
+    text-decoration: none;
+    border-bottom: 1px dotted #556a7f;
+  }
+
   > li {
     display: inline-block;
 
