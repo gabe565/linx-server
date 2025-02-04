@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"gabe565.com/linx-server/internal/config"
+	"gabe565.com/utils/bytefmt"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -22,7 +23,7 @@ func TestContentSecurityPolicy(t *testing.T) {
 	config.Default.SiteURL.URL = url.URL{Scheme: "http", Host: "linx.example.org"}
 	config.Default.FilesPath = t.TempDir()
 	config.Default.MetaPath = config.Default.FilesPath + "_meta"
-	config.Default.MaxSize = 1024 * 1024 * 1024
+	config.Default.MaxSize = bytefmt.GiB
 	config.Default.NoLogs = true
 	config.Default.SiteName = "linx"
 	config.Default.SelifPath = "/selif"

@@ -17,6 +17,7 @@ import (
 	"gabe565.com/linx-server/internal/config"
 	"gabe565.com/linx-server/internal/server"
 	"gabe565.com/linx-server/internal/upload"
+	"gabe565.com/utils/bytefmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -44,7 +45,7 @@ func setup(t *testing.T, preserveSiteURL bool) *chi.Mux {
 	}
 	config.Default.FilesPath = t.TempDir()
 	config.Default.MetaPath = config.Default.FilesPath + "_meta"
-	config.Default.MaxSize = 1024 * 1024 * 1024
+	config.Default.MaxSize = bytefmt.GiB
 	config.Default.NoLogs = true
 	config.Default.SiteName = "linx"
 	t.Cleanup(func() { config.Default = config.New() })

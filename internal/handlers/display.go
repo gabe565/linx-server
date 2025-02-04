@@ -22,7 +22,7 @@ import (
 	"github.com/russross/blackfriday/v2"
 )
 
-const maxDisplayFileSizeBytes = 1024 * 512
+const maxDisplayFileSizeBytes = 512 * bytefmt.KiB
 
 func FileDisplay(w http.ResponseWriter, r *http.Request, fileName string, metadata backends.Metadata) {
 	var expiryHuman string
