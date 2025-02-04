@@ -103,6 +103,7 @@ func Setup() (*chi.Mux, error) {
 	}
 
 	r.Use(middleware.Recoverer)
+	r.Use(middleware.GetHead)
 	r.Use(ContentSecurityPolicy(CSPOptions{
 		Policy:         config.Default.ContentSecurityPolicy,
 		ReferrerPolicy: config.Default.ReferrerPolicy,
