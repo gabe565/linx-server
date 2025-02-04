@@ -20,6 +20,7 @@ body {
 
 #container {
   display: flex;
+  flex-wrap: wrap;
   flex-direction: column;
   justify-self: center;
   max-width: 800px;
@@ -44,18 +45,15 @@ body {
 }
 
 #navigation {
+  display: flex;
   list-style: none;
   padding: 0 0 12px;
   margin: 0 0 0 12px;
 
-  > li {
-    display: inline-block;
-
-    + li {
-      border-left: 1px solid gray;
-      padding-left: 8px;
-      margin-left: 8px;
-    }
+  > li + li {
+    border-left: 1px solid gray;
+    padding-left: 8px;
+    margin-left: 8px;
   }
 
   a {
@@ -139,6 +137,10 @@ body {
 }
 
 .info-actions {
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: column;
+  text-align: right;
   list-style: none;
   padding: 0;
   margin: 0 0 0 9px;
@@ -149,10 +151,10 @@ body {
     border-bottom: 1px dotted #556a7f;
   }
 
-  > li {
-    display: inline-block;
+  @media (min-width: 350px) {
+    flex-direction: row;
 
-    + li {
+    > li + li {
       border-left: 1px solid #849aae;
       padding-left: 6px;
       margin-left: 6px;
