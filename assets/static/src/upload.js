@@ -1,21 +1,21 @@
 export const initUpload = async () => {
   const dropzone = await import("dropzone");
   const myDropzone = new dropzone.default("#dropzone", {
-    init: () => {
+    init() {
       const dzone = document.getElementById("dzone");
       dzone.style.display = "block";
     },
-    addedfile: async (file) => {
-      if (!myDropzone.options.autoProcessQueue) {
+    async addedfile(file) {
+      if (!this.options.autoProcessQueue) {
         const res = await fetch("auth", {
           method: "HEAD",
           redirect: "manual",
         });
         if (res.status < 400) {
-          myDropzone.options.autoProcessQueue = true;
-          myDropzone.processQueue();
+          this.options.autoProcessQueue = true;
+          this.processQueue();
         } else {
-          myDropzone.cancelUpload(file);
+          this.cancelUpload(file);
         }
       }
       const upload = document.createElement("div");
@@ -48,18 +48,18 @@ export const initUpload = async () => {
 
       document.getElementById("uploads").appendChild(upload);
     },
-    uploadprogress: (file, p) => {
+    uploadprogress(file, p) {
       file.progressElement.innerHTML = `${Math.round(p)}%`;
       file.uploadElement.style.backgroundImage = `linear-gradient(to right, #F2F4F7 ${p}%, #E2E2E2 ${p}%)`;
     },
-    sending: (file, xhr, formData) => {
+    sending(file, xhr, formData) {
       const randomize = document.getElementById("randomize");
       if (randomize != null) {
         formData.append("randomize", randomize.checked);
       }
       formData.append("expires", document.getElementById("expires").value);
     },
-    success: (file, resp) => {
+    success(file, resp) {
       file.fileActions.removeChild(file.progressElement);
 
       const fileLabelLink = document.createElement("a");
@@ -91,10 +91,10 @@ export const initUpload = async () => {
       file.cancelActionElement = deleteAction;
       file.fileActions.appendChild(deleteAction);
     },
-    canceled: (file) => {
-      myDropzone.options.error(file);
+    canceled(file) {
+      this.options.error(file);
     },
-    error: (file, resp) => {
+    error(file, resp) {
       file.fileActions.removeChild(file.cancelActionElement);
       file.fileActions.removeChild(file.progressElement);
 
