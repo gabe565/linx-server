@@ -1,5 +1,4 @@
 import hljs from "highlight.js/lib/core";
-import "highlight.js/styles/github.css";
 import { handleTab } from "./util";
 
 export const initBin = () => {
@@ -91,6 +90,9 @@ const loadLanguage = async (language) => {
       break;
     case "autohotkey":
       lang = await import("highlight.js/lib/languages/autohotkey");
+      break;
+    case "bash":
+      lang = await import("highlight.js/lib/languages/bash");
       break;
     case "basic":
       lang = await import("highlight.js/lib/languages/basic");
@@ -205,9 +207,6 @@ const loadLanguage = async (language) => {
       break;
     case "scss":
       lang = await import("highlight.js/lib/languages/scss");
-      break;
-    case "shell":
-      lang = await import("highlight.js/lib/languages/shell");
       break;
     case "sql":
       lang = await import("highlight.js/lib/languages/sql");

@@ -19,7 +19,7 @@ var extensionToHl = map[string]string{
 	"apache":      "apache",
 	"applescript": "applescript",
 	"bas":         "basic",
-	"bash":        "shell",
+	"bash":        "bash",
 	"bat":         "dos",
 	"c":           "cpp",
 	"clj":         "clojure",
@@ -62,7 +62,7 @@ var extensionToHl = map[string]string{
 	"scm":         "scheme",
 	"scpt":        "applescript",
 	"scss":        "scss",
-	"sh":          "shell",
+	"sh":          "bash",
 	"sql":         "sql",
 	"tcl":         "tcl",
 	"tex":         "latex",
@@ -72,4 +72,5 @@ var extensionToHl = map[string]string{
 	"xml":         "xml",
 	"yaml":        "yaml",
 	"yml":         "yaml",
+	"zsh":         "bash",
 }
