@@ -90,8 +90,15 @@
       <p>Uploading myphoto.jpg with a random filename and getting a json response:</p>
 
       <pre><code class="language-bash">$ curl {{- if ne .Auth "none" }} -H &#34;Linx-Api-Key: mysecretkey&#34;{{ end }} -H &#34;Accept: application/json&#34;{{ if not .ForceRandom }} -H &#34;Linx-Randomize: yes&#34;{{- end -}} -T myphoto.jpg {{ .SiteURL }}upload
-{&#34;delete_key&#34;:&#34;...&#34;,&#34;expiry&#34;:&#34;0&#34;,&#34;filename&#34;:&#34;f34h4iu.jpg&#34;,&#34;mimetype&#34;:&#34;image/jpeg&#34;,
-&#34;sha256sum&#34;:&#34;...&#34;,&#34;size&#34;:&#34;...&#34;,&#34;url&#34;:&#34;{{ .SiteURL }}f34h4iu.jpg&#34;}</code></pre>
+{
+  &#34;delete_key&#34;: &#34;...&#34;,
+  &#34;expiry&#34;: &#34;0&#34;,
+  &#34;filename&#34;: &#34;f34h4iu.jpg&#34;,
+  &#34;mimetype&#34;: &#34;image/jpeg&#34;,
+  &#34;sha256sum&#34;: &#34;...&#34;,
+  &#34;size&#34;: &#34;...&#34;,
+  &#34;url&#34;: &#34;{{ .SiteURL }}f34h4iu.jpg&#34;
+}</code></pre>
 
       <h3>Overwriting a file</h3>
 
@@ -143,7 +150,13 @@ DELETED</code></pre>
       <h4>Example</h4>
 
       <pre><code class="language-bash">$ curl -H &#34;Accept: application/json&#34; {{ .SiteURL }}myphoto.jpg
-{&#34;expiry&#34;:&#34;0&#34;,&#34;filename&#34;:&#34;myphoto.jpg&#34;,&#34;mimetype&#34;:&#34;image/jpeg&#34;,&#34;sha256sum&#34;:&#34;...&#34;,&#34;size&#34;:&#34;...&#34;}</code></pre>
+{
+  &#34;expiry&#34;: &#34;0&#34;,
+  &#34;filename&#34;: &#34;myphoto.jpg&#34;,
+  &#34;mimetype&#34;: &#34;image/jpeg&#34;,
+  &#34;sha256sum&#34;: &#34;...&#34;,
+  &#34;size&#34;: &#34;...&#34;
+}</code></pre>
     </div>
   </div>
 </div>
