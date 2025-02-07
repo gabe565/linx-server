@@ -6,11 +6,11 @@
 
 {{- define "content" -}}
 <div id="main" class="oopscontent">
-    <form action="{{ .UnlockPath }}" method="POST" enctype="multipart/form-data">
-        {{- .FileName }} is protected with a password: <br /><br />
-        <input name="access_key" type="password" />
-        <input id="submitbtn" type="submit" value="Unlock">
-        <br /><br />
-    </form>
+  <form action="{{ .UnlockPath }}" method="POST" enctype="multipart/form-data">
+    {{- .FileName }} is protected with a password: <br /><br />
+    <input name="access_key" type="password" />
+    <input id="submitbtn" type="submit" value="Unlock">
+    <br /><br />
+  </form>
 </div>
 {{- end -}}

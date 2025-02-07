@@ -2,9 +2,9 @@
 
 {{- define "main" -}}
 <object class="display-pdf" data="{{ .SitePath }}{{ .SelifPath }}{{ .FileName }}" type="application/pdf">
-    <p>
-        It appears your Web browser is not configured to display PDF files.
-        No worries, just <a href="{{ .SitePath }}{{ .SelifPath }}{{ .FileName }}">click here to download the PDF file.</a>
-    </p>
+  <p>
+    It appears your Web browser is not configured to display PDF files.
+    No worries, just <a href="{{ .SitePath }}{{ .SelifPath }}{{ .FileName }}">click here to download the PDF file.</a>
+  </p>
 </object>
 {{- end -}}

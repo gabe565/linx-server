@@ -4,14 +4,14 @@
 
 {{- define "main" -}}
 <table class="csv">
-    <tbody>
-    {{- range .Extra.Contents -}}
-        <tr>
-            {{- range . -}}
-            <td>{{ . }}</td>
-            {{- end -}}
-        </tr>
+  <tbody>
+  {{- range .Extra.Contents -}}
+  <tr>
+    {{- range . -}}
+    <td>{{ . }}</td>
     {{- end -}}
-    </tbody>
+  </tr>
+  {{- end -}}
+  </tbody>
 </table>
 {{- end -}}

@@ -6,9 +6,9 @@
 
 {{- define "content" -}}
 <div id="main">
-    <div id="inner_content" class="oopscontent">
-        <p>Error: {{ with .Title }}{{ . }}{{ end }}</p>
-        {{- with .Msg }}<p>{{ . }}</p>{{ end -}}
-    </div>
+  <div id="inner_content" class="oopscontent">
+    <p>Error: {{ with .Title }}{{ . }}{{ end }}</p>
+    {{- with .Msg }}<p>{{ . }}</p>{{ end -}}
+  </div>
 </div>
 {{- end -}}

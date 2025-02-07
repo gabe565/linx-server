@@ -2,18 +2,18 @@
 
 {{- define "main" -}}
 <div class="normal display-file">
-    <p class="center">
-		You are requesting <a href="{{ .SitePath }}{{ .SelifPath }}{{ .FileName }}">{{ .FileName }}</a>,
-		<a href="{{ .SitePath }}{{ .SelifPath }}{{ .FileName }}">click here</a> to download.
-	</p>
+  <p class="center">
+    You are requesting <a href="{{ .SitePath }}{{ .SelifPath }}{{ .FileName }}">{{ .FileName }}</a>,
+    <a href="{{ .SitePath }}{{ .SelifPath }}{{ .FileName }}">click here</a> to download.
+  </p>
 
-{{- if ne (len .Files) 0 -}}
-<p>Contents of the archive:</p>
-<ul>
-	{{- range .Files -}}
-	<li>{{ . }}</li>
-	{{- end -}}
-</ul>
-{{- end -}}
+  {{- if ne (len .Files) 0 -}}
+  <p>Contents of the archive:</p>
+  <ul>
+    {{- range .Files -}}
+    <li>{{ . }}</li>
+    {{- end -}}
+  </ul>
+  {{- end -}}
 </div>
 {{- end -}}
