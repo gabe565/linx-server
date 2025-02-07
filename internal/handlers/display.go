@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/csv"
 	"encoding/json"
 	"html/template"
 	"io"
@@ -75,6 +76,43 @@ func FileDisplay(w http.ResponseWriter, r *http.Request, fileName string, metada
 
 				extra["Contents"] = template.HTML(html) //nolint:gosec
 				tpl = "display/md.html"
+			}
+		}
+	case extension == "csv":
+		metadata, reader, err := config.StorageBackend.Get(r.Context(), fileName)
+		if err != nil {
+			Oops(w, r, RespHTML, err.Error())
+			return
+		}
+		defer func() {
+			_ = reader.Close()
+		}()
+
+		if metadata.Size < maxDisplayFileSizeBytes {
+			reader := csv.NewReader(reader)
+			var content [][]string
+			var columns int
+			var err error
+			for {
+				var record []string
+				reader.FieldsPerRecord = 0
+				if record, err = reader.Read(); err != nil {
+					break
+				}
+				if columns < len(record) {
+					columns = len(record)
+				}
+				content = append(content, record)
+			}
+			if err == io.EOF {
+				for i, record := range content {
+					if len(record) != columns {
+						content[i] = append(record, make([]string, columns-len(record))...)
+					}
+				}
+				extra["Contents"] = content
+				extra["Columns"] = columns
+				tpl = "display/csv.html"
 			}
 		}
 	case strings.HasPrefix(metadata.Mimetype, "text/"), util.SupportedBinExtension(extension):
