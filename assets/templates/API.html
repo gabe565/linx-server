@@ -31,7 +31,7 @@
         your upload back.
       </p>
 
-      <p><strong>Optional headers with the request</strong></p>
+      <h4>Optional headers with the request</h4>
 
       {{- if not .ForceRandom -}}
       <p>
@@ -76,7 +76,7 @@
         </p>
       </blockquote>
 
-      <p><strong>Examples</strong></p>
+      <h4>Examples</h4>
       <p>Uploading myphoto.jpg</p>
 
       <pre><code class="language-bash">$ curl {{- if ne .Auth "none" }} -H &#34;Linx-Api-Key: mysecretkey&#34;{{ end }} -T myphoto.jpg {{ .SiteURL }}upload
@@ -100,7 +100,7 @@
         original file's deletion key.
       </p>
 
-      <p><strong>Example</strong></p>
+      <h4>Example</h4>
 
       <p>To overwrite myphoto.jpg</p>
 
@@ -114,7 +114,7 @@
         delete key set as the <code>Linx-Delete-Key</code> header.
       </p>
 
-      <p><strong>Example</strong></p>
+      <h4>Example</h4>
 
       <p>To delete myphoto.jpg</p>
 
@@ -140,7 +140,7 @@ DELETED</code></pre>
         </p>
       </blockquote>
 
-      <p><strong>Example</strong></p>
+      <h4>Example</h4>
 
       <pre><code class="language-bash">$ curl -H &#34;Accept: application/json&#34; {{ .SiteURL }}myphoto.jpg
 {&#34;expiry&#34;:&#34;0&#34;,&#34;filename&#34;:&#34;myphoto.jpg&#34;,&#34;mimetype&#34;:&#34;image/jpeg&#34;,&#34;sha256sum&#34;:&#34;...&#34;,&#34;size&#34;:&#34;...&#34;}</code></pre>
