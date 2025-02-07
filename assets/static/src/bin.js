@@ -79,7 +79,7 @@ export const initBin = () => {
   init();
 };
 
-const loadLanguage = async (language) => {
+export const loadLanguage = async (language) => {
   let lang;
   switch (language) {
     case "apache":

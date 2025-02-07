@@ -1,3 +1,4 @@
+import { initAPI } from "./api.js";
 import { initBin } from "./bin";
 import "./main.css";
 import "./paste";
@@ -14,4 +15,8 @@ if (document.querySelector(".editor")) {
 
 if (document.querySelector("#normal-content")) {
   initBin();
+}
+
+if (document.querySelector("#main.api")) {
+  initAPI();
 }

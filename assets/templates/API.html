@@ -5,7 +5,7 @@
 {{- end -}}
 
 {{- define "content" -}}
-<div id="main">
+<div id="main" class="api">
   <div id="inner_content">
     <div class="normal markdown-body">
       <h2>API</h2>
@@ -79,17 +79,17 @@
       <p><strong>Examples</strong></p>
       <p>Uploading myphoto.jpg</p>
 
-      <pre><code>$ curl {{- if ne .Auth "none" }} -H &#34;Linx-Api-Key: mysecretkey&#34;{{ end }} -T myphoto.jpg {{ .SiteURL }}upload
+      <pre><code class="language-bash">$ curl {{- if ne .Auth "none" }} -H &#34;Linx-Api-Key: mysecretkey&#34;{{ end }} -T myphoto.jpg {{ .SiteURL }}upload
 {{ .SiteURL }}{{ if not .ForceRandom }}myphoto.jpg{{ else }}7z4h4ut.jpg{{ end }}</code></pre>
 
       <p>Uploading myphoto.jpg with an expiry of 20 minutes</p>
 
-      <pre><code>$ curl {{- if ne .Auth "none" }} -H &#34;Linx-Api-Key: mysecretkey&#34;{{ end }} -H &#34;Linx-Expiry: 1200&#34; -T myphoto.jpg {{ .SiteURL }}upload
+      <pre><code class="language-bash">$ curl {{- if ne .Auth "none" }} -H &#34;Linx-Api-Key: mysecretkey&#34;{{ end }} -H &#34;Linx-Expiry: 1200&#34; -T myphoto.jpg {{ .SiteURL }}upload
 {{ .SiteURL }}{{ if not .ForceRandom }}myphoto.jpg{{- else -}}jm295snf.jpg{{- end -}}</code></pre>
 
       <p>Uploading myphoto.jpg with a random filename and getting a json response:</p>
 
-      <pre><code>$ curl {{- if ne .Auth "none" }} -H &#34;Linx-Api-Key: mysecretkey&#34;{{ end }} -H &#34;Accept: application/json&#34;{{ if not .ForceRandom }} -H &#34;Linx-Randomize: yes&#34;{{- end -}} -T myphoto.jpg {{ .SiteURL }}upload
+      <pre><code class="language-bash">$ curl {{- if ne .Auth "none" }} -H &#34;Linx-Api-Key: mysecretkey&#34;{{ end }} -H &#34;Accept: application/json&#34;{{ if not .ForceRandom }} -H &#34;Linx-Randomize: yes&#34;{{- end -}} -T myphoto.jpg {{ .SiteURL }}upload
 {&#34;delete_key&#34;:&#34;...&#34;,&#34;expiry&#34;:&#34;0&#34;,&#34;filename&#34;:&#34;f34h4iu.jpg&#34;,&#34;mimetype&#34;:&#34;image/jpeg&#34;,
 &#34;sha256sum&#34;:&#34;...&#34;,&#34;size&#34;:&#34;...&#34;,&#34;url&#34;:&#34;{{ .SiteURL }}f34h4iu.jpg&#34;}</code></pre>
 
@@ -104,7 +104,7 @@
 
       <p>To overwrite myphoto.jpg</p>
 
-      <pre><code>$ curl {{- if ne .Auth "none" }} -H &#34;Linx-Api-Key: mysecretkey&#34;{{ end }} -H &#34;Linx-Delete-Key: mysecret&#34; -T myphoto.jpg {{ .SiteURL }}upload
+      <pre><code class="language-bash">$ curl {{- if ne .Auth "none" }} -H &#34;Linx-Api-Key: mysecretkey&#34;{{ end }} -H &#34;Linx-Delete-Key: mysecret&#34; -T myphoto.jpg {{ .SiteURL }}upload
 {{ .SiteURL }}myphoto.jpg</code></pre>
 
       <h3>Deleting a file</h3>
@@ -118,7 +118,7 @@
 
       <p>To delete myphoto.jpg</p>
 
-      <pre><code>$ curl {{- if ne .Auth "none" }} -H &#34;Linx-Api-Key: mysecretkey&#34;{{ end }} -H &#34;Linx-Delete-Key: mysecret&#34; -X DELETE {{ .SiteURL }}myphoto.jpg
+      <pre><code class="language-bash">$ curl {{- if ne .Auth "none" }} -H &#34;Linx-Api-Key: mysecretkey&#34;{{ end }} -H &#34;Linx-Delete-Key: mysecret&#34; -X DELETE {{ .SiteURL }}myphoto.jpg
 DELETED</code></pre>
 
       <h3>Information about a file</h3>
@@ -142,9 +142,11 @@ DELETED</code></pre>
 
       <p><strong>Example</strong></p>
 
-      <pre><code>$ curl -H &#34;Accept: application/json&#34; {{ .SiteURL }}myphoto.jpg
+      <pre><code class="language-bash">$ curl -H &#34;Accept: application/json&#34; {{ .SiteURL }}myphoto.jpg
 {&#34;expiry&#34;:&#34;0&#34;,&#34;filename&#34;:&#34;myphoto.jpg&#34;,&#34;mimetype&#34;:&#34;image/jpeg&#34;,&#34;sha256sum&#34;:&#34;...&#34;,&#34;size&#34;:&#34;...&#34;}</code></pre>
     </div>
   </div>
 </div>
+
+{{- .Manifest.PreloadJS .SitePath (printf "node_modules/highlight.js/es/languages/shell.js") -}}
 {{- end -}}
