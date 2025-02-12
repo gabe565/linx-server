@@ -9,7 +9,7 @@ RUN npm ci
 COPY assets/static .
 RUN npm run build
 
-FROM --platform=$BUILDPLATFORM golang:1.23.5-alpine AS backend
+FROM --platform=$BUILDPLATFORM golang:1.24.0-alpine AS backend
 WORKDIR /app
 
 COPY go.mod go.sum ./
