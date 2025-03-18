@@ -9,8 +9,12 @@ RUN npm ci
 COPY assets/static .
 RUN npm run build
 
+FROM --platform=$BUILDPLATFORM tonistiigi/xx:1.6.1 AS xx
+
 FROM --platform=$BUILDPLATFORM golang:1.23.5-alpine AS backend
 WORKDIR /app
+
+COPY --from=xx / /
 
 COPY go.mod go.sum ./
 RUN go mod download
@@ -19,19 +23,9 @@ COPY . .
 
 COPY --from=frontend /app/dist assets/static/dist
 
-# Set Golang build envs based on Docker platform string
 ARG TARGETPLATFORM
-RUN --mount=type=cache,target=/root/.cache <<EOT
-  set -eux
-  case "$TARGETPLATFORM" in
-    'linux/amd64') export GOARCH=amd64 ;;
-    'linux/arm/v6') export GOARCH=arm GOARM=6 ;;
-    'linux/arm/v7') export GOARCH=arm GOARM=7 ;;
-    'linux/arm64') export GOARCH=arm64 ;;
-    *) echo "Unsupported target: $TARGETPLATFORM" && exit 1 ;;
-  esac
-  go build -ldflags='-w -s' -trimpath
-EOT
+RUN --mount=type=cache,target=/root/.cache \
+  CGO_ENABLED=0 xx-go build -ldflags='-w -s' -trimpath
 
 FROM alpine:3.21.2
 WORKDIR /data
