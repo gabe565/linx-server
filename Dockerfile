@@ -27,7 +27,7 @@ ARG TARGETPLATFORM
 RUN --mount=type=cache,target=/root/.cache \
   CGO_ENABLED=0 xx-go build -ldflags='-w -s' -trimpath
 
-FROM alpine:3.21.2
+FROM alpine:3.21.3
 WORKDIR /data
 
 COPY --from=backend /app/linx-server /usr/bin
