@@ -7,7 +7,6 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"path"
 	"time"
 
 	"gabe565.com/linx-server/internal/backends"
@@ -30,19 +29,43 @@ type MetadataJSON struct {
 }
 
 func (b Backend) Delete(_ context.Context, key string) error {
-	err := os.Remove(path.Join(b.metaPath, key+".json"))
+	metaRoot, err := os.OpenRoot(b.metaPath)
 	if err != nil {
-		if errOldPath := os.Remove(path.Join(b.metaPath, key)); errOldPath == nil {
-			err = nil
+		return err
+	}
+	defer func() {
+		_ = metaRoot.Close()
+	}()
+
+	metaErr := metaRoot.Remove(key + ".json")
+	if metaErr != nil {
+		if errOldPath := metaRoot.Remove(key); errOldPath == nil {
+			metaErr = nil
 		}
 	}
-	return errors.Join(os.Remove(path.Join(b.filesPath, key)), err)
+
+	filesRoot, err := os.OpenRoot(b.filesPath)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		_ = filesRoot.Close()
+	}()
+
+	return errors.Join(filesRoot.Remove(key), metaErr)
 }
 
 func (b Backend) Exists(_ context.Context, key string) (bool, error) {
-	_, err := os.Stat(path.Join(b.filesPath, key))
+	filesRoot, err := os.OpenRoot(b.filesPath)
+	if err != nil {
+		return false, err
+	}
+	defer func() {
+		_ = filesRoot.Close()
+	}()
+
 	exists := true
-	if err != nil && os.IsNotExist(err) {
+	if _, err = filesRoot.Stat(key); err != nil && os.IsNotExist(err) {
 		exists = false
 		err = nil
 	}
@@ -51,9 +74,18 @@ func (b Backend) Exists(_ context.Context, key string) (bool, error) {
 
 func (b Backend) Head(_ context.Context, key string) (backends.Metadata, error) {
 	var metadata backends.Metadata
-	f, err := os.Open(path.Join(b.metaPath, key+".json"))
+
+	metaRoot, err := os.OpenRoot(b.metaPath)
 	if err != nil {
-		if f, err = os.Open(path.Join(b.metaPath, key)); err != nil {
+		return metadata, err
+	}
+	defer func() {
+		_ = metaRoot.Close()
+	}()
+
+	f, err := metaRoot.Open(key + ".json")
+	if err != nil {
+		if f, err = metaRoot.Open(key); err != nil {
 			if os.IsNotExist(err) {
 				return metadata, backends.ErrNotFound
 			}
@@ -88,7 +120,7 @@ func (b Backend) Get(ctx context.Context, key string) (backends.Metadata, io.Rea
 		return metadata, nil, err
 	}
 
-	f, err := os.Open(path.Join(b.filesPath, key))
+	f, err := os.OpenInRoot(b.filesPath, key)
 	return metadata, f, err
 }
 
@@ -97,15 +129,19 @@ func (b Backend) ServeFile(key string, w http.ResponseWriter, r *http.Request) e
 		return err
 	}
 
-	filePath := path.Join(b.filesPath, key)
-	http.ServeFile(w, r, filePath)
+	filesRoot, err := os.OpenRoot(b.filesPath)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		_ = filesRoot.Close()
+	}()
 
+	http.ServeFileFS(w, r, filesRoot.FS(), key)
 	return nil
 }
 
 func (b Backend) writeMetadata(key string, metadata backends.Metadata) error {
-	tmpPath := path.Join(b.metaPath, "."+key+".json")
-
 	mjson := MetadataJSON{
 		DeleteKey:    metadata.DeleteKey,
 		AccessKey:    metadata.AccessKey,
@@ -116,24 +152,37 @@ func (b Backend) writeMetadata(key string, metadata backends.Metadata) error {
 		Size:         metadata.Size,
 	}
 
-	tmp, err := os.Create(tmpPath)
+	metaRoot, err := os.OpenRoot(b.metaPath)
 	if err != nil {
 		return err
 	}
 	defer func() {
-		_ = tmp.Close()
-		_ = os.Remove(tmpPath)
+		_ = metaRoot.Close()
 	}()
 
-	if err = json.NewEncoder(tmp).Encode(mjson); err != nil {
+	var success bool
+	path := key + ".json"
+	f, err := metaRoot.Create(path)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		_ = f.Close()
+		if !success {
+			_ = metaRoot.Remove(path)
+		}
+	}()
+
+	if err = json.NewEncoder(f).Encode(mjson); err != nil {
 		return err
 	}
 
-	if err := tmp.Close(); err != nil {
+	if err := f.Close(); err != nil {
 		return err
 	}
 
-	return os.Rename(tmpPath, path.Join(b.metaPath, key+".json"))
+	success = true
+	return nil
 }
 
 func (b Backend) Put(
@@ -144,50 +193,61 @@ func (b Backend) Put(
 	deleteKey, accessKey string,
 ) (backends.Metadata, error) {
 	var m backends.Metadata
-	tmpPath := path.Join(b.filesPath, "."+key)
 
-	tmp, err := os.Create(tmpPath)
+	filesRoot, err := os.OpenRoot(b.filesPath)
 	if err != nil {
 		return m, err
 	}
 	defer func() {
-		_ = tmp.Close()
-		_ = os.Remove(tmpPath)
+		_ = filesRoot.Close()
 	}()
 
-	bytes, err := io.Copy(tmp, r)
+	var success bool
+	f, err := filesRoot.Create(key)
+	if err != nil {
+		return m, err
+	}
+	defer func() {
+		_ = f.Close()
+		if !success {
+			_ = filesRoot.Remove(key)
+		}
+	}()
+
+	bytes, err := io.Copy(f, r)
 	if err != nil {
 		return m, err
 	} else if bytes == 0 {
 		return m, backends.ErrFileEmpty
 	}
 
-	if _, err := tmp.Seek(0, 0); err != nil {
+	if _, err := f.Seek(0, 0); err != nil {
 		return m, err
 	}
-	m, err = helpers.GenerateMetadata(tmp)
+	m, err = helpers.GenerateMetadata(f)
 	if err != nil {
 		return m, err
 	}
-	if _, err := tmp.Seek(0, 0); err != nil {
+	if _, err := f.Seek(0, 0); err != nil {
 		return m, err
 	}
 
 	m.Expiry = expiry
 	m.DeleteKey = deleteKey
 	m.AccessKey = accessKey
-	m.ArchiveFiles, _ = helpers.ListArchiveFiles(m.Mimetype, m.Size, tmp)
+	m.ArchiveFiles, _ = helpers.ListArchiveFiles(m.Mimetype, m.Size, f)
 
 	err = b.writeMetadata(key, m)
 	if err != nil {
 		return m, err
 	}
 
-	if err := tmp.Close(); err != nil {
+	if err := f.Close(); err != nil {
 		return m, err
 	}
 
-	return m, os.Rename(tmpPath, path.Join(b.filesPath, key))
+	success = true
+	return m, nil
 }
 
 func (b Backend) PutMetadata(_ context.Context, key string, m backends.Metadata) error {
@@ -195,7 +255,15 @@ func (b Backend) PutMetadata(_ context.Context, key string, m backends.Metadata)
 }
 
 func (b Backend) Size(_ context.Context, key string) (int64, error) {
-	fileInfo, err := os.Stat(path.Join(b.filesPath, key))
+	filesRoot, err := os.OpenRoot(b.filesPath)
+	if err != nil {
+		return 0, err
+	}
+	defer func() {
+		_ = filesRoot.Close()
+	}()
+
+	fileInfo, err := filesRoot.Stat(key)
 	if err != nil {
 		return 0, err
 	}
