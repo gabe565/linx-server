@@ -43,9 +43,9 @@
 <div id="main" class="api">
   <div id="inner_content">
     <div class="normal markdown-body">
-      <h2>API Reference</h2>
+      <h1>API Reference</h1>
 
-      <h3>Table of Contents</h3>
+      <strong>Table of Contents</strong>
       <ul>
         <li><a href="#upload">Upload a File</a></li>
         <li><a href="#overwrite">Overwrite a File</a></li>
@@ -54,16 +54,14 @@
         <li><a href="#client">Client</a></li>
       </ul>
 
-      <hr>
-
       <section id="upload">
-        <h3>Upload a File</h3>
+        <h2>Upload a File</h2>
 
         <p>Make a <code>PUT</code> request to:</p>
         <pre>{{ .SiteURL }}upload</pre>
 
         {{- if ne .Auth "none" }}
-        <h4>Required Headers</h4>
+        <h3>Required Headers</h3>
         <ul>
           <li>
             <code>Linx-Api-Key: mysecretkey</code> - Authentication key
@@ -71,7 +69,7 @@
         </ul>
         {{- end }}
 
-        <h4>Optional Headers</h4>
+        <h3>Optional Headers</h3>
 
         <ul>
           <li>
@@ -88,19 +86,19 @@
           </li>
         </ul>
 
-        <h4>Default Response</h4>
+        <h3>Default Response</h3>
         <p>The URL of the uploaded file.</p>
 
-        <h4>JSON Response</h4>
+        <h3>JSON Response</h3>
         {{- template "payload" (set (deepCopy .) "withExtras" true) -}}
 
-        <h4>Examples</h4>
-        <h5>Basic upload</h5>
+        <h3>Examples</h3>
+        <h4>Basic upload</h4>
         <pre><code class="language-bash">$ curl {{ .SiteURL }}upload {{- $defaultFlags }} -T myphoto.jpg
 {{ .SiteURL }}{{ randAlphaNum 8 }}.jpg</code></pre>
 
         {{- if not .ForceRandom }}
-        <h5>Upload with filename</h5>
+        <h4>Upload with filename</h4>
         <p>
           Note the trailing <code>/</code>. This makes curl append the filename to the URL.
         </p>
@@ -108,15 +106,15 @@
 {{ .SiteURL }}myphoto.jpg</code></pre>
         {{- end }}
 
-        <h5>Upload with expiry</h5>
+        <h4>Upload with expiry</h4>
         <pre><code class="language-bash">$ curl {{ .SiteURL }}upload {{- $defaultFlags }} -H 'Linx-Expiry: 20m' -T myphoto.jpg
 {{ .SiteURL }}{{ randAlphaNum 8 }}.jpg</code></pre>
 
-        <h5>Upload from pipe</h5>
+        <h4>Upload from pipe</h4>
         <pre><code class="language-bash">$ echo hello world | curl {{ .SiteURL }}upload {{- $defaultFlags }} -T -
 {{ .SiteURL }}{{ randAlphaNum 8 }}.txt</code></pre>
 
-        <h5>Upload with hardcoded file extension</h5>
+        <h4>Upload with hardcoded file extension</h4>
         <p>
           When randomizing the filename, nested extensions will not be detected correctly.
           For example, <code>example.tar.gz</code> would be uploaded with a <code>.gz</code> extension. To avoid this,
@@ -128,10 +126,8 @@ $ curl {{ .SiteURL }}upload/.tar.gz {{- $defaultFlags }} -T example.tar.gz
         {{- "" }}</code></pre>
       </section>
 
-      <hr>
-
       <section id="overwrite">
-        <h3>Overwrite a File</h3>
+        <h2>Overwrite a File</h2>
         <p>
           Upload again with the same name and include the <code>Linx-Delete-Key</code> header with the original deletion key.
         </p>
@@ -140,10 +136,8 @@ $ curl {{ .SiteURL }}upload/.tar.gz {{- $defaultFlags }} -T example.tar.gz
 {{ .SiteURL }}myphoto.jpg</code></pre>
       </section>
 
-      <hr>
-
       <section id="delete">
-        <h3>Delete a File</h3>
+        <h2>Delete a File</h2>
         <p>
           Send a <code>DELETE</code> request and include the <code>Linx-Delete-Key</code> header with the original deletion key.
         </p>
@@ -152,24 +146,20 @@ $ curl {{ .SiteURL }}upload/.tar.gz {{- $defaultFlags }} -T example.tar.gz
 DELETED</code></pre>
       </section>
 
-      <hr>
-
       <section id="info">
-        <h3>Retrieve File Info</h3>
+        <h2>Retrieve File Info</h2>
         <p>
           Make a <code>GET</code> request to the public file URL with <code>Accept: application/json</code>:
         </p>
 
         <pre><code class="language-bash">$ curl {{ .SiteURL }}myphoto.jpg -H 'Accept: application/json'</code></pre>
 
-        <h4>JSON Response</h4>
+        <h3>JSON Response</h3>
         {{- template "payload" (set (set (deepCopy .) "withFile" "myphoto.jpg") "withSize" "1048576") -}}
       </section>
 
-      <hr>
-
       <section id="client">
-        <h3>Client</h3>
+        <h2>Client</h2>
         <p>
           For convenience, use
           <a target="_blank" href="https://github.com/andreimarcu/linx-client">linx-client</a>
