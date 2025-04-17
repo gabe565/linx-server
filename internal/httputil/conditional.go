@@ -204,10 +204,9 @@ func CheckPreconditions(w http.ResponseWriter, r *http.Request, modtime time.Tim
 		if r.Method == http.MethodGet || r.Method == http.MethodHead {
 			writeNotModified(w)
 			return true
-		} else {
-			w.WriteHeader(http.StatusPreconditionFailed)
-			return true
 		}
+		w.WriteHeader(http.StatusPreconditionFailed)
+		return true
 	case condNone:
 		if checkIfModifiedSince(r, modtime) == condFalse {
 			writeNotModified(w)

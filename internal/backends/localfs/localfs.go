@@ -131,7 +131,13 @@ func (b Backend) writeMetadata(key string, metadata backends.Metadata) error {
 	return os.Rename(tmpPath, path.Join(b.metaPath, key))
 }
 
-func (b Backend) Put(_ context.Context, key string, r io.Reader, expiry time.Time, deleteKey, accessKey string) (backends.Metadata, error) {
+func (b Backend) Put(
+	_ context.Context,
+	key string,
+	r io.Reader,
+	expiry time.Time,
+	deleteKey, accessKey string,
+) (backends.Metadata, error) {
 	var m backends.Metadata
 	tmpPath := path.Join(b.filesPath, "."+key)
 

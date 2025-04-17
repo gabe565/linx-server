@@ -3,7 +3,7 @@ package apikeys
 import (
 	"bufio"
 	"encoding/base64"
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"slices"
@@ -39,7 +39,8 @@ func ReadAuthKeys(authFile string) []string {
 
 	f, err := os.Open(authFile)
 	if err != nil {
-		log.Fatal("Failed to open authfile: ", err)
+		slog.Error("Failed to open authfile", "error", err)
+		os.Exit(1)
 	}
 	defer func() {
 		_ = f.Close()
@@ -52,7 +53,8 @@ func ReadAuthKeys(authFile string) []string {
 
 	err = scanner.Err()
 	if err != nil {
-		log.Fatal("Scanner error while reading authfile: ", err) //nolint:gocritic
+		slog.Error("Scanner error while reading authfile", "error", err)
+		os.Exit(1) //nolint:gocritic
 	}
 
 	return authKeys

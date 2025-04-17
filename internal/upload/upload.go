@@ -40,7 +40,7 @@ var (
 	}
 )
 
-// Describes metadata directly from the user request
+// Describes metadata directly from the user request.
 type Request struct {
 	src            io.Reader
 	size           int64
@@ -51,7 +51,7 @@ type Request struct {
 	accessKey      string // Empty string if not defined
 }
 
-// Metadata associated with a file as it would actually be stored
+// Metadata associated with a file as it would actually be stored.
 type Upload struct {
 	Filename string // Final filename on disk
 	Metadata backends.Metadata
@@ -59,7 +59,9 @@ type Upload struct {
 
 func POSTHandler(w http.ResponseWriter, r *http.Request) {
 	siteURL := headers.GetSiteURL(r).String()
-	if !csrf.StrictReferrerCheck(r, siteURL, []string{"Linx-Delete-Key", "Linx-Expiry", "Linx-Randomize", "X-Requested-With"}) {
+	if !csrf.StrictReferrerCheck(r, siteURL,
+		[]string{"Linx-Delete-Key", "Linx-Expiry", "Linx-Randomize", "X-Requested-With"},
+	) {
 		handlers.BadRequest(w, r, handlers.RespAUTO, "")
 		return
 	}
@@ -379,7 +381,13 @@ func Process(ctx context.Context, upReq Request) (Upload, error) {
 		upReq.deleteKey = uniuri.NewLen(30)
 	}
 
-	upload.Metadata, err = config.StorageBackend.Put(ctx, upload.Filename, io.MultiReader(bytes.NewReader(header), upReq.src), fileExpiry, upReq.deleteKey, upReq.accessKey)
+	upload.Metadata, err = config.StorageBackend.Put(ctx,
+		upload.Filename,
+		io.MultiReader(bytes.NewReader(header), upReq.src),
+		fileExpiry,
+		upReq.deleteKey,
+		upReq.accessKey,
+	)
 	if err != nil {
 		return upload, err
 	}

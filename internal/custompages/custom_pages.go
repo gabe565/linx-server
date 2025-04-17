@@ -1,7 +1,7 @@
 package custompages
 
 import (
-	"log"
+	"log/slog"
 	"os"
 	"path"
 	"strings"
@@ -19,7 +19,8 @@ var (
 func InitializeCustomPages(customPagesDir string) {
 	files, err := os.ReadDir(customPagesDir)
 	if err != nil {
-		log.Fatal("Error reading the custom pages directory: ", err)
+		slog.Error("Error reading the custom pages directory", "error", err)
+		os.Exit(1)
 	}
 	if len(files) == 0 {
 		return
@@ -38,7 +39,8 @@ func InitializeCustomPages(customPagesDir string) {
 		if strings.EqualFold(fileName[len(fileName)-3:], ".md") {
 			contents, err := os.ReadFile(path.Join(customPagesDir, fileName))
 			if err != nil {
-				log.Fatalf("Error reading file %s", fileName)
+				slog.Error("Error reading file", "name", fileName)
+				os.Exit(1)
 			}
 
 			unsafe := blackfriday.Run(contents)

@@ -35,7 +35,7 @@ func TestContentSecurityPolicy(t *testing.T) {
 
 	w := httptest.NewRecorder()
 
-	req, err := http.NewRequest(http.MethodGet, "/", nil)
+	req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, "/", nil)
 	require.NoError(t, err)
 
 	r.ServeHTTP(w, req)

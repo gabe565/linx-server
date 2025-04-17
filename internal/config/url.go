@@ -8,7 +8,7 @@ type URL struct {
 	url.URL
 }
 
-func (u URL) String() string {
+func (u *URL) String() string {
 	return u.URL.String()
 }
 
@@ -25,7 +25,7 @@ func (u *URL) Type() string {
 	return typeString
 }
 
-func (u URL) MarshalText() ([]byte, error) {
+func (u *URL) MarshalText() ([]byte, error) {
 	return []byte(u.String()), nil
 }
 

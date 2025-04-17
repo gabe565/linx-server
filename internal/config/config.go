@@ -14,29 +14,29 @@ import (
 type Config struct {
 	Bind      string `toml:"bind"`
 	FilesPath string `toml:"files-path" comment:"Path to files directory"`
-	MetaPath  string `toml:"meta-path" comment:"Path to metadata directory"`
+	MetaPath  string `toml:"meta-path"  comment:"Path to metadata directory"`
 	SiteName  string `toml:"site-name"`
 	SiteURL   URL    `toml:"site-url"`
 	SelifPath string `toml:"selif-path" comment:"Path relative to site base url where files are accessed directly"`
-	Fastcgi   bool   `toml:"fastcgi" comment:"Serve through fastcgi"`
+	Fastcgi   bool   `toml:"fastcgi"    comment:"Serve through fastcgi"`
 
-	MaxSize             Bytes    `toml:"max-size" comment:"Maximum upload file size in bytes"`
-	MaxExpiry           Duration `toml:"max-expiry" comment:"Maximum expiration time (a value of 0s means no expiry)"`
-	AllowHotlink        bool     `toml:"allow-hotlink" comment:"Allow hot-linking of files"`
-	RemoteUploads       bool     `toml:"remote-uploads" comment:"Enable remote uploads (/upload?url=https://...)"`
-	NoDirectAgents      bool     `toml:"no-direct-agents" comment:"Disable serving files directly for wget/curl user agents"`
+	MaxSize             Bytes    `toml:"max-size"              comment:"Maximum upload file size in bytes"`
+	MaxExpiry           Duration `toml:"max-expiry"            comment:"Maximum expiration time (a value of 0s means no expiry)"`
+	AllowHotlink        bool     `toml:"allow-hotlink"         comment:"Allow hot-linking of files"`
+	RemoteUploads       bool     `toml:"remote-uploads"        comment:"Enable remote uploads (/upload?url=https://...)"`
+	NoDirectAgents      bool     `toml:"no-direct-agents"      comment:"Disable serving files directly for wget/curl user agents"`
 	ForceRandomFilename bool     `toml:"force-random-filename" comment:"Force all uploads to use a random filename"`
-	NoLogs              bool     `toml:"no-logs" comment:"Remove stdout output for each request"`
-	NoTorrent           bool     `toml:"no-torrent" comment:"Disable the torrent file endpoint"`
+	NoLogs              bool     `toml:"no-logs"               comment:"Remove stdout output for each request"`
+	NoTorrent           bool     `toml:"no-torrent"            comment:"Disable the torrent file endpoint"`
 
 	CleanupEvery Duration `toml:"cleanup-every" comment:"How often to clean up expired files. A value of 0 means files will be cleaned up as they are accessed."`
 
 	CustomPagesDir string `toml:"custom-pages-dir" comment:"Path to directory containing .md files to render as custom pages"`
 
-	TLS    TLS    `toml:"tls" comment:"TLS (HTTPS) configuration"`
+	TLS    TLS    `toml:"tls"    comment:"TLS (HTTPS) configuration"`
 	Auth   Auth   `toml:"auth"`
-	S3     S3     `toml:"s3" comment:"S3-compatible storage configuration"`
-	Limit  Limit  `toml:"limit" comment:"Configure rate limits"`
+	S3     S3     `toml:"s3"     comment:"S3-compatible storage configuration"`
+	Limit  Limit  `toml:"limit"  comment:"Configure rate limits"`
 	Header Header `toml:"header" comment:"Modify request/response headers"`
 }
 
@@ -47,9 +47,9 @@ type TLS struct {
 
 type Auth struct {
 	CookieExpiry Duration `toml:"cookie-expiry" comment:"Expiration time for access key cookies (set to 0s to use session cookies)"`
-	Basic        bool     `toml:"auth" comment:"Allow logging in with basic auth password"`
-	File         string   `toml:"file" comment:"Path to a file containing newline-separated scrypted auth keys"`
-	RemoteFile   string   `toml:"remote-file" comment:"Path to a file containing newline-separated scrypted auth keys for remote uploads"`
+	Basic        bool     `toml:"auth"          comment:"Allow logging in with basic auth password"`
+	File         string   `toml:"file"          comment:"Path to a file containing newline-separated scrypted auth keys"`
+	RemoteFile   string   `toml:"remote-file"   comment:"Path to a file containing newline-separated scrypted auth keys for remote uploads"`
 }
 
 type S3 struct {
@@ -68,7 +68,7 @@ type Limit struct {
 }
 
 type Header struct {
-	RealIP                    bool              `toml:"real-ip" comment:"Use X-Real-IP/X-Forwarded-For headers"`
+	RealIP                    bool              `toml:"real-ip"                      comment:"Use X-Real-IP/X-Forwarded-For headers"`
 	AddHeaders                map[string]string `toml:"add-headers,inline"`
 	ContentSecurityPolicy     string            `toml:"content-security-policy"`
 	FileContentSecurityPolicy string            `toml:"file-content-security-policy"`

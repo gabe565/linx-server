@@ -4,8 +4,8 @@ import "gabe565.com/utils/bytefmt"
 
 type Bytes int64
 
-func (b Bytes) String() string {
-	return bytefmt.Encode(int64(b))
+func (b *Bytes) String() string {
+	return bytefmt.Encode(int64(*b))
 }
 
 func (b *Bytes) Set(s string) error {
@@ -17,11 +17,11 @@ func (b *Bytes) Set(s string) error {
 	return nil
 }
 
-func (b Bytes) Type() string {
+func (b *Bytes) Type() string {
 	return typeString
 }
 
-func (b Bytes) MarshalText() ([]byte, error) {
+func (b *Bytes) MarshalText() ([]byte, error) {
 	return []byte(b.String()), nil
 }
 

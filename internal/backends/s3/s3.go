@@ -172,7 +172,13 @@ func unmapMetadata(input map[string]string) (backends.Metadata, error) {
 	return m, nil
 }
 
-func (b Backend) Put(ctx context.Context, key string, r io.Reader, expiry time.Time, deleteKey, accessKey string) (backends.Metadata, error) {
+func (b Backend) Put(
+	ctx context.Context,
+	key string,
+	r io.Reader,
+	expiry time.Time,
+	deleteKey, accessKey string,
+) (backends.Metadata, error) {
 	var m backends.Metadata
 	tmpDst, err := os.CreateTemp("", "linx-server-upload")
 	if err != nil {
@@ -258,7 +264,13 @@ func (b Backend) List(ctx context.Context) ([]string, error) {
 	return output, nil
 }
 
-func NewS3Backend(ctx context.Context, bucket string, region string, endpoint string, forcePathStyle bool) (Backend, error) {
+func NewS3Backend(
+	ctx context.Context,
+	bucket string,
+	region string,
+	endpoint string,
+	forcePathStyle bool,
+) (Backend, error) {
 	cfg, err := config.LoadDefaultConfig(ctx)
 	if err != nil {
 		return Backend{}, err

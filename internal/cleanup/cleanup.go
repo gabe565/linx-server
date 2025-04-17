@@ -3,7 +3,6 @@ package cleanup
 import (
 	"context"
 	"errors"
-	"log"
 	"log/slog"
 	"time"
 
@@ -24,13 +23,13 @@ func Cleanup(filesDir string, metaDir string, noLogs bool) error {
 		metadata, err := fileBackend.Head(context.Background(), filename)
 		if err != nil {
 			if !noLogs {
-				log.Printf("Failed to find metadata for %s", filename)
+				slog.Warn("Failed to find metadata for upload", "name", filename)
 			}
 		}
 
 		if expiry.IsTSExpired(metadata.Expiry) {
 			if !noLogs {
-				log.Printf("Delete %s", filename)
+				slog.Info("Delete upload", "name", filename)
 			}
 			if err := fileBackend.Delete(context.Background(), filename); err != nil {
 				errs = append(errs, err)

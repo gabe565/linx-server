@@ -48,7 +48,12 @@ func Setup() (*chi.Mux, error) {
 	config.Default.SelifPath = strings.Trim(config.Default.SelifPath, "/") + "/"
 
 	if config.Default.S3.Bucket != "" {
-		config.StorageBackend, err = s3.NewS3Backend(context.Background(), config.Default.S3.Bucket, config.Default.S3.Region, config.Default.S3.Endpoint, config.Default.S3.ForcePathStyle)
+		config.StorageBackend, err = s3.NewS3Backend(context.Background(),
+			config.Default.S3.Bucket,
+			config.Default.S3.Region,
+			config.Default.S3.Endpoint,
+			config.Default.S3.ForcePathStyle,
+		)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create S3 backend: %w", err)
 		}
@@ -133,7 +138,9 @@ func Setup() (*chi.Mux, error) {
 	}
 
 	r.Get("/api", handlers.APIDoc)
-	r.Get("/API", http.RedirectHandler(path.Join(config.Default.SiteURL.Path, "api"), http.StatusPermanentRedirect).ServeHTTP)
+	r.Get("/API",
+		http.RedirectHandler(path.Join(config.Default.SiteURL.Path, "api"), http.StatusPermanentRedirect).ServeHTTP,
+	)
 
 	r.Group(func(r chi.Router) {
 		r.Use(rateLimit(config.Default.Limit.UploadMaxRequests, config.Default.Limit.UploadInterval.Duration))

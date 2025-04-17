@@ -89,18 +89,18 @@ func Oops(w http.ResponseWriter, r *http.Request, rt RespType, msg string) {
 
 	const name = "error.html"
 
-	switch {
-	case rt == RespHTML:
+	switch rt {
+	case RespHTML:
 		w.WriteHeader(http.StatusInternalServerError)
 		if err := templates.Render(name, map[string]any{"Msg": msg}, r, w); err != nil {
 			slog.Error("Failed to render template", "template", name, "error", err)
 		}
 		return
-	case rt == RespPLAIN:
+	case RespPLAIN:
 		w.WriteHeader(http.StatusInternalServerError)
 		_, _ = fmt.Fprintf(w, "%s", msg)
 		return
-	case rt == RespJSON:
+	case RespJSON:
 		js, _ := json.Marshal(map[string]string{
 			"error": msg,
 		})
@@ -108,31 +108,30 @@ func Oops(w http.ResponseWriter, r *http.Request, rt RespType, msg string) {
 		w.WriteHeader(http.StatusInternalServerError)
 		_, _ = w.Write(js)
 		return
-	case rt == RespAUTO:
+	case RespAUTO:
 		if strings.EqualFold("application/json", r.Header.Get("Accept")) {
 			Oops(w, r, RespJSON, msg)
 			return
-		} else {
-			Oops(w, r, RespHTML, msg)
-			return
 		}
+		Oops(w, r, RespHTML, msg)
+		return
 	}
 }
 
 func BadRequest(w http.ResponseWriter, r *http.Request, rt RespType, msg string) {
-	switch {
-	case rt == RespHTML:
+	switch rt {
+	case RespHTML:
 		w.WriteHeader(http.StatusBadRequest)
 		err := templates.Render("error.html", map[string]any{"Title": "400 Bad Request", "Msg": msg}, r, w)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 		return
-	case rt == RespPLAIN:
+	case RespPLAIN:
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprintf(w, "%s", msg)
 		return
-	case rt == RespJSON:
+	case RespJSON:
 		js, _ := json.Marshal(map[string]string{
 			"error": msg,
 		})
@@ -140,14 +139,13 @@ func BadRequest(w http.ResponseWriter, r *http.Request, rt RespType, msg string)
 		w.WriteHeader(http.StatusBadRequest)
 		_, _ = w.Write(js)
 		return
-	case rt == RespAUTO:
+	case RespAUTO:
 		if strings.EqualFold("application/json", r.Header.Get("Accept")) {
 			BadRequest(w, r, RespJSON, msg)
 			return
-		} else {
-			BadRequest(w, r, RespHTML, msg)
-			return
 		}
+		BadRequest(w, r, RespHTML, msg)
+		return
 	}
 }
 

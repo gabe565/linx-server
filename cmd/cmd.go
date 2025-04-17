@@ -3,7 +3,6 @@ package cmd
 import (
 	"context"
 	"errors"
-	"log"
 	"log/slog"
 	"net"
 	"net/http"
@@ -86,7 +85,7 @@ func run(cmd *cobra.Command, _ []string) error {
 		})
 
 		group.Go(func() error {
-			log.Printf("Serving over fastcgi, bound on %s", config.Default.Bind)
+			slog.Info("Serving over fastcgi", "address", config.Default.Bind)
 			return fcgi.Serve(listener, mux)
 		})
 	} else {
@@ -98,12 +97,12 @@ func run(cmd *cobra.Command, _ []string) error {
 
 		if config.Default.TLS.Cert != "" {
 			group.Go(func() error {
-				log.Printf("Serving over https, bound on %s", config.Default.Bind)
+				slog.Info("Serving over https", "address", config.Default.Bind)
 				return srv.ListenAndServeTLS(config.Default.TLS.Cert, config.Default.TLS.Key)
 			})
 		} else {
 			group.Go(func() error {
-				log.Printf("Serving over http, bound on %s", config.Default.Bind)
+				slog.Info("Serving over http", "address", config.Default.Bind)
 				return srv.ListenAndServe()
 			})
 		}

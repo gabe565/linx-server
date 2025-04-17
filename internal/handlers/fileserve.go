@@ -92,7 +92,7 @@ func AssetHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Etag", strconv.Quote(config.TimeStartedStr))
 	w.Header().Set("Cache-Control", "public, max-age=86400")
-	http.ServeContent(w, r, path, config.TimeStarted, file.(io.ReadSeeker))
+	http.ServeContent(w, r, path, config.TimeStarted, file.(io.ReadSeeker)) //nolint:errcheck
 }
 
 func CheckFile(ctx context.Context, filename string) (backends.Metadata, error) {

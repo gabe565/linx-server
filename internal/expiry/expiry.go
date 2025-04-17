@@ -24,7 +24,7 @@ type ExpirationTime struct {
 	Human    string
 }
 
-// Determine if the given filename is expired
+// Determine if the given filename is expired.
 func IsFileExpired(ctx context.Context, filename string) (bool, error) {
 	metadata, err := config.StorageBackend.Head(ctx, filename)
 	if err != nil {
@@ -34,7 +34,7 @@ func IsFileExpired(ctx context.Context, filename string) (bool, error) {
 	return IsTSExpired(metadata.Expiry), nil
 }
 
-// Return a list of expiration times and their humanized versions
+// Return a list of expiration times and their humanized versions.
 func ListExpirationTimes() []ExpirationTime {
 	epoch := time.Now()
 	actualExpiryInList := false
@@ -71,7 +71,7 @@ func ListExpirationTimes() []ExpirationTime {
 //nolint:gochecknoglobals
 var NeverExpire = time.Unix(0, 0)
 
-// Determine if a file with expiry set to "ts" has expired yet
+// Determine if a file with expiry set to "ts" has expired yet.
 func IsTSExpired(ts time.Time) bool {
 	now := time.Now()
 	return ts != NeverExpire && now.After(ts)
