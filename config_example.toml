@@ -39,7 +39,7 @@ custom-pages-dir = ''
   # Expiration time for access key cookies (set to 0s to use session cookies)
   cookie-expiry = '0s'
   # Allow logging in with basic auth password
-  auth = false
+  basic = false
   # Path to a file containing newline-separated scrypted auth keys
   file = ''
   # Path to a file containing newline-separated scrypted auth keys for remote uploads

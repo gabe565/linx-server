@@ -47,7 +47,7 @@ type TLS struct {
 
 type Auth struct {
 	CookieExpiry Duration `toml:"cookie-expiry" comment:"Expiration time for access key cookies (set to 0s to use session cookies)"`
-	Basic        bool     `toml:"auth"          comment:"Allow logging in with basic auth password"`
+	Basic        bool     `toml:"basic"         comment:"Allow logging in with basic auth password"`
 	File         string   `toml:"file"          comment:"Path to a file containing newline-separated scrypted auth keys"`
 	RemoteFile   string   `toml:"remote-file"   comment:"Path to a file containing newline-separated scrypted auth keys for remote uploads"`
 }
