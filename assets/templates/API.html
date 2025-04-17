@@ -35,9 +35,9 @@
 {{- end -}}
 
 {{- define "content" -}}
-{{- $defaultFlags := "" -}}
+{{- $defaultFlags := " -s" -}}
 {{- if ne .Auth "none" -}}
-  {{- $defaultFlags = " -H 'Linx-Api-Key: mysecretkey'" -}}
+  {{- $defaultFlags = print $defaultFlags "-H 'Linx-Api-Key: mysecretkey'" -}}
 {{- end -}}
 
 <div id="main" class="api">
