@@ -1,162 +1,163 @@
 {{ template "base.html" . }}
 
 {{- define "title" -}}
-  {{ .SiteName }} - API
+  {{ .SiteName }} - API Reference
+{{- end -}}
+
+{{- define "payload" -}}
+{{- $example := default (randAlphaNum 8 | printf "%s.jpg") .withFile -}}
+<pre><code class="language-json">{{ "" -}}
+{
+  {{- if .withExtras }}
+  // Publicly-available upload url
+  "url": "{{ .SiteURL }}{{ $example }}",
+  {{- end }}
+  // URL to access the file directly
+  "direct_url": "{{ .SiteURL }}selif/{{ $example }}",
+  // Optionally-generated filename
+  "filename": "{{ $example }}",
+  {{- if .withExtras }}
+  // Optionally-generated deletion key
+  "delete_key": "{{ randAlphaNum 30 }}",
+  // Optionally-supplied access key
+  "access_key": "",
+  {{- end }}
+  // Unix timestamp at which the file will expire (0 if no expiry)
+  "expiry": "{{ now | date_modify "24h" | unixEpoch }}",
+  // Size in bytes of the file
+  "size": "{{ default (len $example) .withSize }}",
+  // Inferred mimetype of the file
+  "mimetype": "image/jpeg",
+  // SHA256 checksum of the file
+  "sha256sum": "{{ sha256sum $example }}"
+}
+      {{- "" }}</code></pre>
 {{- end -}}
 
 {{- define "content" -}}
+{{- $defaultFlags := "" -}}
+{{- if ne .Auth "none" -}}
+  {{- $defaultFlags = " -H 'Linx-Api-Key: mysecretkey'" -}}
+{{- end -}}
+
 <div id="main" class="api">
   <div id="inner_content">
     <div class="normal markdown-body">
-      <h2>API</h2>
+      <h2>API Reference</h2>
 
-      <h3>Client</h3>
-      <p>
-        To simplify uploading and deleting files, you can use
-        <a target="_blank" href="https://github.com/andreimarcu/linx-client">linx-client</a>,
-        which uses this API.
-      </p>
+      <h3>Table of Contents</h3>
+      <ul>
+        <li><a href="#upload">Upload a File</a></li>
+        <li><a href="#overwrite">Overwrite a File</a></li>
+        <li><a href="#delete">Delete a File</a></li>
+        <li><a href="#info">Retrieve File Info</a></li>
+        <li><a href="#client">Client</a></li>
+      </ul>
 
-      {{- if ne .Auth "none" -}}
-      <h3>Keys</h3>
-      <p>
-        This instance uses API Keys, therefore you will need to provide a key for uploading and deleting
-        files.<br /> To do so, add the <code>Linx-Api-Key</code> header with your key.
-      </p>
-      {{- end -}}
+      <hr>
 
-      <h3>Uploading a file</h3>
-      <p>
-        To upload a file, make a PUT request to <code>{{ .SiteURL }}upload</code> and you will get the url of
-        your upload back.
-      </p>
+      <section id="upload">
+        <h3>Upload a File</h3>
 
-      <h4>Optional headers with the request</h4>
+        <p>Make a <code>PUT</code> request to:</p>
+        <pre>{{ .SiteURL }}upload</pre>
 
-      {{- if not .ForceRandom -}}
-      <p>
-        Randomize the filename<br />
-        <code>Linx-Randomize: yes</code>
-      </p>
-      {{- end -}}
+        {{- if ne .Auth "none" }}
+        <h4>Required Headers</h4>
+        <ul>
+          <li>
+            <code>Linx-Api-Key: mysecretkey</code> - Authentication key
+          </li>
+        </ul>
+        {{- end }}
 
-      <p>
-        Specify a custom deletion key<br />
-        <code>Linx-Delete-Key: mysecret</code>
-      </p>
+        <h4>Optional Headers</h4>
 
-      <p>
-        Protect file with password<br />
-        <code>Linx-Access-Key: mysecret</code>
-      </p>
+        <ul>
+          <li>
+            <code>Linx-Delete-Key: mysecret</code> - Set custom delete key
+          </li>
+          <li>
+            <code>Linx-Access-Key: mysecret</code> - Password-protect file with an access key
+          </li>
+          <li>
+            <code>Linx-Expiry: 1h</code> - Set file expiry (Go duration or seconds)
+          </li>
+          <li>
+            <code>Accept: application/json</code> - Request JSON response
+          </li>
+        </ul>
 
-      <p>
-        Specify an expiration time (in seconds or Go duration)<br />
-        <code>Linx-Expiry: 1h</code>
-      </p>
+        <h4>Default Response</h4>
+        <p>The URL of the uploaded file.</p>
 
-      <p>
-        Get a json response<br />
-        <code>Accept: application/json</code>
-      </p>
+        <h4>JSON Response</h4>
+        {{- template "payload" (set (deepCopy .) "withExtras" true) -}}
 
-      <p>The json response will then contain:</p>
+        <h4>Examples</h4>
+        <h5>Basic upload</h5>
+        <pre><code class="language-bash">$ curl {{ .SiteURL }}upload {{- $defaultFlags }} -T myphoto.jpg
+{{ .SiteURL }}{{ randAlphaNum 8 }}.jpg</code></pre>
 
-      <blockquote>
-        <p>
-          “url”: the publicly available upload url<br />
-          “direct_url”: the url to access the file directly<br />
-          “filename”: the (optionally generated) filename<br />
-          “delete_key”: the (optionally generated) deletion key,<br />
-          “access_key”: the (optionally supplied) access key,<br />
-          “expiry”: the unix timestamp at which the file will expire (0 if never)<br />
-          “size”: the size in bytes of the file<br />
-          “mimetype”: the guessed mimetype of the file<br />
-          “sha256sum”: the sha256sum of the file,
-        </p>
-      </blockquote>
-
-      <h4>Examples</h4>
-      <p>Uploading myphoto.jpg</p>
-
-      <pre><code class="language-bash">$ curl {{- if ne .Auth "none" }} -H &#34;Linx-Api-Key: mysecretkey&#34;{{ end }} -T myphoto.jpg {{ .SiteURL }}upload
-{{ .SiteURL }}{{ if not .ForceRandom }}myphoto.jpg{{ else }}7z4h4ut.jpg{{ end }}</code></pre>
-
-      <p>Uploading myphoto.jpg with an expiry of 20 minutes</p>
-
-      <pre><code class="language-bash">$ curl {{- if ne .Auth "none" }} -H &#34;Linx-Api-Key: mysecretkey&#34;{{ end }} -H &#34;Linx-Expiry: 20m&#34; -T myphoto.jpg {{ .SiteURL }}upload
-{{ .SiteURL }}{{ if not .ForceRandom }}myphoto.jpg{{- else -}}jm295snf.jpg{{- end -}}</code></pre>
-
-      <p>Uploading myphoto.jpg with a random filename and getting a json response:</p>
-
-      <pre><code class="language-bash">$ curl {{- if ne .Auth "none" }} -H &#34;Linx-Api-Key: mysecretkey&#34;{{ end }} -H &#34;Accept: application/json&#34;{{ if not .ForceRandom }} -H &#34;Linx-Randomize: yes&#34;{{- end -}} -T myphoto.jpg {{ .SiteURL }}upload
-{
-  &#34;delete_key&#34;: &#34;...&#34;,
-  &#34;expiry&#34;: &#34;0&#34;,
-  &#34;filename&#34;: &#34;f34h4iu.jpg&#34;,
-  &#34;mimetype&#34;: &#34;image/jpeg&#34;,
-  &#34;sha256sum&#34;: &#34;...&#34;,
-  &#34;size&#34;: &#34;...&#34;,
-  &#34;url&#34;: &#34;{{ .SiteURL }}f34h4iu.jpg&#34;
-}</code></pre>
-
-      <h3>Overwriting a file</h3>
-
-      <p>
-        To overwrite a file you uploaded, simply provide the <code>Linx-Delete-Key</code> header with the
-        original file's deletion key.
-      </p>
-
-      <h4>Example</h4>
-
-      <p>To overwrite myphoto.jpg</p>
-
-      <pre><code class="language-bash">$ curl {{- if ne .Auth "none" }} -H &#34;Linx-Api-Key: mysecretkey&#34;{{ end }} -H &#34;Linx-Delete-Key: mysecret&#34; -T myphoto.jpg {{ .SiteURL }}upload
+        {{- if not .ForceRandom }}
+        <h5>Upload with filename</h5>
+        <pre><code class="language-bash">$ curl {{ .SiteURL }}upload/myphoto.jpg {{- $defaultFlags }} -T myphoto.jpg
 {{ .SiteURL }}myphoto.jpg</code></pre>
+        {{- end }}
 
-      <h3>Deleting a file</h3>
+        <h5>Upload with expiry</h5>
+        <pre><code class="language-bash">$ curl {{ .SiteURL }}upload {{- $defaultFlags }} -H 'Linx-Expiry: 20m' -T myphoto.jpg
+{{ .SiteURL }}{{ randAlphaNum 8 }}.jpg</code></pre>
+      </section>
 
-      <p>
-        To delete a file you uploaded, make a DELETE request to <code>{{ .SiteURL }}yourfile.ext</code> with the
-        delete key set as the <code>Linx-Delete-Key</code> header.
-      </p>
+      <hr>
 
-      <h4>Example</h4>
-
-      <p>To delete myphoto.jpg</p>
-
-      <pre><code class="language-bash">$ curl {{- if ne .Auth "none" }} -H &#34;Linx-Api-Key: mysecretkey&#34;{{ end }} -H &#34;Linx-Delete-Key: mysecret&#34; -X DELETE {{ .SiteURL }}myphoto.jpg
-DELETED</code></pre>
-
-      <h3>Information about a file</h3>
-
-      <p>
-        To retrieve information about a file, make a GET request the public url with
-        <code>Accept: application/json</code> headers and you will receive a json response containing:
-      </p>
-
-      <blockquote>
+      <section id="overwrite">
+        <h3>Overwrite a File</h3>
         <p>
-          “url”: the publicly available upload url<br />
-          “direct_url”: the url to access the file directly<br />
-          “filename”: the (optionally generated) filename<br />
-          “expiry”: the unix timestamp at which the file will expire (0 if never)<br />
-          “size”: the size in bytes of the file<br />
-          “mimetype”: the guessed mimetype of the file<br />
-          “sha256sum”: the sha256sum of the file,
+          Upload again with the same name and include the <code>Linx-Delete-Key</code> header with the original deletion key.
         </p>
-      </blockquote>
 
-      <h4>Example</h4>
+        <pre><code class="language-bash">$ curl {{ .SiteURL }}upload/myphoto.jpg {{- $defaultFlags }} -H 'Linx-Delete-Key: mysecret' -T myphoto.jpg
+{{ .SiteURL }}myphoto.jpg</code></pre>
+      </section>
 
-      <pre><code class="language-bash">$ curl -H &#34;Accept: application/json&#34; {{ .SiteURL }}myphoto.jpg
-{
-  &#34;expiry&#34;: &#34;0&#34;,
-  &#34;filename&#34;: &#34;myphoto.jpg&#34;,
-  &#34;mimetype&#34;: &#34;image/jpeg&#34;,
-  &#34;sha256sum&#34;: &#34;...&#34;,
-  &#34;size&#34;: &#34;...&#34;
-}</code></pre>
+      <hr>
+
+      <section id="delete">
+        <h3>Delete a File</h3>
+        <p>
+          Send a <code>DELETE</code> request and include the <code>Linx-Delete-Key</code> header with the original deletion key.
+        </p>
+
+        <pre><code class="language-bash">$ curl {{ .SiteURL }}myphoto.jpg -X DELETE {{- $defaultFlags }} -H 'Linx-Delete-Key: mysecret'
+DELETED</code></pre>
+      </section>
+
+      <hr>
+
+      <section id="info">
+        <h3>Retrieve File Info</h3>
+        <p>
+          Make a <code>GET</code> request to the public file URL with <code>Accept: application/json</code>:
+        </p>
+
+        <pre><code class="language-bash">$ curl {{ .SiteURL }}myphoto.jpg -H 'Accept: application/json'</code></pre>
+
+        <h4>JSON Response</h4>
+        {{- template "payload" (set (set (deepCopy .) "withFile" "myphoto.jpg") "withSize" "1048576") -}}
+      </section>
+
+      <hr>
+
+      <section id="client">
+        <h3>Client</h3>
+        <p>
+          For convenience, use
+          <a target="_blank" href="https://github.com/andreimarcu/linx-client">linx-client</a>
+          to simplify file uploads.
+        </p>
+        </section>
     </div>
   </div>
 </div>

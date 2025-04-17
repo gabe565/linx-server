@@ -96,7 +96,7 @@ body {
   margin-bottom: 15px;
 }
 
-#info {
+#info.info-flex {
   background-color: white;
   padding: 10px;
 
@@ -163,7 +163,7 @@ body {
   }
 }
 
-#info #extension,
+#info.info-flex #extension,
 #editform #extension {
   width: 40px;
 }
