@@ -51,8 +51,8 @@
       </p>
 
       <p>
-        Specify an expiration time (in seconds)<br />
-        <code>Linx-Expiry: 60</code>
+        Specify an expiration time (in seconds or Go duration)<br />
+        <code>Linx-Expiry: 1h</code>
       </p>
 
       <p>
@@ -84,7 +84,7 @@
 
       <p>Uploading myphoto.jpg with an expiry of 20 minutes</p>
 
-      <pre><code class="language-bash">$ curl {{- if ne .Auth "none" }} -H &#34;Linx-Api-Key: mysecretkey&#34;{{ end }} -H &#34;Linx-Expiry: 1200&#34; -T myphoto.jpg {{ .SiteURL }}upload
+      <pre><code class="language-bash">$ curl {{- if ne .Auth "none" }} -H &#34;Linx-Api-Key: mysecretkey&#34;{{ end }} -H &#34;Linx-Expiry: 20m&#34; -T myphoto.jpg {{ .SiteURL }}upload
 {{ .SiteURL }}{{ if not .ForceRandom }}myphoto.jpg{{- else -}}jm295snf.jpg{{- end -}}</code></pre>
 
       <p>Uploading myphoto.jpg with a random filename and getting a json response:</p>

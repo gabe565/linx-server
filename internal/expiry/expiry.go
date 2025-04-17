@@ -20,8 +20,8 @@ var defaultExpiryList = []time.Duration{
 }
 
 type ExpirationTime struct {
-	Seconds uint64
-	Human   string
+	Duration time.Duration
+	Human    string
 }
 
 // Determine if the given filename is expired
@@ -47,8 +47,8 @@ func ListExpirationTimes() []ExpirationTime {
 			}
 
 			expiryList = append(expiryList, ExpirationTime{
-				Seconds: uint64(expiryEntry.Seconds()),
-				Human:   humanize.RelTime(epoch, epoch.Add(expiryEntry), "", ""),
+				Duration: expiryEntry,
+				Human:    humanize.RelTime(epoch, epoch.Add(expiryEntry), "", ""),
 			})
 		}
 	}
@@ -60,8 +60,8 @@ func ListExpirationTimes() []ExpirationTime {
 		})
 	} else if !actualExpiryInList {
 		expiryList = append(expiryList, ExpirationTime{
-			Seconds: uint64(config.Default.MaxExpiry.Seconds()),
-			Human:   humanize.RelTime(epoch, epoch.Add(config.Default.MaxExpiry.Duration), "", ""),
+			Duration: config.Default.MaxExpiry.Duration,
+			Human:    humanize.RelTime(epoch, epoch.Add(config.Default.MaxExpiry.Duration), "", ""),
 		})
 	}
 

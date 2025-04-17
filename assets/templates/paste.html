@@ -25,7 +25,7 @@
         <select id="expiry" name="expires">
           <option disabled>Expires:</option>
           {{- range $i, $expiry := .ExpiryList -}}
-          <option value="{{ $expiry.Seconds }}" {{- if eq $i (sub (len $.ExpiryList) 1) }} selected{{ end }}>
+          <option value="{{ $expiry.Duration }}" {{- if eq $i (sub (len $.ExpiryList) 1) }} selected{{ end }}>
             {{- $expiry.Human -}}
           </option>
           {{- end -}}
