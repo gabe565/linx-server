@@ -101,7 +101,10 @@
 
         {{- if not .ForceRandom }}
         <h5>Upload with filename</h5>
-        <pre><code class="language-bash">$ curl {{ .SiteURL }}upload/myphoto.jpg {{- $defaultFlags }} -T myphoto.jpg
+        <p>
+          Note the trailing <code>/</code>. This makes curl append the filename to the URL.
+        </p>
+        <pre><code class="language-bash">$ curl {{ .SiteURL }}upload/ {{- $defaultFlags }} -T myphoto.jpg
 {{ .SiteURL }}myphoto.jpg</code></pre>
         {{- end }}
 
@@ -118,7 +121,7 @@
           Upload again with the same name and include the <code>Linx-Delete-Key</code> header with the original deletion key.
         </p>
 
-        <pre><code class="language-bash">$ curl {{ .SiteURL }}upload/myphoto.jpg {{- $defaultFlags }} -H 'Linx-Delete-Key: mysecret' -T myphoto.jpg
+        <pre><code class="language-bash">$ curl {{ .SiteURL }}upload/ {{- $defaultFlags }} -H 'Linx-Delete-Key: mysecret' -T myphoto.jpg
 {{ .SiteURL }}myphoto.jpg</code></pre>
       </section>
 
