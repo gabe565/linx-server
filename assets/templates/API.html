@@ -111,6 +111,10 @@
         <h5>Upload with expiry</h5>
         <pre><code class="language-bash">$ curl {{ .SiteURL }}upload {{- $defaultFlags }} -H 'Linx-Expiry: 20m' -T myphoto.jpg
 {{ .SiteURL }}{{ randAlphaNum 8 }}.jpg</code></pre>
+
+        <h5>Upload from pipe</h5>
+        <pre><code class="language-bash">$ echo hello world | curl {{ .SiteURL }}upload {{- $defaultFlags }} -T -
+{{ .SiteURL }}{{ randAlphaNum 8 }}.txt</code></pre>
       </section>
 
       <hr>
