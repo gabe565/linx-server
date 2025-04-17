@@ -30,10 +30,13 @@ type MetadataJSON struct {
 }
 
 func (b Backend) Delete(_ context.Context, key string) error {
-	return errors.Join(
-		os.Remove(path.Join(b.filesPath, key)),
-		os.Remove(path.Join(b.metaPath, key)),
-	)
+	err := os.Remove(path.Join(b.metaPath, key+".json"))
+	if err != nil {
+		if errOldPath := os.Remove(path.Join(b.metaPath, key)); errOldPath == nil {
+			err = nil
+		}
+	}
+	return errors.Join(os.Remove(path.Join(b.filesPath, key)), err)
 }
 
 func (b Backend) Exists(_ context.Context, key string) (bool, error) {
@@ -48,12 +51,14 @@ func (b Backend) Exists(_ context.Context, key string) (bool, error) {
 
 func (b Backend) Head(_ context.Context, key string) (backends.Metadata, error) {
 	var metadata backends.Metadata
-	f, err := os.Open(path.Join(b.metaPath, key))
+	f, err := os.Open(path.Join(b.metaPath, key+".json"))
 	if err != nil {
-		if os.IsNotExist(err) {
-			return metadata, backends.ErrNotFound
+		if f, err = os.Open(path.Join(b.metaPath, key)); err != nil {
+			if os.IsNotExist(err) {
+				return metadata, backends.ErrNotFound
+			}
+			return metadata, backends.ErrBadMetadata
 		}
-		return metadata, backends.ErrBadMetadata
 	}
 	defer func() {
 		_ = f.Close()
@@ -99,7 +104,7 @@ func (b Backend) ServeFile(key string, w http.ResponseWriter, r *http.Request) e
 }
 
 func (b Backend) writeMetadata(key string, metadata backends.Metadata) error {
-	tmpPath := path.Join(b.metaPath, "."+key)
+	tmpPath := path.Join(b.metaPath, "."+key+".json")
 
 	mjson := MetadataJSON{
 		DeleteKey:    metadata.DeleteKey,
@@ -128,7 +133,7 @@ func (b Backend) writeMetadata(key string, metadata backends.Metadata) error {
 		return err
 	}
 
-	return os.Rename(tmpPath, path.Join(b.metaPath, key))
+	return os.Rename(tmpPath, path.Join(b.metaPath, key+".json"))
 }
 
 func (b Backend) Put(
