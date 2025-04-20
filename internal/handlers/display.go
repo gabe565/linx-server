@@ -27,7 +27,7 @@ const maxDisplayFileSizeBytes = 512 * bytefmt.KiB
 
 func FileDisplay(w http.ResponseWriter, r *http.Request, fileName string, metadata backends.Metadata) {
 	var expiryHuman string
-	if metadata.Expiry != expiry.NeverExpire {
+	if !metadata.Expiry.IsZero() {
 		expiryHuman = strings.TrimSpace(humanize.RelTime(time.Now(), metadata.Expiry, "", ""))
 	}
 	sizeHuman := bytefmt.NewEncoder().SetPrecision(0).Encode(metadata.Size)

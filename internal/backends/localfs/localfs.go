@@ -19,13 +19,13 @@ type Backend struct {
 }
 
 type MetadataJSON struct {
-	DeleteKey    string   `json:"delete_key"`
-	AccessKey    string   `json:"access_key,omitempty"`
-	Sha256sum    string   `json:"sha256sum"`
-	Mimetype     string   `json:"mimetype"`
-	Size         int64    `json:"size"`
-	Expiry       int64    `json:"expiry"`
-	ArchiveFiles []string `json:"archive_files,omitempty"`
+	DeleteKey    string          `json:"delete_key"`
+	AccessKey    string          `json:"access_key,omitzero"`
+	Sha256sum    string          `json:"sha256sum"`
+	Mimetype     string          `json:"mimetype"`
+	Size         int64           `json:"size"`
+	Expiry       backends.Expiry `json:"expiry,omitzero"`
+	ArchiveFiles []string        `json:"archive_files,omitzero"`
 }
 
 func (b Backend) Delete(_ context.Context, key string) error {
@@ -108,7 +108,7 @@ func (b Backend) Head(_ context.Context, key string) (backends.Metadata, error) 
 	metadata.Mimetype = mjson.Mimetype
 	metadata.ArchiveFiles = mjson.ArchiveFiles
 	metadata.Sha256sum = mjson.Sha256sum
-	metadata.Expiry = time.Unix(mjson.Expiry, 0)
+	metadata.Expiry = time.Time(mjson.Expiry)
 	metadata.Size = mjson.Size
 
 	return metadata, nil
@@ -148,7 +148,7 @@ func (b Backend) writeMetadata(key string, metadata backends.Metadata) error {
 		Mimetype:     metadata.Mimetype,
 		ArchiveFiles: metadata.ArchiveFiles,
 		Sha256sum:    metadata.Sha256sum,
-		Expiry:       metadata.Expiry.Unix(),
+		Expiry:       backends.Expiry(metadata.Expiry),
 		Size:         metadata.Size,
 	}
 

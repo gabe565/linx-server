@@ -68,11 +68,7 @@ func ListExpirationTimes() []ExpirationTime {
 	return expiryList
 }
 
-//nolint:gochecknoglobals
-var NeverExpire = time.Unix(0, 0)
-
-// Determine if a file with expiry set to "ts" has expired yet.
+// IsTSExpired determines if a file with expiry set to "ts" has expired yet.
 func IsTSExpired(ts time.Time) bool {
-	now := time.Now()
-	return ts != NeverExpire && now.After(ts)
+	return !ts.IsZero() && time.Now().After(ts)
 }

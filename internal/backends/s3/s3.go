@@ -2,6 +2,7 @@ package s3
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"io"
 	"net/http"
@@ -133,7 +134,7 @@ func (b Backend) ServeFile(key string, w http.ResponseWriter, r *http.Request) e
 
 func mapMetadata(m backends.Metadata) map[string]string {
 	return map[string]string{
-		"expiry":    strconv.FormatInt(m.Expiry.Unix(), 10),
+		"expiry":    m.Expiry.Format(time.RFC3339),
 		"deletekey": m.DeleteKey,
 		"size":      strconv.FormatInt(m.Size, 10),
 		"mimetype":  m.Mimetype,
@@ -156,11 +157,17 @@ func unmapMetadata(input map[string]string) (backends.Metadata, error) {
 		case "mimetype":
 			m.Mimetype = v
 		case "expiry":
-			expiry, err := strconv.ParseInt(v, 10, 64)
+			b, err := json.Marshal(v)
 			if err != nil {
 				return m, err
 			}
-			m.Expiry = time.Unix(expiry, 0)
+
+			var expiry backends.Expiry
+			if err := expiry.UnmarshalJSON(b); err != nil {
+				return m, err
+			}
+
+			m.Expiry = time.Time(expiry)
 		case "size":
 			var err error
 			m.Size, err = strconv.ParseInt(input["size"], 10, 64)

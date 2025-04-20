@@ -22,7 +22,6 @@ import (
 	"gabe565.com/linx-server/internal/backends"
 	"gabe565.com/linx-server/internal/config"
 	"gabe565.com/linx-server/internal/csrf"
-	"gabe565.com/linx-server/internal/expiry"
 	"gabe565.com/linx-server/internal/handlers"
 	"gabe565.com/linx-server/internal/headers"
 	"github.com/dchest/uniuri"
@@ -372,7 +371,7 @@ func Process(ctx context.Context, upReq Request) (Upload, error) {
 	// Get the rest of the metadata needed for storage
 	var fileExpiry time.Time
 	if upReq.expiry == 0 {
-		fileExpiry = expiry.NeverExpire
+		fileExpiry = time.Time{}
 	} else {
 		fileExpiry = time.Now().Add(upReq.expiry)
 	}
