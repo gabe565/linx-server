@@ -1,8 +1,8 @@
 package helpers
 
 import (
-	"bytes"
 	"encoding/hex"
+	"fmt"
 	"io"
 
 	"gabe565.com/linx-server/internal/backends"
@@ -11,44 +11,32 @@ import (
 )
 
 func GenerateMetadata(r io.Reader) (backends.Metadata, error) {
-	// Since we don't have the ability to seek within a file, we can use a
-	// Buffer in combination with a TeeReader to keep a copy of the bytes
-	// we read when detecting the file type. These bytes are still needed
-	// to hash the file and determine its size and cannot be discarded.
-	var buf bytes.Buffer
-	buf.Grow(512)
-	var m backends.Metadata
-	teeReader := io.TeeReader(r, &buf)
-
-	// Get first 512 bytes for mimetype detection
-	header := make([]byte, 512)
-	headerlen, err := teeReader.Read(header)
-	if err != nil {
-		return m, err
-	}
-
-	// Create a Hash and a MultiReader that includes the Buffer we created
-	// above along with the original Reader, which will have the rest of
-	// the file.
 	hasher := sha256.New()
-	multiReader := io.MultiReader(&buf, r)
+	sz := &sizeWriter{w: hasher}
 
-	// Copy everything into the Hash, then use the number of bytes written
-	// as the file size.
-	var readLen int64
-	readLen, err = io.Copy(hasher, multiReader)
+	kind, err := mimetype.DetectReader(io.TeeReader(r, sz))
 	if err != nil {
-		return m, err
+		return backends.Metadata{}, fmt.Errorf("detecting mimetype: %w", err)
 	}
-	m.Size += readLen
 
-	// Get the hex-encoded string version of the Hash checksum
-	m.Sha256sum = hex.EncodeToString(hasher.Sum(nil))
+	if _, err := io.Copy(sz, r); err != nil {
+		return backends.Metadata{}, fmt.Errorf("hashing data: %w", err)
+	}
 
-	// Use the bytes we extracted earlier and attempt to determine the file
-	// type
-	kind := mimetype.Detect(header[:headerlen])
-	m.Mimetype = kind.String()
+	return backends.Metadata{
+		Size:      sz.size,
+		Sha256sum: hex.EncodeToString(hasher.Sum(nil)),
+		Mimetype:  kind.String(),
+	}, nil
+}
 
-	return m, err
+type sizeWriter struct {
+	w    io.Writer
+	size int64
+}
+
+func (s *sizeWriter) Write(p []byte) (int, error) {
+	n, err := s.w.Write(p)
+	s.size += int64(n)
+	return n, err
 }

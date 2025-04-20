@@ -24,6 +24,7 @@ import (
 	"gabe565.com/linx-server/internal/csrf"
 	"gabe565.com/linx-server/internal/handlers"
 	"gabe565.com/linx-server/internal/headers"
+	"gabe565.com/utils/bytefmt"
 	"github.com/dchest/uniuri"
 	"github.com/gabriel-vasile/mimetype"
 	"github.com/go-chi/chi/v5"
@@ -290,18 +291,18 @@ func Process(ctx context.Context, upReq Request) (Upload, error) {
 		randomize = true
 	}
 
-	var header []byte
 	if len(extension) == 0 {
-		// Pull the first 512 bytes off for use in MIME detection
-		header = make([]byte, 512)
-		n, _ := upReq.src.Read(header)
-		if n == 0 {
-			return upload, backends.ErrFileEmpty
-		}
-		header = header[:n]
+		var header bytes.Buffer
+		header.Grow(3 * bytefmt.KiB)
 
-		// Determine the type of file from header
-		kind := mimetype.Detect(header)
+		// Determine the type of file from the file header
+		kind, err := mimetype.DetectReader(io.TeeReader(upReq.src, &header))
+		if err != nil {
+			return upload, err
+		}
+
+		upReq.src = io.MultiReader(bytes.NewReader(header.Bytes()), upReq.src)
+
 		if len(kind.Extension()) < 2 {
 			extension = "file"
 		} else {
@@ -382,7 +383,7 @@ func Process(ctx context.Context, upReq Request) (Upload, error) {
 
 	upload.Metadata, err = config.StorageBackend.Put(ctx,
 		upload.Filename,
-		io.MultiReader(bytes.NewReader(header), upReq.src),
+		upReq.src,
 		fileExpiry,
 		upReq.deleteKey,
 		upReq.accessKey,

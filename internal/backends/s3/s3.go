@@ -196,33 +196,24 @@ func (b Backend) Put(
 		_ = os.Remove(tmpDst.Name())
 	}()
 
-	bytes, err := io.Copy(tmpDst, r)
+	m, err = helpers.GenerateMetadata(io.TeeReader(r, tmpDst))
 	if err != nil {
 		return m, err
 	}
-	if bytes == 0 {
+
+	if m.Size == 0 {
 		return m, backends.ErrFileEmpty
 	}
 
-	_, err = tmpDst.Seek(0, 0)
-	if err != nil {
+	if _, err = tmpDst.Seek(0, io.SeekStart); err != nil {
 		return m, err
 	}
 
-	m, err = helpers.GenerateMetadata(tmpDst)
-	if err != nil {
-		return m, err
-	}
 	m.Expiry = expiry
 	m.DeleteKey = deleteKey
 	m.AccessKey = accessKey
 	// XXX: we may not be able to write this to AWS easily
 	// m.ArchiveFiles, _ = helpers.ListArchiveFiles(m.Mimetype, m.Size, tmpDst)
-
-	_, err = tmpDst.Seek(0, 0)
-	if err != nil {
-		return m, err
-	}
 
 	_, err = manager.NewUploader(b.client).Upload(ctx, &s3.PutObjectInput{
 		Bucket:   aws.String(b.bucket),

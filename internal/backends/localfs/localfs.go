@@ -214,22 +214,13 @@ func (b Backend) Put(
 		}
 	}()
 
-	bytes, err := io.Copy(f, r)
+	m, err = helpers.GenerateMetadata(io.TeeReader(r, f))
 	if err != nil {
 		return m, err
-	} else if bytes == 0 {
-		return m, backends.ErrFileEmpty
 	}
 
-	if _, err := f.Seek(0, 0); err != nil {
-		return m, err
-	}
-	m, err = helpers.GenerateMetadata(f)
-	if err != nil {
-		return m, err
-	}
-	if _, err := f.Seek(0, 0); err != nil {
-		return m, err
+	if m.Size == 0 {
+		return m, backends.ErrFileEmpty
 	}
 
 	m.Expiry = expiry
