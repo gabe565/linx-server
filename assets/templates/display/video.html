@@ -5,7 +5,7 @@
 {{- end -}}
 
 {{- define "main" -}}
-<video class="display-video" controls autoplay>
+<video class="display video" controls autoplay>
   <source src="{{ .SitePath }}{{ .SelifPath }}{{ .FileName }}" />
   <a href="{{ .SitePath }}{{ .SelifPath }}{{ .FileName }}">Download it instead</a>
 </video>

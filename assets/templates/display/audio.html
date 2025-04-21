@@ -5,7 +5,7 @@
 {{- end -}}
 
 {{- define "main" -}}
-<audio class="display-audio" controls preload="auto">
+<audio class="display audio" controls preload="auto">
   <source src="{{ .SitePath }}{{ .SelifPath }}{{ .FileName }}">
   <a href="{{ .SitePath }}{{ .SelifPath }}{{ .FileName }}">Download it instead</a>
 </audio>

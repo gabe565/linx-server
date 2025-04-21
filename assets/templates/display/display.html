@@ -19,7 +19,7 @@
     {{- if not .NoTorrent -}}
     <li><a href="{{ .SitePath }}torrent/{{ .FileName }}" download>torrent</a></li>
     {{- end -}}
-    <li><a href="{{ .SitePath }}{{ .SelifPath }}{{ .FileName }}" download>get</a></li>
+    <li><a href="{{ .FileSelifURL }}" download>get</a></li>
   </ul>
 
   {{- block "infoleft" . }}{{ end -}}
