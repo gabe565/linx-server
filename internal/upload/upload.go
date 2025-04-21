@@ -400,13 +400,17 @@ func GenerateBarename() string {
 }
 
 func GenerateJSONresponse(upload Upload, r *http.Request) []byte {
+	var expiry int64
+	if v := upload.Metadata.Expiry.Unix(); v > 0 {
+		expiry = v
+	}
 	js, _ := json.Marshal(map[string]string{
 		"url":        headers.GetFileURL(r, upload.Filename).String(),
 		"direct_url": headers.GetSelifURL(r, upload.Filename).String(),
 		"filename":   upload.Filename,
 		"delete_key": upload.Metadata.DeleteKey,
 		"access_key": upload.Metadata.AccessKey,
-		"expiry":     strconv.FormatInt(upload.Metadata.Expiry.Unix(), 10),
+		"expiry":     strconv.FormatInt(expiry, 10),
 		"size":       strconv.FormatInt(upload.Metadata.Size, 10),
 		"mimetype":   upload.Metadata.Mimetype,
 		"sha256sum":  upload.Metadata.Sha256sum,
