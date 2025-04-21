@@ -308,6 +308,7 @@ func TestPostUpload(t *testing.T) {
 	require.NoError(t, mw.Close())
 
 	req, err := http.NewRequestWithContext(t.Context(), http.MethodPost, "/upload", &b)
+	require.NoError(t, err)
 	req.Header.Set("Content-Type", mw.FormDataContentType())
 	req.Header.Set("Referer", config.Default.SiteURL.String())
 	require.NoError(t, err)
@@ -335,6 +336,7 @@ func TestPostJSONUpload(t *testing.T) {
 	require.NoError(t, mw.Close())
 
 	req, err := http.NewRequestWithContext(t.Context(), http.MethodPost, "/upload", &b)
+	require.NoError(t, err)
 	req.Header.Set("Content-Type", mw.FormDataContentType())
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Referer", config.Default.SiteURL.String())
@@ -376,6 +378,7 @@ func TestPostJSONUploadMaxExpiry(t *testing.T) {
 		require.NoError(t, mw.Close())
 
 		req, err := http.NewRequestWithContext(t.Context(), http.MethodPost, "/upload", &b)
+		require.NoError(t, err)
 		req.Header.Set("Content-Type", mw.FormDataContentType())
 		req.Header.Set("Accept", "application/json")
 		req.Header.Set("Linx-Expiry", expiry)
@@ -419,6 +422,7 @@ func TestPostExpiresJSONUpload(t *testing.T) {
 	require.NoError(t, mw.Close())
 
 	req, err := http.NewRequestWithContext(t.Context(), http.MethodPost, "/upload", &b)
+	require.NoError(t, err)
 	req.Header.Set("Content-Type", mw.FormDataContentType())
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Referer", config.Default.SiteURL.String())
@@ -461,6 +465,7 @@ func TestPostRandomizeJSONUpload(t *testing.T) {
 	require.NoError(t, mw.Close())
 
 	req, err := http.NewRequestWithContext(t.Context(), http.MethodPost, "/upload", &b)
+	require.NoError(t, err)
 	req.Header.Set("Content-Type", mw.FormDataContentType())
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Referer", config.Default.SiteURL.String())
@@ -492,6 +497,7 @@ func TestPostEmptyUpload(t *testing.T) {
 	require.NoError(t, mw.Close())
 
 	req, err := http.NewRequestWithContext(t.Context(), http.MethodPost, "/upload", &b)
+	require.NoError(t, err)
 	req.Header.Set("Content-Type", mw.FormDataContentType())
 	req.Header.Set("Referer", config.Default.SiteURL.String())
 	require.NoError(t, err)
@@ -517,6 +523,7 @@ func TestPostTooLargeUpload(t *testing.T) {
 	require.NoError(t, mw.Close())
 
 	req, err := http.NewRequestWithContext(t.Context(), http.MethodPost, "/upload", &b)
+	require.NoError(t, err)
 	req.Header.Set("Content-Type", mw.FormDataContentType())
 	req.Header.Set("Referer", config.Default.SiteURL.String())
 	require.NoError(t, err)
@@ -541,6 +548,7 @@ func TestPostEmptyJSONUpload(t *testing.T) {
 	require.NoError(t, mw.Close())
 
 	req, err := http.NewRequestWithContext(t.Context(), http.MethodPost, "/upload", &b)
+	require.NoError(t, err)
 	req.Header.Set("Content-Type", mw.FormDataContentType())
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Referer", config.Default.SiteURL.String())
@@ -941,6 +949,7 @@ func TestInferSiteURLProxied(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, "/api", nil)
+	require.NoError(t, err)
 	req.Header.Add("X-Forwarded-Proto", "https")
 	req.Host = "example.com:8080"
 	require.NoError(t, err)
@@ -1002,6 +1011,7 @@ func TestPutAndGetCLI(t *testing.T) {
 	// request file with wget user agent
 	w = httptest.NewRecorder()
 	req, err = http.NewRequestWithContext(t.Context(), http.MethodGet, myjson.URL, nil)
+	require.NoError(t, err)
 	req.Header.Set("User-Agent", "wget")
 	require.NoError(t, err)
 	r.ServeHTTP(w, req)
