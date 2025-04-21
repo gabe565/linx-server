@@ -39,7 +39,7 @@ func Setup() (*chi.Mux, error) {
 	config.Default.SelifPath = strings.Trim(config.Default.SelifPath, "/") + "/"
 
 	if config.Default.S3.Bucket != "" {
-		config.StorageBackend, err = s3.NewS3Backend(context.Background(),
+		config.StorageBackend, err = s3.New(context.Background(),
 			config.Default.S3.Bucket,
 			config.Default.S3.Region,
 			config.Default.S3.Endpoint,
@@ -59,9 +59,11 @@ func Setup() (*chi.Mux, error) {
 			return nil, fmt.Errorf("could not create metadata directory: %w", err)
 		}
 
-		config.StorageBackend = localfs.NewLocalfsBackend(config.Default.MetaPath, config.Default.FilesPath)
+		backend := localfs.New(config.Default.MetaPath, config.Default.FilesPath)
+		config.StorageBackend = backend
+
 		if config.Default.CleanupEvery.Duration > 0 {
-			go cleanup.PeriodicCleanup(config.Default.CleanupEvery.Duration, config.Default.FilesPath, config.Default.MetaPath, config.Default.NoLogs)
+			go cleanup.PeriodicCleanup(backend, config.Default.CleanupEvery.Duration, config.Default.NoLogs)
 		}
 	}
 

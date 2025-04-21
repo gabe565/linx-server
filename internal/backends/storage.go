@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"io"
+	"iter"
 	"net/http"
 	"time"
 )
@@ -19,9 +20,9 @@ type StorageBackend interface {
 	Size(ctx context.Context, key string) (int64, error)
 }
 
-type MetaStorageBackend interface {
+type ListBackend interface {
 	StorageBackend
-	List() ([]string, error)
+	List(ctx context.Context) iter.Seq2[string, error]
 }
 
 var (

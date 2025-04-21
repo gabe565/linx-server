@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"iter"
 	"net/http"
 	"os"
 	"time"
@@ -261,21 +262,26 @@ func (b Backend) Size(_ context.Context, key string) (int64, error) {
 	return fileInfo.Size(), nil
 }
 
-func (b Backend) List(_ context.Context) ([]string, error) {
-	files, err := os.ReadDir(b.filesPath)
-	if err != nil {
-		return nil, err
-	}
+func (b Backend) List(_ context.Context) iter.Seq2[string, error] {
+	return func(yield func(string, error) bool) {
+		files, err := os.ReadDir(b.filesPath)
+		if err != nil {
+			yield("", err)
+			return
+		}
 
-	output := make([]string, 0, len(files))
-	for _, file := range files {
-		output = append(output, file.Name())
+		for _, file := range files {
+			if file.IsDir() {
+				continue
+			}
+			if !yield(file.Name(), nil) {
+				return
+			}
+		}
 	}
-
-	return output, nil
 }
 
-func NewLocalfsBackend(metaPath string, filesPath string) Backend {
+func New(metaPath string, filesPath string) Backend {
 	return Backend{
 		metaPath:  metaPath,
 		filesPath: filesPath,

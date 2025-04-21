@@ -1,6 +1,7 @@
 package cleanup
 
 import (
+	"gabe565.com/linx-server/internal/backends/localfs"
 	"gabe565.com/linx-server/internal/cleanup"
 	"gabe565.com/linx-server/internal/config"
 	"github.com/spf13/cobra"
@@ -28,5 +29,8 @@ func run(cmd *cobra.Command, _ []string) error {
 
 	cmd.SilenceUsage = true
 
-	return cleanup.Cleanup(config.Default.FilesPath, config.Default.MetaPath, config.Default.NoLogs)
+	return cleanup.Cleanup(cmd.Context(),
+		localfs.New(config.Default.MetaPath, config.Default.FilesPath),
+		config.Default.NoLogs,
+	)
 }

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"iter"
 	"net/http"
 	"os"
 	"strconv"
@@ -246,23 +247,34 @@ func (b Backend) Size(ctx context.Context, key string) (int64, error) {
 	return *result.ContentLength, nil
 }
 
-func (b Backend) List(ctx context.Context) ([]string, error) {
-	results, err := b.client.ListObjects(ctx, &s3.ListObjectsInput{
-		Bucket: aws.String(b.bucket),
-	})
-	if err != nil {
-		return nil, err
-	}
+func (b Backend) List(ctx context.Context) iter.Seq2[string, error] {
+	return func(yield func(string, error) bool) {
+		input := &s3.ListObjectsV2Input{
+			Bucket: aws.String(b.bucket),
+		}
 
-	output := make([]string, 0, len(results.Contents))
-	for _, object := range results.Contents {
-		output = append(output, *object.Key)
-	}
+		for {
+			res, err := b.client.ListObjectsV2(ctx, input)
+			if err != nil {
+				yield("", err)
+				return
+			}
 
-	return output, nil
+			for _, object := range res.Contents {
+				if !yield(*object.Key, nil) {
+					return
+				}
+			}
+
+			if res.ContinuationToken == nil {
+				return
+			}
+			input.ContinuationToken = res.ContinuationToken
+		}
+	}
 }
 
-func NewS3Backend(
+func New(
 	ctx context.Context,
 	bucket string,
 	region string,

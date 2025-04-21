@@ -111,13 +111,12 @@ func New() *Config {
 
 //nolint:gochecknoglobals
 var (
-	Default            = New()
-	StorageBackend     backends.StorageBackend
-	Templates          map[string]*template.Template
-	TimeStarted        time.Time
-	TimeStartedStr     string
-	RemoteAuthKeys     []string
-	MetaStorageBackend backends.MetaStorageBackend
+	Default        = New()
+	StorageBackend backends.StorageBackend
+	Templates      map[string]*template.Template
+	TimeStarted    time.Time
+	TimeStartedStr string
+	RemoteAuthKeys []string
 )
 
 func getDefaultFile() (string, error) {
