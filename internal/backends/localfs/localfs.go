@@ -222,6 +222,8 @@ func (b Backend) Put(
 		return m, err
 	}
 
+	_, _ = f.Seek(0, io.SeekStart)
+
 	if m.Size == 0 {
 		return m, backends.ErrFileEmpty
 	}
