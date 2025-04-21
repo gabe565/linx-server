@@ -21,6 +21,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 )
 
+var _ backends.ListBackend = Backend{}
+
 type Backend struct {
 	bucket string
 	client *s3.Client

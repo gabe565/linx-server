@@ -12,6 +12,7 @@ import (
 
 	"gabe565.com/linx-server/assets"
 	"gabe565.com/linx-server/internal/auth/apikeys"
+	"gabe565.com/linx-server/internal/backends"
 	"gabe565.com/linx-server/internal/backends/localfs"
 	"gabe565.com/linx-server/internal/backends/s3"
 	"gabe565.com/linx-server/internal/cleanup"
@@ -59,10 +60,11 @@ func Setup() (*chi.Mux, error) {
 			return nil, fmt.Errorf("could not create metadata directory: %w", err)
 		}
 
-		backend := localfs.New(config.Default.MetaPath, config.Default.FilesPath)
-		config.StorageBackend = backend
+		config.StorageBackend = localfs.New(config.Default.MetaPath, config.Default.FilesPath)
+	}
 
-		if config.Default.CleanupEvery.Duration > 0 {
+	if config.Default.CleanupEvery.Duration > 0 {
+		if backend, ok := config.StorageBackend.(backends.ListBackend); ok {
 			go cleanup.PeriodicCleanup(backend, config.Default.CleanupEvery.Duration, config.Default.NoLogs)
 		}
 	}

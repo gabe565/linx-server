@@ -14,6 +14,8 @@ import (
 	"gabe565.com/linx-server/internal/helpers"
 )
 
+var _ backends.ListBackend = Backend{}
+
 type Backend struct {
 	metaPath  string
 	filesPath string
