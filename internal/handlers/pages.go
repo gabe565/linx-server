@@ -47,7 +47,7 @@ func Paste(w http.ResponseWriter, r *http.Request) {
 }
 
 func APIDoc(w http.ResponseWriter, r *http.Request) {
-	err := templates.Render("API.html", map[string]any{
+	err := templates.Render("api.html", map[string]any{
 		"SiteURL":     headers.GetSiteURL(r).String(),
 		"ForceRandom": config.Default.ForceRandomFilename,
 	}, r, w)
