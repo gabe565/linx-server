@@ -50,7 +50,7 @@ func run(cmd *cobra.Command, _ []string) error {
 
 	cmd.SilenceUsage = true
 
-	mux, err := server.Setup()
+	mux, err := server.Setup(cmd.Context())
 	if err != nil {
 		return err
 	}

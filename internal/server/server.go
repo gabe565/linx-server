@@ -28,7 +28,7 @@ import (
 	"github.com/go-chi/httprate"
 )
 
-func Setup() (*chi.Mux, error) {
+func Setup(ctx context.Context) (*chi.Mux, error) {
 	var err error
 
 	switch config.Default.SiteURL.Path {
@@ -40,7 +40,7 @@ func Setup() (*chi.Mux, error) {
 	config.Default.SelifPath = strings.Trim(config.Default.SelifPath, "/") + "/"
 
 	if config.Default.S3.Bucket != "" {
-		config.StorageBackend, err = s3.New(context.Background(),
+		config.StorageBackend, err = s3.New(ctx,
 			config.Default.S3.Bucket,
 			config.Default.S3.Region,
 			config.Default.S3.Endpoint,

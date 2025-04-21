@@ -50,7 +50,7 @@ func setup(t *testing.T, preserveSiteURL bool) *chi.Mux {
 	config.Default.SiteName = "linx"
 	t.Cleanup(func() { config.Default = config.New() })
 
-	r, err := server.Setup()
+	r, err := server.Setup(t.Context())
 	require.NoError(t, err)
 	return r
 }
