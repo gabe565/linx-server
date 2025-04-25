@@ -143,9 +143,8 @@ func PUTHandler(w http.ResponseWriter, r *http.Request) {
 	upReq := Request{}
 	HeaderProcess(r, &upReq)
 
-	defer r.Body.Close()
 	upReq.filename = chi.URLParam(r, "name")
-	upReq.src = http.MaxBytesReader(w, r.Body, int64(config.Default.MaxSize))
+	upReq.src = r.Body
 
 	upload, err := Process(r.Context(), upReq)
 

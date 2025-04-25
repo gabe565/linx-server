@@ -12,3 +12,14 @@ func RemoveMultipartForm(next http.Handler) http.Handler {
 		}
 	})
 }
+
+func LimitBodySize(maxSize int64) func(handler http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.Body != nil {
+				r.Body = http.MaxBytesReader(w, r.Body, maxSize)
+			}
+			next.ServeHTTP(w, r)
+		})
+	}
+}

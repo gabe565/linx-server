@@ -144,7 +144,10 @@ func Setup(ctx context.Context) (*chi.Mux, error) {
 	r.Get("/api/config", handlers.Config)
 
 	r.Group(func(r chi.Router) {
-		r.Use(rateLimit(config.Default.Limit.UploadMaxRequests, config.Default.Limit.UploadInterval.Duration))
+		r.Use(
+			rateLimit(config.Default.Limit.UploadMaxRequests, config.Default.Limit.UploadInterval.Duration),
+			LimitBodySize(int64(config.Default.MaxSize)),
+		)
 
 		r.Post("/upload", upload.POSTHandler)
 		r.Put("/upload", upload.PUTHandler)
