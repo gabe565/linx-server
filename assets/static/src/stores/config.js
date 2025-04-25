@@ -8,7 +8,7 @@ export const useConfigStore = defineStore(
   "config",
   () => {
     const site = ref({ site_name: "Linx", expiration_times: [] });
-    const apiKey = ref("");
+    const apiKey = ref();
     const expiry = ref("");
     const filename = ref("");
     const extension = ref("txt");

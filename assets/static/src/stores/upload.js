@@ -35,7 +35,7 @@ export const useUploadStore = defineStore(
       file,
       expiry,
       randomFilename = false,
-      password = "",
+      password,
       saveOriginalName = true,
     }) => {
       const upload = ref({ progress: 0 });
@@ -45,7 +45,9 @@ export const useUploadStore = defineStore(
       const form = new FormData();
       form.append("file", file);
       form.append("expires", expiry);
-      form.append("access_key", password);
+      if (password) {
+        form.append("access_key", password);
+      }
       form.append("randomize", randomFilename);
 
       try {

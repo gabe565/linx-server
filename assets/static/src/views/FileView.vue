@@ -200,7 +200,7 @@ const props = defineProps({
 
 document.title = props.filename + " · " + useConfigStore().site.site_name;
 
-const accessKey = ref("");
+const accessKey = ref();
 const downloadAttempts = ref(0);
 const wrap = ref(true);
 const csvRows = ref(250);
