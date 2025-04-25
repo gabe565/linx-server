@@ -58,12 +58,14 @@ type Upload struct {
 }
 
 func POSTHandler(w http.ResponseWriter, r *http.Request) {
-	siteURL := headers.GetSiteURL(r).String()
-	if !csrf.StrictReferrerCheck(r, siteURL,
-		[]string{"Linx-Delete-Key", "Linx-Expiry", "Linx-Randomize", "X-Requested-With"},
-	) {
-		handlers.BadRequest(w, r, handlers.RespAUTO, "")
-		return
+	if config.Default.FrontendURL == "" {
+		siteURL := headers.GetSiteURL(r).String()
+		if !csrf.StrictReferrerCheck(r, siteURL,
+			[]string{"Linx-Delete-Key", "Linx-Expiry", "Linx-Randomize", "X-Requested-With"},
+		) {
+			handlers.BadRequest(w, r, handlers.RespAUTO, "")
+			return
+		}
 	}
 
 	upReq := Request{}

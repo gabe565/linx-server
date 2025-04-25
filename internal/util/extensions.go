@@ -1,9 +1,14 @@
 package util
 
-func ExtensionToHlLang(extension string) string {
+import "strings"
+
+func ExtensionToHlLang(filename, extension string) string {
 	hlExt, exists := extensionToHl[extension]
 	if !exists {
 		hlExt = "text"
+		if strings.HasPrefix(strings.ToLower(filename), "dockerfile") {
+			return "dockerfile"
+		}
 	}
 	return hlExt
 }
@@ -68,7 +73,7 @@ var extensionToHl = map[string]string{
 	"tex":         "latex",
 	"toml":        "ini",
 	"ts":          "typescript",
-	"txt":         "text",
+	"vue":         "vue",
 	"xml":         "xml",
 	"yaml":        "yaml",
 	"yml":         "yaml",

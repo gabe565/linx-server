@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"io"
 	"log/slog"
@@ -46,8 +47,10 @@ func FileServeHandler(w http.ResponseWriter, r *http.Request) {
 	if !config.Default.AllowHotlink {
 		referer := r.Header.Get("Referer")
 		u, _ := url.Parse(referer)
+		frontend, _ := url.Parse(config.Default.FrontendURL)
 		p := headers.GetSiteURL(r)
-		if referer != "" && !csrf.SameOrigin(u, p) {
+		if referer != "" && !csrf.SameOrigin(u, p) &&
+			(config.Default.FrontendURL == "" || !csrf.SameOrigin(u, frontend)) {
 			http.Redirect(w, r, headers.GetFileURL(r, fileName).String(), http.StatusSeeOther)
 			return
 		}
@@ -60,6 +63,9 @@ func FileServeHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Length", strconv.FormatInt(metadata.Size, 10))
 	w.Header().Set("Etag", strconv.Quote(metadata.Sha256sum))
 	w.Header().Set("Cache-Control", "public, no-cache")
+	if r.URL.Query().Has("download") {
+		w.Header().Set("Content-Disposition", "attachment; filename="+strconv.Quote(fileName))
+	}
 
 	modtime := time.Unix(0, 0)
 	if done := httputil.CheckPreconditions(w, r, modtime); done {
@@ -75,21 +81,26 @@ func FileServeHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func AssetHandler(w http.ResponseWriter, r *http.Request) {
-	path := strings.TrimPrefix(r.URL.Path, "/")
-	switch {
-	case path == "favicon.ico":
-		path = "images/favicon.gif"
-	case strings.HasPrefix(path, ".vite/"):
-		NotFound(w, r)
-		return
+	if strings.EqualFold(r.Header.Get("Accept"), "application/json") {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusNotFound)
+		_ = json.NewEncoder(w).Encode(ErrorResponse{Error: "Not found"})
 	}
+
+	path := strings.TrimPrefix(r.URL.Path, "/")
 
 	file, err := assets.Static().Open(path)
 	if err != nil {
-		NotFound(w, r)
-		return
+		path = "index.html"
+		file, err = assets.Static().Open(path)
+		if err != nil {
+			slog.Error("Failed to open index.html", "error", err)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		}
 	}
 
+	w.Header().Set("Vary", "Accept")
 	w.Header().Set("Etag", strconv.Quote(config.TimeStartedStr))
 	w.Header().Set("Cache-Control", "public, max-age=86400")
 	http.ServeContent(w, r, path, config.TimeStarted, file.(io.ReadSeeker)) //nolint:errcheck

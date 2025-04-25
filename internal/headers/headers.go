@@ -63,3 +63,12 @@ func GetSelifURL(r *http.Request, filename string) *url.URL {
 	}
 	return u
 }
+
+func GetTorrentURL(r *http.Request, filename string) *url.URL {
+	u := GetSiteURL(r)
+	u.Path = path.Join(u.Path, "torrent")
+	if filename != "" {
+		u.Path = path.Join(u.Path, filename)
+	}
+	return u
+}

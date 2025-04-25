@@ -13,7 +13,6 @@ import (
 	"gabe565.com/linx-server/internal/backends"
 	"gabe565.com/linx-server/internal/config"
 	"gabe565.com/linx-server/internal/headers"
-	"gabe565.com/linx-server/internal/templates"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -37,6 +36,10 @@ var (
 	errInvalidAccessKey = errors.New("invalid access key")
 	cliUserAgents       = []string{"curl", "wget"}
 )
+
+type ErrorResponse struct {
+	Error string `json:"error"`
+}
 
 func CheckAccessKey(r *http.Request, metadata *backends.Metadata) (AccessKeySource, error) {
 	key := metadata.AccessKey
@@ -129,18 +132,14 @@ func FileAccessHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if strings.EqualFold("application/json", r.Header.Get("Accept")) {
-			dec := json.NewEncoder(w)
-			_ = dec.Encode(map[string]string{
-				"error": errInvalidAccessKey.Error(),
-			})
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusUnauthorized)
+			_ = json.NewEncoder(w).Encode(ErrorResponse{Error: errInvalidAccessKey.Error()})
 
 			return
 		}
 
-		_ = templates.Render("access.html", map[string]any{
-			"FileName":   fileName,
-			"AccessPath": fileName,
-		}, r, w)
+		AssetHandler(w, r)
 		return
 	}
 

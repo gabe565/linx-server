@@ -1,0 +1,46 @@
+<template>
+  <div class="flex items-center">
+    <Button
+      as="a"
+      variant="outline"
+      size="lg"
+      :href="`${meta.direct_url}?download`"
+      :download="meta.filename"
+      class="flex-1"
+      :class="{ 'rounded-r-none': meta.torrent_url }"
+      v-bind="$attrs"
+    >
+      <DownloadIcon class="text-2xl" />
+      Download <span class="text-xs text-gray-500">({{ formatBytes(meta.size) }})</span>
+    </Button>
+    <DropdownMenu v-if="meta.torrent_url">
+      <DropdownMenuTrigger as-child class="rounded-l-none border-l-0 !px-2">
+        <Button variant="outline" size="lg">
+          <DownIcon />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent>
+        <DropdownMenuItem as="a" :href="meta.torrent_url" :download="`${meta.filename}.torrent`">
+          Download Torrent
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  </div>
+</template>
+
+<script setup>
+import { Button } from "@/components/ui/button/index.js";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { formatBytes } from "@/util/bytes.js";
+import DownloadIcon from "~icons/material-symbols/download-rounded";
+import DownIcon from "~icons/material-symbols/keyboard-arrow-down-rounded";
+
+defineProps({
+  meta: { type: Object, required: true },
+});
+</script>

@@ -1,7 +1,6 @@
 package config
 
 import (
-	"html/template"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -12,13 +11,14 @@ import (
 )
 
 type Config struct {
-	Bind      string `toml:"bind"`
-	FilesPath string `toml:"files-path" comment:"Path to files directory"`
-	MetaPath  string `toml:"meta-path"  comment:"Path to metadata directory"`
-	SiteName  string `toml:"site-name"`
-	SiteURL   URL    `toml:"site-url"`
-	SelifPath string `toml:"selif-path" comment:"Path relative to site base url where files are accessed directly"`
-	Fastcgi   bool   `toml:"fastcgi"    comment:"Serve through fastcgi"`
+	Bind        string `toml:"bind"`
+	FilesPath   string `toml:"files-path"             comment:"Path to files directory"`
+	MetaPath    string `toml:"meta-path"              comment:"Path to metadata directory"`
+	SiteName    string `toml:"site-name"`
+	SiteURL     URL    `toml:"site-url"`
+	FrontendURL string `toml:"frontend-url,omitempty"`
+	SelifPath   string `toml:"selif-path"             comment:"Path relative to site base url where files are accessed directly"`
+	Fastcgi     bool   `toml:"fastcgi"                comment:"Serve through fastcgi"`
 
 	MaxSize             Bytes    `toml:"max-size"              comment:"Maximum upload file size in bytes"`
 	MaxExpiry           Duration `toml:"max-expiry"            comment:"Maximum expiration time (a value of 0s means no expiry)"`
@@ -113,7 +113,6 @@ func New() *Config {
 var (
 	Default        = New()
 	StorageBackend backends.StorageBackend
-	Templates      map[string]*template.Template
 	TimeStarted    time.Time
 	TimeStartedStr string
 	RemoteAuthKeys []string
