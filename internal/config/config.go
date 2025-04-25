@@ -87,8 +87,8 @@ func New() *Config {
 		CleanupEvery: Duration{time.Hour},
 		Limit: Limit{
 			UploadMaxRequests: 5,
-			UploadInterval:    Duration{time.Minute},
-			FileMaxRequests:   10,
+			UploadInterval:    Duration{15 * time.Second},
+			FileMaxRequests:   20,
 			FileInterval:      Duration{10 * time.Second},
 		},
 		Header: Header{

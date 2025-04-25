@@ -56,8 +56,8 @@ custom-pages-dir = ''
 # Configure rate limits
 [limit]
   upload-max-requests = 5
-  upload-interval = '1m0s'
-  file-max-requests = 10
+  upload-interval = '15s'
+  file-max-requests = 20
   file-interval = '10s'
 
 # Modify request/response headers
