@@ -83,13 +83,15 @@ func FileTorrentHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch {
 		case errors.Is(err, backends.ErrNotFound):
-			handlers.NotFound(w, r)
+			handlers.ErrorMsg(w, r, http.StatusNotFound, "File not found")
 			return
 		case errors.Is(err, backends.ErrBadMetadata):
-			handlers.Oops(w, r, handlers.RespAUTO, "Corrupt metadata.")
+			slog.Error("Corrupt metadata", "path", fileName, "error", err)
+			handlers.ErrorMsg(w, r, http.StatusInternalServerError, "Corrupt metadata")
 			return
 		default:
-			handlers.Oops(w, r, handlers.RespAUTO, err.Error())
+			slog.Error("Failed to get file", "path", fileName, "error", err)
+			handlers.Error(w, r, http.StatusInternalServerError)
 			return
 		}
 	}
@@ -101,13 +103,13 @@ func FileTorrentHandler(w http.ResponseWriter, r *http.Request) {
 		if err := config.StorageBackend.Delete(r.Context(), fileName); err != nil {
 			slog.Error("Failed to delete expired file", "path", fileName)
 		}
-		handlers.NotFound(w, r)
+		handlers.ErrorMsg(w, r, http.StatusNotFound, "File not found")
 		return
 	}
 
 	encoded, err := CreateTorrent(fileName, f, r)
 	if err != nil {
-		handlers.Oops(w, r, handlers.RespHTML, "Could not create torrent.")
+		handlers.ErrorMsg(w, r, http.StatusInternalServerError, "Could not create torrent")
 		return
 	}
 

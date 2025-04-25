@@ -96,6 +96,14 @@ func SetAccessKeyCookies(w http.ResponseWriter, r *http.Request, fileName, value
 	http.SetCookie(w, &cookie)
 }
 
+func IsDirectUA(r *http.Request) bool {
+	ua := strings.ToLower(r.Header.Get("User-Agent"))
+	return !config.Default.NoDirectAgents && !strings.EqualFold(r.Header.Get("Accept"), "application/json") &&
+		slices.ContainsFunc(cliUserAgents, func(s string) bool {
+			return strings.Contains(ua, s)
+		})
+}
+
 func FileAccessHandler(w http.ResponseWriter, r *http.Request) {
 	fileName := chi.URLParam(r, "name")
 
@@ -104,15 +112,9 @@ func FileAccessHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !config.Default.NoDirectAgents && !strings.EqualFold(r.Header.Get("Accept"), "application/json") {
-		ua := r.Header.Get("User-Agent")
-		isCLI := slices.ContainsFunc(cliUserAgents, func(s string) bool {
-			return strings.Contains(strings.ToLower(ua), s)
-		})
-		if isCLI {
-			FileServeHandler(w, r)
-			return
-		}
+	if IsDirectUA(r) {
+		FileServeHandler(w, r)
+		return
 	}
 
 	metadata, err := CheckFile(r.Context(), fileName)
@@ -121,7 +123,7 @@ func FileAccessHandler(w http.ResponseWriter, r *http.Request) {
 			AssetHandler(w, r)
 			return
 		}
-		Oops(w, r, RespAUTO, "Corrupt metadata.")
+		ErrorMsg(w, r, http.StatusInternalServerError, "Corrupt metadata")
 		return
 	}
 

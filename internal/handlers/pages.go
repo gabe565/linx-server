@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
-	"fmt"
+	"io"
 	"net/http"
 	"strings"
 )
@@ -10,10 +10,10 @@ import (
 type RespType int
 
 const (
-	RespPLAIN RespType = iota
-	RespJSON
+	RespAUTO RespType = iota
 	RespHTML
-	RespAUTO
+	RespJSON
+	RespPLAIN
 )
 
 // func MakeCustomPage(fileName string) func(w http.ResponseWriter, r *http.Request) {
@@ -32,68 +32,43 @@ const (
 //	}
 //}
 
-func NotFound(w http.ResponseWriter, r *http.Request) {
-	AssetHandler(w, r)
+func Error(w http.ResponseWriter, r *http.Request, status int) {
+	ErrorType(w, r, RespAUTO, status, "")
 }
 
-func Oops(w http.ResponseWriter, r *http.Request, rt RespType, msg string) {
+func ErrorMsg(w http.ResponseWriter, r *http.Request, status int, msg string) {
+	ErrorType(w, r, RespAUTO, status, msg)
+}
+
+func ErrorType(w http.ResponseWriter, r *http.Request, rt RespType, status int, msg string) {
 	if msg == "" {
-		msg = "Oops! Something went wrong..."
+		msg = http.StatusText(status)
 	}
 
 	switch rt {
+	case RespAUTO:
+		switch {
+		case strings.EqualFold("application/json", r.Header.Get("Accept")):
+			ErrorType(w, r, RespJSON, status, msg)
+			return
+		case IsDirectUA(r):
+			ErrorType(w, r, RespPLAIN, status, msg)
+			return
+		default:
+			ErrorType(w, r, RespHTML, status, msg)
+		}
 	case RespHTML:
 		AssetHandler(w, r)
-		return
-	case RespPLAIN:
-		w.WriteHeader(http.StatusInternalServerError)
-		_, _ = fmt.Fprintf(w, "%s", msg)
-		return
 	case RespJSON:
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-		w.WriteHeader(http.StatusInternalServerError)
+		w.WriteHeader(status)
 		_ = json.NewEncoder(w).Encode(ErrorResponse{Error: msg})
-		return
-	case RespAUTO:
-		if strings.EqualFold("application/json", r.Header.Get("Accept")) {
-			Oops(w, r, RespJSON, msg)
-			return
-		}
-		Oops(w, r, RespHTML, msg)
-		return
-	}
-}
-
-func BadRequest(w http.ResponseWriter, r *http.Request, rt RespType, msg string) {
-	switch rt {
-	case RespHTML:
-		AssetHandler(w, r)
-		return
 	case RespPLAIN:
-		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintf(w, "%s", msg)
-		return
-	case RespJSON:
-		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-		w.WriteHeader(http.StatusBadRequest)
-		_ = json.NewEncoder(w).Encode(ErrorResponse{Error: msg})
-		return
-	case RespAUTO:
-		if strings.EqualFold("application/json", r.Header.Get("Accept")) {
-			BadRequest(w, r, RespJSON, msg)
-			return
+		if !strings.HasSuffix(msg, "\n") {
+			msg += "\n"
 		}
-		BadRequest(w, r, RespHTML, msg)
-		return
+		w.Header().Set("Content-Type", "text/plain; charset=UTF-8")
+		w.WriteHeader(status)
+		_, _ = io.WriteString(w, msg)
 	}
-}
-
-func Unauthorized(w http.ResponseWriter, r *http.Request) {
-	if r.Header.Get("Accept") == "application/json" {
-		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-		w.WriteHeader(http.StatusUnauthorized)
-		_ = json.NewEncoder(w).Encode(ErrorResponse{Error: http.StatusText(http.StatusUnauthorized)})
-		return
-	}
-	AssetHandler(w, r)
 }

@@ -29,9 +29,10 @@ func FileServeHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		if errors.Is(err, backends.ErrNotFound) {
 			AssetHandler(w, r)
-			return
+		} else {
+			slog.Error("Corrupt metadata", "path", fileName, "error", err)
+			ErrorMsg(w, r, http.StatusInternalServerError, "Corrupt metadata")
 		}
-		Oops(w, r, RespAUTO, "Corrupt metadata.")
 		return
 	}
 
@@ -40,7 +41,7 @@ func FileServeHandler(w http.ResponseWriter, r *http.Request) {
 		if src == AccessKeySourceCookie {
 			SetAccessKeyCookies(w, r, fileName, "", time.Unix(0, 0))
 		}
-		Unauthorized(w, r)
+		Error(w, r, http.StatusUnauthorized)
 		return
 	}
 
@@ -74,7 +75,8 @@ func FileServeHandler(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method != http.MethodHead {
 		if err := config.StorageBackend.ServeFile(fileName, w, r); err != nil {
-			Oops(w, r, RespAUTO, err.Error())
+			slog.Error("Failed to serve file", "path", fileName, "error", err)
+			Error(w, r, http.StatusInternalServerError)
 			return
 		}
 	}
@@ -114,7 +116,7 @@ func CheckFile(ctx context.Context, filename string) (backends.Metadata, error) 
 
 	if expiry.IsTSExpired(metadata.Expiry) {
 		if err := config.StorageBackend.Delete(ctx, filename); err != nil {
-			slog.Error("Failed to delete expired file", "path", filename)
+			slog.Error("Failed to delete expired file", "path", filename, "error", err)
 		}
 		return metadata, backends.ErrNotFound
 	}

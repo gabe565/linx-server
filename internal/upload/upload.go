@@ -5,8 +5,8 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"os"
@@ -32,13 +32,10 @@ import (
 )
 
 //nolint:gochecknoglobals
-var (
-	ErrFileTooLarge = errors.New("file too large")
-	fileDenylist    = []string{
-		"favicon.ico",
-		"crossdomain.xml",
-	}
-)
+var fileDenylist = []string{
+	"favicon.ico",
+	"crossdomain.xml",
+}
 
 // Describes metadata directly from the user request.
 type Request struct {
@@ -63,7 +60,7 @@ func POSTHandler(w http.ResponseWriter, r *http.Request) {
 		if !csrf.StrictReferrerCheck(r, siteURL,
 			[]string{"Linx-Delete-Key", "Linx-Expiry", "Linx-Randomize", "X-Requested-With"},
 		) {
-			handlers.BadRequest(w, r, handlers.RespAUTO, "")
+			handlers.Error(w, r, http.StatusBadRequest)
 			return
 		}
 	}
@@ -76,7 +73,13 @@ func POSTHandler(w http.ResponseWriter, r *http.Request) {
 	if strings.HasPrefix(contentType, "multipart/form-data") {
 		file, headers, err := r.FormFile("file")
 		if err != nil {
-			handlers.Oops(w, r, handlers.RespHTML, "Could not upload file.")
+			var maxBytes *http.MaxBytesError
+			if errors.As(err, &maxBytes) {
+				handlers.ErrorMsg(w, r, http.StatusRequestEntityTooLarge, "File too large")
+			} else {
+				slog.Error("Upload failed", "error", err)
+				handlers.ErrorMsg(w, r, http.StatusInternalServerError, "")
+			}
 			return
 		}
 		defer func() {
@@ -88,7 +91,7 @@ func POSTHandler(w http.ResponseWriter, r *http.Request) {
 		upReq.filename = headers.Filename
 	} else {
 		if r.PostFormValue("content") == "" {
-			handlers.BadRequest(w, r, handlers.RespAUTO, "Empty file")
+			handlers.ErrorMsg(w, r, http.StatusBadRequest, "Empty file")
 			return
 		}
 		extension := r.PostFormValue("extension")
@@ -111,30 +114,20 @@ func POSTHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	upload, err := Process(r.Context(), upReq)
+	if err != nil {
+		if errors.Is(err, backends.ErrFileEmpty) {
+			handlers.ErrorMsg(w, r, http.StatusBadRequest, "File empty")
+		} else {
+			handlers.Error(w, r, http.StatusInternalServerError)
+		}
+		return
+	}
 
 	if strings.EqualFold("application/json", r.Header.Get("Accept")) {
-		if err != nil {
-			if errors.Is(err, ErrFileTooLarge) || errors.Is(err, backends.ErrFileEmpty) {
-				handlers.BadRequest(w, r, handlers.RespJSON, err.Error())
-				return
-			}
-			handlers.Oops(w, r, handlers.RespJSON, "Could not upload file: "+err.Error())
-			return
-		}
-
 		js := GenerateJSONresponse(upload, r)
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 		_, _ = w.Write(js)
 	} else {
-		if err != nil {
-			if errors.Is(err, ErrFileTooLarge) || errors.Is(err, backends.ErrFileEmpty) {
-				handlers.BadRequest(w, r, handlers.RespHTML, err.Error())
-				return
-			}
-			handlers.Oops(w, r, handlers.RespHTML, "Could not upload file: "+err.Error())
-			return
-		}
-
 		http.Redirect(w, r, headers.GetFileURL(r, upload.Filename).String(), http.StatusSeeOther)
 	}
 }
@@ -147,31 +140,25 @@ func PUTHandler(w http.ResponseWriter, r *http.Request) {
 	upReq.src = r.Body
 
 	upload, err := Process(r.Context(), upReq)
+	if err != nil {
+		var maxBytes *http.MaxBytesError
+		switch {
+		case errors.As(err, &maxBytes):
+			handlers.ErrorMsg(w, r, http.StatusRequestEntityTooLarge, "File too large")
+		case errors.Is(err, backends.ErrFileEmpty):
+			handlers.ErrorMsg(w, r, http.StatusBadRequest, "File empty")
+		default:
+			handlers.Error(w, r, http.StatusInternalServerError)
+		}
+		return
+	}
 
 	if strings.EqualFold("application/json", r.Header.Get("Accept")) {
-		if err != nil {
-			if errors.Is(err, ErrFileTooLarge) || errors.Is(err, backends.ErrFileEmpty) {
-				handlers.BadRequest(w, r, handlers.RespJSON, err.Error())
-				return
-			}
-			handlers.Oops(w, r, handlers.RespJSON, "Could not upload file: "+err.Error())
-			return
-		}
-
 		js := GenerateJSONresponse(upload, r)
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 		_, _ = w.Write(js)
 	} else {
-		if err != nil {
-			if errors.Is(err, ErrFileTooLarge) || errors.Is(err, backends.ErrFileEmpty) {
-				handlers.BadRequest(w, r, handlers.RespPLAIN, err.Error())
-				return
-			}
-			handlers.Oops(w, r, handlers.RespPLAIN, "Could not upload file: "+err.Error())
-			return
-		}
-
-		fmt.Fprintf(w, "%s\n", headers.GetFileURL(r, upload.Filename))
+		_, _ = io.WriteString(w, headers.GetFileURL(r, upload.Filename).String()+"\n")
 	}
 }
 
@@ -195,7 +182,7 @@ func Remote(w http.ResponseWriter, r *http.Request) {
 				}
 				w.Header().Set("WWW-Authenticate", `Basic`+rs)
 			}
-			handlers.Unauthorized(w, r)
+			handlers.Error(w, r, http.StatusUnauthorized)
 			return
 		}
 	}
@@ -208,26 +195,31 @@ func Remote(w http.ResponseWriter, r *http.Request) {
 	upReq := Request{}
 	grabURL, err := url.Parse(r.FormValue("url"))
 	if err != nil {
-		handlers.Oops(w, r, handlers.RespAUTO, "Invalid URL: "+err.Error())
+		handlers.ErrorMsg(w, r, http.StatusBadRequest, "Invalid URL")
 		return
 	}
 	directURL := r.FormValue("direct_url") == InputYes
 
 	req, err := http.NewRequestWithContext(r.Context(), http.MethodGet, grabURL.String(), nil)
 	if err != nil {
-		handlers.Oops(w, r, handlers.RespAUTO, err.Error())
+		handlers.ErrorMsg(w, r, http.StatusInternalServerError, "Failed to create request")
 		return
 	}
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		handlers.Oops(w, r, handlers.RespAUTO, "Could not retrieve URL")
+		handlers.ErrorMsg(w, r, http.StatusServiceUnavailable, "Could not retrieve URL")
 		return
 	}
 	defer func() {
 		_, _ = io.Copy(io.Discard, resp.Body)
 		_ = resp.Body.Close()
 	}()
+
+	if resp.StatusCode >= 400 {
+		handlers.ErrorMsg(w, r, resp.StatusCode, "Remote host returned error "+resp.Status)
+		return
+	}
 
 	upReq.filename = filepath.Base(grabURL.Path)
 	upReq.src = http.MaxBytesReader(w, resp.Body, int64(config.Default.MaxSize))
@@ -237,22 +229,21 @@ func Remote(w http.ResponseWriter, r *http.Request) {
 	upReq.expiry = ParseExpiry(r.FormValue("expiry"))
 
 	upload, err := Process(r.Context(), upReq)
+	if err != nil {
+		var maxBytes *http.MaxBytesError
+		if errors.As(err, &maxBytes) {
+			handlers.ErrorMsg(w, r, http.StatusRequestEntityTooLarge, "File too large")
+		} else {
+			handlers.Error(w, r, http.StatusInternalServerError)
+		}
+		return
+	}
 
 	if strings.EqualFold("application/json", r.Header.Get("Accept")) {
-		if err != nil {
-			handlers.Oops(w, r, handlers.RespJSON, "Could not upload file: "+err.Error())
-			return
-		}
-
 		js := GenerateJSONresponse(upload, r)
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 		_, _ = w.Write(js)
 	} else {
-		if err != nil {
-			handlers.Oops(w, r, handlers.RespHTML, "Could not upload file: "+err.Error())
-			return
-		}
-
 		var u *url.URL
 		if directURL {
 			u = headers.GetSelifURL(r, upload.Filename)
@@ -281,7 +272,7 @@ var ErrProhibitedFilename = errors.New("prohibited filename")
 func Process(ctx context.Context, upReq Request) (Upload, error) {
 	var upload Upload
 	if upReq.size > int64(config.Default.MaxSize) {
-		return upload, ErrFileTooLarge
+		return upload, &http.MaxBytesError{Limit: int64(config.Default.MaxSize)}
 	}
 
 	// Determine the appropriate filename

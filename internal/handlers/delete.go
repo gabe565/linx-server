@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"errors"
-	"fmt"
+	"io"
 	"net/http"
 
 	"gabe565.com/linx-server/internal/backends"
@@ -19,23 +19,22 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	metadata, err := config.StorageBackend.Head(r.Context(), filename)
 	if err != nil {
 		if errors.Is(err, backends.ErrNotFound) {
-			NotFound(w, r) // 404 - file doesn't exist
-			return
+			ErrorMsg(w, r, http.StatusNotFound, "File not found") // 404 - file doesn't exist
+		} else {
+			Error(w, r, http.StatusUnauthorized) // 401 - no metadata available
 		}
-		Unauthorized(w, r) // 401 - no metadata available
 		return
 	}
 
-	if metadata.DeleteKey == requestKey {
-		err := config.StorageBackend.Delete(r.Context(), filename)
-		if err != nil {
-			Oops(w, r, RespPLAIN, "Could not delete")
-			return
-		}
-
-		_, _ = fmt.Fprintf(w, "DELETED")
+	if metadata.DeleteKey != requestKey {
+		Error(w, r, http.StatusUnauthorized) // 401 - wrong delete key
 		return
 	}
 
-	Unauthorized(w, r) // 401 - wrong delete key
+	if err := config.StorageBackend.Delete(r.Context(), filename); err != nil {
+		Error(w, r, http.StatusInternalServerError)
+		return
+	}
+
+	_, _ = io.WriteString(w, "DELETED\n")
 }
