@@ -18,7 +18,6 @@ import (
 	"gabe565.com/linx-server/internal/csrf"
 	"gabe565.com/linx-server/internal/expiry"
 	"gabe565.com/linx-server/internal/headers"
-	"gabe565.com/linx-server/internal/httputil"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -66,11 +65,6 @@ func FileServeHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "public, no-cache")
 	if r.URL.Query().Has("download") {
 		w.Header().Set("Content-Disposition", "attachment; filename="+strconv.Quote(fileName))
-	}
-
-	modtime := time.Unix(0, 0)
-	if done := httputil.CheckPreconditions(w, r, modtime); done {
-		return
 	}
 
 	if r.Method != http.MethodHead {
