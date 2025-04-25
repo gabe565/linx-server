@@ -120,7 +120,7 @@ func FileAccessHandler(w http.ResponseWriter, r *http.Request) {
 	metadata, err := CheckFile(r.Context(), fileName)
 	if err != nil {
 		if errors.Is(err, backends.ErrNotFound) {
-			AssetHandler(w, r)
+			ServeAsset(w, r, http.StatusNotFound)
 			return
 		}
 		ErrorMsg(w, r, http.StatusInternalServerError, "Corrupt metadata")
@@ -137,11 +137,10 @@ func FileAccessHandler(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusUnauthorized)
 			_ = json.NewEncoder(w).Encode(ErrorResponse{Error: errInvalidAccessKey.Error()})
-
 			return
 		}
 
-		AssetHandler(w, r)
+		ServeAsset(w, r, http.StatusUnauthorized)
 		return
 	}
 

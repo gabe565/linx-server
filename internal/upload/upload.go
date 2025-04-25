@@ -78,7 +78,7 @@ func POSTHandler(w http.ResponseWriter, r *http.Request) {
 				handlers.ErrorMsg(w, r, http.StatusRequestEntityTooLarge, "File too large")
 			} else {
 				slog.Error("Upload failed", "error", err)
-				handlers.ErrorMsg(w, r, http.StatusInternalServerError, "")
+				handlers.Error(w, r, http.StatusInternalServerError)
 			}
 			return
 		}
@@ -115,9 +115,14 @@ func POSTHandler(w http.ResponseWriter, r *http.Request) {
 
 	upload, err := Process(r.Context(), upReq)
 	if err != nil {
-		if errors.Is(err, backends.ErrFileEmpty) {
-			handlers.ErrorMsg(w, r, http.StatusBadRequest, "File empty")
-		} else {
+		var maxBytes *http.MaxBytesError
+		switch {
+		case errors.As(err, &maxBytes):
+			handlers.ErrorMsg(w, r, http.StatusRequestEntityTooLarge, "File too large")
+		case errors.Is(err, backends.ErrFileEmpty):
+			handlers.ErrorMsg(w, r, http.StatusBadRequest, "Empty file")
+		default:
+			slog.Error("Upload failed", "error", err)
 			handlers.Error(w, r, http.StatusInternalServerError)
 		}
 		return
@@ -146,7 +151,7 @@ func PUTHandler(w http.ResponseWriter, r *http.Request) {
 		case errors.As(err, &maxBytes):
 			handlers.ErrorMsg(w, r, http.StatusRequestEntityTooLarge, "File too large")
 		case errors.Is(err, backends.ErrFileEmpty):
-			handlers.ErrorMsg(w, r, http.StatusBadRequest, "File empty")
+			handlers.ErrorMsg(w, r, http.StatusBadRequest, "Empty file")
 		default:
 			handlers.Error(w, r, http.StatusInternalServerError)
 		}

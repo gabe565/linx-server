@@ -27,7 +27,7 @@ func FileServeHandler(w http.ResponseWriter, r *http.Request) {
 	metadata, err := CheckFile(r.Context(), fileName)
 	if err != nil {
 		if errors.Is(err, backends.ErrNotFound) {
-			AssetHandler(w, r)
+			ErrorMsg(w, r, http.StatusNotFound, "File not found")
 		} else {
 			slog.Error("Corrupt metadata", "path", fileName, "error", err)
 			ErrorMsg(w, r, http.StatusInternalServerError, "Corrupt metadata")
@@ -83,6 +83,19 @@ func AssetHandler(w http.ResponseWriter, r *http.Request) {
 		_ = json.NewEncoder(w).Encode(ErrorResponse{Error: "Not found"})
 	}
 
+	ServeAsset(w, r, http.StatusOK)
+}
+
+type StatusResponseWriter struct {
+	http.ResponseWriter
+	code int
+}
+
+func (m StatusResponseWriter) WriteHeader(int) {
+	m.ResponseWriter.WriteHeader(m.code)
+}
+
+func ServeAsset(w http.ResponseWriter, r *http.Request, status int) {
 	path := strings.TrimPrefix(r.URL.Path, "/")
 
 	file, err := assets.Static().Open(path)
@@ -96,9 +109,14 @@ func AssetHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	if status == http.StatusOK {
+		w.Header().Set("Cache-Control", "public, max-age=86400")
+	} else {
+		w = StatusResponseWriter{w, status}
+	}
+
 	w.Header().Set("Vary", "Accept")
 	w.Header().Set("Etag", strconv.Quote(config.TimeStartedStr))
-	w.Header().Set("Cache-Control", "public, max-age=86400")
 	http.ServeContent(w, r, path, config.TimeStarted, file.(io.ReadSeeker)) //nolint:errcheck
 }
 

@@ -58,7 +58,7 @@ func ErrorType(w http.ResponseWriter, r *http.Request, rt RespType, status int, 
 			ErrorType(w, r, RespHTML, status, msg)
 		}
 	case RespHTML:
-		AssetHandler(w, r)
+		ServeAsset(w, r, status)
 	case RespJSON:
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(status)
