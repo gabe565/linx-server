@@ -1,12 +1,16 @@
 package torrent
 
 import (
+	"bytes"
+	"image"
+	"image/color"
+	"image/draw"
+	"image/png"
 	"os"
 	"path"
 	"path/filepath"
 	"testing"
 
-	"gabe565.com/linx-server/assets"
 	"gabe565.com/linx-server/internal/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -44,12 +48,14 @@ func TestCreateTorrent(t *testing.T) {
 func TestCreateTorrentWithImage(t *testing.T) {
 	var decoded Torrent
 
-	f, err := assets.Static().Open("images/404.jpg")
-	require.NoError(t, err)
+	img := image.NewRGBA(image.Rect(0, 0, 10, 10))
+	draw.Draw(img, img.Bounds(), image.NewUniform(color.Black), image.Point{}, draw.Src)
+	var buf bytes.Buffer
+	require.NoError(t, png.Encode(&buf, img))
 
-	encoded, err := CreateTorrent("test.jpg", f, nil)
+	encoded, err := CreateTorrent("test.png", &buf, nil)
 	require.NoError(t, err)
 
 	require.NoError(t, bencode.DecodeBytes(encoded, &decoded))
-	assert.Equal(t, "\xd6\xff\xbf'^)\x85?\xb4.\xb0\xc1|\xa3\x83\xeeX\xf9\xfd\xd7", decoded.Info.Pieces)
+	assert.Equal(t, "\x1f?\xe6a#\xe3wIi\xf5}\xf2\x87X\x89\r\xf8t\xdc\xc0", decoded.Info.Pieces)
 }
