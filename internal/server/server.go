@@ -100,7 +100,7 @@ func Setup(ctx context.Context) (*chi.Mux, error) {
 	r.Use(middleware.Heartbeat("/ping"))
 
 	if !config.Default.NoLogs {
-		r.Use(middleware.Logger)
+		r.Use(middleware.Logger, RemoveMultipartForm)
 	}
 
 	r.Use(middleware.Recoverer)

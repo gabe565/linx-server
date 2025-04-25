@@ -79,7 +79,9 @@ func POSTHandler(w http.ResponseWriter, r *http.Request) {
 			handlers.Oops(w, r, handlers.RespHTML, "Could not upload file.")
 			return
 		}
-		defer file.Close()
+		defer func() {
+			_ = file.Close()
+		}()
 
 		upReq.src = file
 		upReq.size = headers.Size
