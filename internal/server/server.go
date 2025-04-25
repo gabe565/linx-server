@@ -10,21 +10,19 @@ import (
 	"strings"
 	"time"
 
-	"gabe565.com/linx-server/assets"
 	"gabe565.com/linx-server/internal/auth/apikeys"
 	"gabe565.com/linx-server/internal/backends"
 	"gabe565.com/linx-server/internal/backends/localfs"
 	"gabe565.com/linx-server/internal/backends/s3"
 	"gabe565.com/linx-server/internal/cleanup"
 	"gabe565.com/linx-server/internal/config"
-	"gabe565.com/linx-server/internal/custompages"
 	"gabe565.com/linx-server/internal/handlers"
 	"gabe565.com/linx-server/internal/headers"
-	"gabe565.com/linx-server/internal/templates"
 	"gabe565.com/linx-server/internal/torrent"
 	"gabe565.com/linx-server/internal/upload"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/cors"
 	"github.com/go-chi/httprate"
 )
 
@@ -69,18 +67,8 @@ func Setup(ctx context.Context) (*chi.Mux, error) {
 		}
 	}
 
-	// Template setup
-	config.Templates, err = templates.Load(assets.Templates())
-	if err != nil {
-		return nil, fmt.Errorf("could not load templates: %w", err)
-	}
-
 	config.TimeStarted = time.Now()
 	config.TimeStartedStr = strconv.FormatInt(config.TimeStarted.Unix(), 10)
-
-	if err := assets.LoadManifest(); err != nil {
-		return nil, fmt.Errorf("failed to load Vite manifest: %w", err)
-	}
 
 	// Routing setup
 	r := chi.NewRouter()
@@ -124,6 +112,25 @@ func Setup(ctx context.Context) (*chi.Mux, error) {
 	}))
 	r.Use(headers.AddHeaders(config.Default.Header.AddHeaders))
 
+	if v := config.Default.FrontendURL; v != "" {
+		r.Use(cors.Handler(cors.Options{
+			AllowedOrigins: []string{v},
+			AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+			AllowedHeaders: []string{
+				"Accept",
+				"Authorization",
+				"Content-Type",
+				"Linx-Expiry",
+				"Linx-Randomize",
+				"Linx-Delete-Key",
+				"Linx-Access-Key",
+				"Linx-Api-Key",
+			},
+			AllowCredentials: true,
+			MaxAge:           300,
+		}))
+	}
+
 	if config.Default.Auth.File != "" {
 		r.Use(apikeys.NewAPIKeysMiddleware(apikeys.AuthOptions{
 			AuthFile:      config.Default.Auth.File,
@@ -134,18 +141,7 @@ func Setup(ctx context.Context) (*chi.Mux, error) {
 		}))
 	}
 
-	if config.Default.Auth.File == "" || config.Default.Auth.Basic {
-		r.Get("/", handlers.Index)
-		r.Get("/paste", handlers.Paste)
-	} else {
-		r.Get("/", http.RedirectHandler(path.Join(config.Default.SiteURL.Path, "API"), http.StatusSeeOther).ServeHTTP)
-		r.Get("/paste", http.RedirectHandler(path.Join(config.Default.SiteURL.Path, "API/"), http.StatusSeeOther).ServeHTTP)
-	}
-
-	r.Get("/api", handlers.APIDoc)
-	r.Get("/API",
-		http.RedirectHandler(path.Join(config.Default.SiteURL.Path, "api"), http.StatusPermanentRedirect).ServeHTTP,
-	)
+	r.Get("/api/config", handlers.Config)
 
 	r.Group(func(r chi.Router) {
 		r.Use(rateLimit(config.Default.Limit.UploadMaxRequests, config.Default.Limit.UploadInterval.Duration))
@@ -175,6 +171,7 @@ func Setup(ctx context.Context) (*chi.Mux, error) {
 		r.Use(rateLimit(config.Default.Limit.FileMaxRequests, config.Default.Limit.FileInterval.Duration))
 
 		r.Get(path.Join("/", config.Default.SelifPath, "{name}"), handlers.FileServeHandler)
+
 		if !config.Default.NoTorrent {
 			r.Get("/torrent/{name}", torrent.FileTorrentHandler)
 			r.Get("/{name}/torrent", func(w http.ResponseWriter, r *http.Request) {
@@ -183,12 +180,12 @@ func Setup(ctx context.Context) (*chi.Mux, error) {
 		}
 	})
 
-	if config.Default.CustomPagesDir != "" {
-		custompages.InitializeCustomPages(config.Default.CustomPagesDir)
-		for fileName := range custompages.Names {
-			r.Get("/"+fileName, handlers.MakeCustomPage(fileName))
-		}
-	}
+	// if config.Default.CustomPagesDir != "" {
+	//	custompages.InitializeCustomPages(config.Default.CustomPagesDir)
+	//	for fileName := range custompages.Names {
+	//		r.Get("/"+fileName, handlers.MakeCustomPage(fileName))
+	//	}
+	//}
 
 	r.NotFound(handlers.AssetHandler)
 

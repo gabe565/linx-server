@@ -1,22 +1,15 @@
-import { initAPI } from "./api.js";
-import { initBin } from "./bin";
+import { createPinia } from "pinia";
+import piniaPluginPersistedstate from "pinia-plugin-persistedstate";
+import { createApp } from "vue";
+import App from "./App.vue";
 import "./main.css";
-import "./paste";
-import { initPaste } from "./paste";
-import { initUpload } from "./upload";
+import router from "./router";
 
-if (document.querySelector("#dropzone")) {
-  initUpload();
-}
+const pinia = createPinia();
+pinia.use(piniaPluginPersistedstate);
 
-if (document.querySelector(".editor")) {
-  initPaste();
-}
+const app = createApp(App);
 
-if (document.querySelector("#normal-content")) {
-  initBin();
-}
-
-if (document.querySelector("#main.api")) {
-  initAPI();
-}
+app.use(router);
+app.use(pinia);
+app.mount("#app");

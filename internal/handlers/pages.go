@@ -3,16 +3,8 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
-	"html/template"
-	"log/slog"
 	"net/http"
 	"strings"
-
-	"gabe565.com/linx-server/internal/config"
-	"gabe565.com/linx-server/internal/custompages"
-	"gabe565.com/linx-server/internal/expiry"
-	"gabe565.com/linx-server/internal/headers"
-	"gabe565.com/linx-server/internal/templates"
 )
 
 type RespType int
@@ -24,62 +16,24 @@ const (
 	RespAUTO
 )
 
-func Index(w http.ResponseWriter, r *http.Request) {
-	err := templates.Render("index.html", map[string]any{
-		"MaxSize":     int(config.Default.MaxSize),
-		"ExpiryList":  expiry.ListExpirationTimes(),
-		"ForceRandom": config.Default.ForceRandomFilename,
-	}, r, w)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-}
-
-func Paste(w http.ResponseWriter, r *http.Request) {
-	err := templates.Render("paste.html", map[string]any{
-		"ExpiryList":  expiry.ListExpirationTimes(),
-		"ForceRandom": config.Default.ForceRandomFilename,
-	}, r, w)
-	if err != nil {
-		Oops(w, r, RespHTML, "")
-		return
-	}
-}
-
-func APIDoc(w http.ResponseWriter, r *http.Request) {
-	err := templates.Render("api.html", map[string]any{
-		"SiteURL":     headers.GetSiteURL(r).String(),
-		"ForceRandom": config.Default.ForceRandomFilename,
-	}, r, w)
-	if err != nil {
-		Oops(w, r, RespHTML, "")
-		return
-	}
-}
-
-func MakeCustomPage(fileName string) func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		err := templates.Render("custom_page.html", map[string]any{
-			"SiteURL":     headers.GetSiteURL(r).String(),
-			"ForceRandom": config.Default.ForceRandomFilename,
-			"Contents":    template.HTML(custompages.CustomPages[fileName]), //nolint:gosec
-			"FileName":    fileName,
-			"PageName":    custompages.Names[fileName],
-		}, r, w)
-		if err != nil {
-			Oops(w, r, RespHTML, "")
-			return
-		}
-	}
-}
+// func MakeCustomPage(fileName string) func(w http.ResponseWriter, r *http.Request) {
+//	return func(w http.ResponseWriter, r *http.Request) {
+//		err := templates.Render("custom_page.html", map[string]any{
+//			"SiteURL":     headers.GetSiteURL(r).String(),
+//			"ForceRandom": config.Default.ForceRandomFilename,
+//			"Contents":    template.HTML(custompages.CustomPages[fileName]), //nolint:gosec
+//			"FileName":    fileName,
+//			"PageName":    custompages.Names[fileName],
+//		}, r, w)
+//		if err != nil {
+//			Oops(w, r, RespHTML, "")
+//			return
+//		}
+//	}
+//}
 
 func NotFound(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusNotFound)
-	err := templates.Render("404.html", nil, r, w)
-	if err != nil {
-		Oops(w, r, RespHTML, "")
-		return
-	}
+	AssetHandler(w, r)
 }
 
 func Oops(w http.ResponseWriter, r *http.Request, rt RespType, msg string) {
@@ -87,26 +41,18 @@ func Oops(w http.ResponseWriter, r *http.Request, rt RespType, msg string) {
 		msg = "Oops! Something went wrong..."
 	}
 
-	const name = "error.html"
-
 	switch rt {
 	case RespHTML:
-		w.WriteHeader(http.StatusInternalServerError)
-		if err := templates.Render(name, map[string]any{"Msg": msg}, r, w); err != nil {
-			slog.Error("Failed to render template", "template", name, "error", err)
-		}
+		AssetHandler(w, r)
 		return
 	case RespPLAIN:
 		w.WriteHeader(http.StatusInternalServerError)
 		_, _ = fmt.Fprintf(w, "%s", msg)
 		return
 	case RespJSON:
-		js, _ := json.Marshal(map[string]string{
-			"error": msg,
-		})
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 		w.WriteHeader(http.StatusInternalServerError)
-		_, _ = w.Write(js)
+		_ = json.NewEncoder(w).Encode(ErrorResponse{Error: msg})
 		return
 	case RespAUTO:
 		if strings.EqualFold("application/json", r.Header.Get("Accept")) {
@@ -121,23 +67,16 @@ func Oops(w http.ResponseWriter, r *http.Request, rt RespType, msg string) {
 func BadRequest(w http.ResponseWriter, r *http.Request, rt RespType, msg string) {
 	switch rt {
 	case RespHTML:
-		w.WriteHeader(http.StatusBadRequest)
-		err := templates.Render("error.html", map[string]any{"Title": "400 Bad Request", "Msg": msg}, r, w)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
+		AssetHandler(w, r)
 		return
 	case RespPLAIN:
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprintf(w, "%s", msg)
 		return
 	case RespJSON:
-		js, _ := json.Marshal(map[string]string{
-			"error": msg,
-		})
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 		w.WriteHeader(http.StatusBadRequest)
-		_, _ = w.Write(js)
+		_ = json.NewEncoder(w).Encode(ErrorResponse{Error: msg})
 		return
 	case RespAUTO:
 		if strings.EqualFold("application/json", r.Header.Get("Accept")) {
@@ -150,9 +89,11 @@ func BadRequest(w http.ResponseWriter, r *http.Request, rt RespType, msg string)
 }
 
 func Unauthorized(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusUnauthorized)
-	err := templates.Render("error.html", map[string]any{"Title": "401 Unauthorized"}, r, w)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	if r.Header.Get("Accept") == "application/json" {
+		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+		w.WriteHeader(http.StatusUnauthorized)
+		_ = json.NewEncoder(w).Encode(ErrorResponse{Error: http.StatusText(http.StatusUnauthorized)})
+		return
 	}
+	AssetHandler(w, r)
 }

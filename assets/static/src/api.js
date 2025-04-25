@@ -1,8 +1,6 @@
-import hljs from "highlight.js/lib/core";
-import { loadLanguage } from "./bin.js";
+import { createApiReference } from "@scalar/api-reference";
 
-export const initAPI = async () => {
-  await loadLanguage("bash");
-  await loadLanguage("json");
-  hljs.default.highlightAll();
-};
+createApiReference("#app", {
+  url: "https://cdn.jsdelivr.net/npm/@scalar/galaxy/dist/latest.json",
+  hideDarkModeToggle: true,
+});
