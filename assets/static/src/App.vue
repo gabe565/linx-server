@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col min-h-screen bg-background text-foreground">
+  <div class="flex flex-col min-h-screen min-h-svh bg-background text-foreground">
     <header class="grid grid-cols-3 border-b bg-surface px-4 py-2 items-center">
       <div>
         <Button variant="link" class="p-0" as-child>
