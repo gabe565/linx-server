@@ -184,6 +184,7 @@ import { Label } from "@/components/ui/label/index.js";
 import { Switch } from "@/components/ui/switch/index.js";
 import { Table, TableCell, TableRow } from "@/components/ui/table/index.js";
 import { ApiPath } from "@/config/api.js";
+import { useConfigStore } from "@/stores/config.js";
 import { getExtension, loadLanguage } from "@/util/extensions.js";
 import { UseTimeAgo } from "@vueuse/components";
 import { useAsyncState } from "@vueuse/core";
@@ -195,6 +196,8 @@ import SpinnerIcon from "~icons/svg-spinners/ring-resize";
 const props = defineProps({
   filename: { type: String, required: true },
 });
+
+document.title = props.filename + " · " + useConfigStore().site.site_name;
 
 const accessKey = ref("");
 const wrap = ref(true);

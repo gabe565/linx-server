@@ -1,3 +1,4 @@
+import { useConfigStore } from "@/stores/config.js";
 import { createRouter, createWebHistory } from "vue-router";
 
 const router = createRouter({
@@ -34,6 +35,12 @@ const router = createRouter({
       props: true,
     },
   ],
+});
+
+router.beforeEach((to) => {
+  if (to.name !== "File") {
+    document.title = to.name + " · " + useConfigStore().site.site_name;
+  }
 });
 
 export default router;
