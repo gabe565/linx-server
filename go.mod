@@ -3,7 +3,7 @@ module gabe565.com/linx-server
 go 1.24.2
 
 require (
-	gabe565.com/utils v0.0.0-20250203234441-e4ad4d8bf6fc
+	gabe565.com/utils v0.0.0-20250302063333-ede73b14282c
 	github.com/dchest/uniuri v1.2.0
 	github.com/dustin/go-humanize v1.0.1
 	github.com/gabriel-vasile/mimetype v1.4.8
@@ -21,7 +21,7 @@ require (
 	github.com/minio/sha256-simd v1.0.1
 	github.com/pelletier/go-toml/v2 v2.2.3
 	github.com/russross/blackfriday/v2 v2.1.0
-	github.com/spf13/cobra v1.8.1
+	github.com/spf13/cobra v1.9.1
 	github.com/spf13/pflag v1.0.6
 	github.com/stretchr/testify v1.10.0
 	github.com/zeebo/bencode v1.0.0
@@ -32,7 +32,7 @@ require (
 require (
 	github.com/aymerick/douceur v0.2.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
-	github.com/cpuguy83/go-md2man/v2 v2.0.4 // indirect
+	github.com/cpuguy83/go-md2man/v2 v2.0.6 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/fatih/structs v1.1.0 // indirect
 	github.com/go-ini/ini v1.67.0 // indirect
