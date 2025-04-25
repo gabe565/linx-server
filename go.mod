@@ -13,7 +13,7 @@ require (
 	github.com/gosimple/slug v1.15.0
 	github.com/knadh/koanf/providers/env v1.0.0
 	github.com/knadh/koanf/providers/posflag v0.1.0
-	github.com/knadh/koanf/providers/rawbytes v0.1.0
+	github.com/knadh/koanf/providers/rawbytes v1.0.0
 	github.com/knadh/koanf/providers/structs v0.1.0
 	github.com/knadh/koanf/v2 v2.1.2
 	github.com/microcosm-cc/bluemonday v1.0.27
