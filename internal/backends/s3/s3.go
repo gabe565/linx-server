@@ -2,184 +2,94 @@ package s3
 
 import (
 	"context"
-	"encoding/json"
-	"errors"
 	"io"
 	"iter"
 	"net/http"
+	"net/url"
 	"os"
-	"strconv"
-	"strings"
 	"time"
 
 	"gabe565.com/linx-server/internal/backends"
 	"gabe565.com/linx-server/internal/helpers"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
-	"github.com/aws/aws-sdk-go-v2/service/s3"
-	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	"github.com/minio/minio-go/v7"
+	"github.com/minio/minio-go/v7/pkg/credentials"
 )
 
 var _ backends.ListBackend = Backend{}
 
 type Backend struct {
 	bucket string
-	client *s3.Client
+	client *minio.Client
 }
 
 func (b Backend) Delete(ctx context.Context, key string) error {
-	_, err := b.client.DeleteObject(ctx, &s3.DeleteObjectInput{
-		Bucket: aws.String(b.bucket),
-		Key:    aws.String(key),
-	})
-	return err
+	return b.client.RemoveObject(ctx, b.bucket, key, minio.RemoveObjectOptions{})
 }
 
 func (b Backend) Exists(ctx context.Context, key string) (bool, error) {
-	_, err := b.client.HeadObject(ctx, &s3.HeadObjectInput{
-		Bucket: aws.String(b.bucket),
-		Key:    aws.String(key),
-	})
-	exists := true
+	_, err := b.client.StatObject(ctx, b.bucket, key, minio.StatObjectOptions{})
 	if err != nil {
-		var nf *types.NotFound
-		if errors.As(err, &nf) {
-			exists = false
-			err = nil
+		if minio.ToErrorResponse(err).StatusCode == http.StatusNotFound {
+			return false, nil
 		}
+		return false, err
 	}
-	return exists, err
+	return true, nil
 }
 
 func (b Backend) Head(ctx context.Context, key string) (backends.Metadata, error) {
-	var metadata backends.Metadata
-	result, err := b.client.HeadObject(ctx, &s3.HeadObjectInput{
-		Bucket: aws.String(b.bucket),
-		Key:    aws.String(key),
-	})
+	info, err := b.client.StatObject(ctx, b.bucket, key, minio.StatObjectOptions{})
 	if err != nil {
-		var nf *types.NotFound
-		if errors.As(err, &nf) {
-			err = backends.ErrNotFound
+		if minio.ToErrorResponse(err).StatusCode == http.StatusNotFound {
+			return backends.Metadata{}, backends.ErrNotFound
 		}
-		return metadata, err
+		return backends.Metadata{}, err
 	}
 
-	return unmapMetadata(result.Metadata)
+	return unmapMetadata(info.UserMetadata)
 }
 
 func (b Backend) Get(ctx context.Context, key string) (backends.Metadata, io.ReadCloser, error) {
-	var metadata backends.Metadata
-	result, err := b.client.GetObject(ctx, &s3.GetObjectInput{
-		Bucket: aws.String(b.bucket),
-		Key:    aws.String(key),
-	})
+	obj, err := b.client.GetObject(ctx, b.bucket, key, minio.GetObjectOptions{})
 	if err != nil {
-		var nf *types.NotFound
-		if errors.As(err, &nf) {
-			err = backends.ErrNotFound
+		if minio.ToErrorResponse(err).StatusCode == http.StatusNotFound {
+			return backends.Metadata{}, nil, backends.ErrNotFound
 		}
-		return metadata, nil, err
+		return backends.Metadata{}, nil, err
 	}
 
-	if metadata, err = unmapMetadata(result.Metadata); err != nil {
-		return metadata, nil, err
+	info, err := obj.Stat()
+	if err != nil {
+		return backends.Metadata{}, nil, err
 	}
-	return metadata, result.Body, nil
+
+	m, err := unmapMetadata(info.UserMetadata)
+	if err != nil {
+		return backends.Metadata{}, nil, err
+	}
+
+	return m, obj, nil
 }
 
 func (b Backend) ServeFile(key string, w http.ResponseWriter, r *http.Request) error {
-	var result *s3.GetObjectOutput
-	var err error
-
-	if r.Header.Get("Range") != "" {
-		result, err = b.client.GetObject(r.Context(), &s3.GetObjectInput{
-			Bucket: aws.String(b.bucket),
-			Key:    aws.String(key),
-			Range:  aws.String(r.Header.Get("Range")),
-		})
-		if err != nil {
-			var nf *types.NotFound
-			if errors.As(err, &nf) {
-				err = backends.ErrNotFound
-			}
-			return err
+	obj, err := b.client.GetObject(r.Context(), b.bucket, key, minio.GetObjectOptions{})
+	if err != nil {
+		if minio.ToErrorResponse(err).StatusCode == http.StatusNotFound {
+			return backends.ErrNotFound
 		}
-		defer func() {
-			_ = result.Body.Close()
-		}()
+		return err
+	}
+	defer func() {
+		_ = obj.Close()
+	}()
 
-		w.WriteHeader(http.StatusPartialContent)
-		w.Header().Set("Content-Range", *result.ContentRange)
-		w.Header().Set("Content-Length", strconv.FormatInt(*result.ContentLength, 10))
-		w.Header().Set("Accept-Ranges", "bytes")
-	} else {
-		result, err = b.client.GetObject(r.Context(), &s3.GetObjectInput{
-			Bucket: aws.String(b.bucket),
-			Key:    aws.String(key),
-		})
-		if err != nil {
-			var nf *types.NotFound
-			if errors.As(err, &nf) {
-				err = backends.ErrNotFound
-			}
-			return err
-		}
-		defer func() {
-			_ = result.Body.Close()
-		}()
+	mod := time.Now()
+	if stat, err := obj.Stat(); err == nil {
+		mod = stat.LastModified
 	}
 
-	_, err = io.Copy(w, result.Body)
-	return err
-}
-
-func mapMetadata(m backends.Metadata) map[string]string {
-	return map[string]string{
-		"expiry":    m.Expiry.Format(time.RFC3339),
-		"deletekey": m.DeleteKey,
-		"size":      strconv.FormatInt(m.Size, 10),
-		"mimetype":  m.Mimetype,
-		"sha256sum": m.Sha256sum,
-		"accesskey": m.AccessKey,
-	}
-}
-
-func unmapMetadata(input map[string]string) (backends.Metadata, error) {
-	var m backends.Metadata
-	for k, v := range input {
-		k = strings.ToLower(k)
-		switch k {
-		case "deletekey", "delete_key":
-			m.DeleteKey = v
-		case "accesskey":
-			m.AccessKey = v
-		case "sha256sum":
-			m.Sha256sum = v
-		case "mimetype":
-			m.Mimetype = v
-		case "expiry":
-			b, err := json.Marshal(v)
-			if err != nil {
-				return m, err
-			}
-
-			var expiry backends.Expiry
-			if err := expiry.UnmarshalJSON(b); err != nil {
-				return m, err
-			}
-
-			m.Expiry = time.Time(expiry)
-		case "size":
-			var err error
-			m.Size, err = strconv.ParseInt(input["size"], 10, 64)
-			if err != nil {
-				return m, err
-			}
-		}
-	}
-	return m, nil
+	http.ServeContent(w, r, key, mod, obj)
+	return nil
 }
 
 func (b Backend) Put(
@@ -189,17 +99,16 @@ func (b Backend) Put(
 	expiry time.Time,
 	deleteKey, accessKey string,
 ) (backends.Metadata, error) {
-	var m backends.Metadata
-	tmpDst, err := os.CreateTemp("", "linx-server-upload")
+	tmp, err := os.CreateTemp("", "linx-upload")
 	if err != nil {
-		return m, err
+		return backends.Metadata{}, err
 	}
 	defer func() {
-		_ = tmpDst.Close()
-		_ = os.Remove(tmpDst.Name())
+		_ = tmp.Close()
+		_ = os.Remove(tmp.Name())
 	}()
 
-	m, err = helpers.GenerateMetadata(io.TeeReader(r, tmpDst))
+	m, err := helpers.GenerateMetadata(io.TeeReader(r, tmp))
 	if err != nil {
 		return m, err
 	}
@@ -208,94 +117,79 @@ func (b Backend) Put(
 		return m, backends.ErrFileEmpty
 	}
 
-	if _, err = tmpDst.Seek(0, io.SeekStart); err != nil {
+	if _, err = tmp.Seek(0, io.SeekStart); err != nil {
 		return m, err
 	}
 
 	m.Expiry = expiry
 	m.DeleteKey = deleteKey
 	m.AccessKey = accessKey
-	// XXX: we may not be able to write this to AWS easily
-	// m.ArchiveFiles, _ = helpers.ListArchiveFiles(m.Mimetype, m.Size, tmpDst)
 
-	_, err = manager.NewUploader(b.client).Upload(ctx, &s3.PutObjectInput{
-		Bucket:   aws.String(b.bucket),
-		Key:      aws.String(key),
-		Body:     tmpDst,
-		Metadata: mapMetadata(m),
+	_, err = b.client.PutObject(ctx, b.bucket, key, tmp, m.Size, minio.PutObjectOptions{
+		UserMetadata: mapMetadata(m),
 	})
 	return m, err
 }
 
 func (b Backend) PutMetadata(ctx context.Context, key string, m backends.Metadata) error {
-	_, err := b.client.CopyObject(ctx, &s3.CopyObjectInput{
-		Bucket:            aws.String(b.bucket),
-		Key:               aws.String(key),
-		CopySource:        aws.String("/" + b.bucket + "/" + key),
-		Metadata:          mapMetadata(m),
-		MetadataDirective: types.MetadataDirectiveReplace,
-	})
+	src := minio.CopySrcOptions{Bucket: b.bucket, Object: key}
+	dst := minio.CopyDestOptions{
+		Bucket:          b.bucket,
+		Object:          key,
+		ReplaceMetadata: true,
+		UserMetadata:    mapMetadata(m),
+	}
+	_, err := b.client.CopyObject(ctx, dst, src)
 	return err
 }
 
 func (b Backend) Size(ctx context.Context, key string) (int64, error) {
-	result, err := b.client.HeadObject(ctx, &s3.HeadObjectInput{
-		Bucket: aws.String(b.bucket),
-		Key:    aws.String(key),
-	})
+	info, err := b.client.StatObject(ctx, b.bucket, key, minio.StatObjectOptions{})
 	if err != nil {
 		return 0, err
 	}
-	return *result.ContentLength, nil
+	return info.Size, nil
 }
 
 func (b Backend) List(ctx context.Context) iter.Seq2[string, error] {
 	return func(yield func(string, error) bool) {
-		input := &s3.ListObjectsV2Input{
-			Bucket: aws.String(b.bucket),
-		}
-
-		for {
-			res, err := b.client.ListObjectsV2(ctx, input)
-			if err != nil {
-				yield("", err)
+		for item := range b.client.ListObjects(ctx, b.bucket, minio.ListObjectsOptions{Recursive: true}) {
+			if item.Err != nil {
+				yield("", item.Err)
 				return
 			}
-
-			for _, object := range res.Contents {
-				if !yield(*object.Key, nil) {
-					return
-				}
-			}
-
-			if res.ContinuationToken == nil {
+			if !yield(item.Key, nil) {
 				return
 			}
-			input.ContinuationToken = res.ContinuationToken
 		}
 	}
 }
 
 func New(
-	ctx context.Context,
-	bucket string,
-	region string,
-	endpoint string,
+	_ context.Context,
+	bucket, region, endpoint string,
 	forcePathStyle bool,
 ) (Backend, error) {
-	cfg, err := config.LoadDefaultConfig(ctx)
+	u, err := url.Parse(endpoint)
 	if err != nil {
 		return Backend{}, err
 	}
-	if region != "" {
-		cfg.Region = region
+
+	opts := &minio.Options{
+		Creds: credentials.NewChainCredentials([]credentials.Provider{
+			&credentials.EnvAWS{},
+			&credentials.IAM{},
+		}),
+		Secure: u.Scheme == "https",
+		Region: region,
 	}
-	if endpoint != "" {
-		cfg.BaseEndpoint = aws.String(endpoint)
+	if forcePathStyle {
+		opts.BucketLookup = minio.BucketLookupPath
 	}
 
-	client := s3.NewFromConfig(cfg, func(o *s3.Options) {
-		o.UsePathStyle = forcePathStyle
-	})
+	client, err := minio.New(u.Host, opts)
+	if err != nil {
+		return Backend{}, err
+	}
 	return Backend{bucket: bucket, client: client}, nil
 }
