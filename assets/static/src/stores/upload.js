@@ -72,7 +72,7 @@ export const useUploadStore = defineStore(
           },
         });
         uploads.value.unshift(res.data);
-        if (!timeout) removeExpired();
+        removeExpired();
         return res.data;
       } catch (err) {
         toast.error("Upload failed", { description: err.response?.data?.error || err.message });
