@@ -191,6 +191,7 @@ import { useAsyncState } from "@vueuse/core";
 import axios from "axios";
 import "highlight.js/styles/github-dark.css";
 import { computed, ref } from "vue";
+import { toast } from "vue-sonner";
 import SpinnerIcon from "~icons/svg-spinners/ring-resize";
 
 const props = defineProps({
@@ -200,6 +201,7 @@ const props = defineProps({
 document.title = props.filename + " · " + useConfigStore().site.site_name;
 
 const accessKey = ref("");
+const downloadAttempts = ref(0);
 const wrap = ref(true);
 const csvRows = ref(250);
 
@@ -215,14 +217,26 @@ const Modes = Object.freeze({
 });
 
 const { state, isLoading, error, execute } = useAsyncState(async () => {
-  const res = await axios.get(ApiPath(`/${props.filename}`), {
-    headers: {
-      Accept: "application/json",
-      "Linx-Access-Key": accessKey.value,
-    },
-    validateStatus: (s) => s === 200,
-    withCredentials: true,
-  });
+  downloadAttempts.value += 1;
+  let res;
+  try {
+    res = await axios.get(ApiPath(`/${props.filename}`), {
+      headers: {
+        Accept: "application/json",
+        "Linx-Access-Key": accessKey.value,
+      },
+      validateStatus: (s) => s === 200,
+      withCredentials: true,
+    });
+  } catch (err) {
+    if (downloadAttempts.value > 1) {
+      toast.error("Download failed", {
+        description: err.message,
+      });
+    }
+    throw err;
+  }
+
   const meta = res.data;
 
   let mode;
