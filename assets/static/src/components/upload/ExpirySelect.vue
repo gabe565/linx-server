@@ -1,6 +1,6 @@
 <template>
   <Select>
-    <SelectTrigger class="w-40">
+    <SelectTrigger v-bind="$attrs">
       <SelectValue placeholder="Select expiration" />
     </SelectTrigger>
     <SelectContent>

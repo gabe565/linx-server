@@ -25,11 +25,14 @@
           </Card>
 
           <Card v-else class="py-4">
-            <CardHeader class="px-4">
-              <RouterLink :to="`/${item.filename}`">
-                <CardTitle>
+            <CardHeader class="px-4 max-w-full">
+              <RouterLink :to="`/${item.filename}`" class="overflow-hidden">
+                <CardTitle class="wrap-break-word">
                   {{ item.filename }}
-                  <span v-if="item.original_name && item.filename !== item.original_name">
+                  <span
+                    v-if="item.original_name && item.filename !== item.original_name"
+                    class="text-sm"
+                  >
                     ({{ item.original_name }})
                   </span>
                 </CardTitle>

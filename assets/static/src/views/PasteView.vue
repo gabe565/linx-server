@@ -6,29 +6,33 @@
       </CardHeader>
 
       <CardContent class="space-y-6">
-        <div
-          class="flex flex-col sm:flex-row flex-wrap items-center justify-center sm:justify-between gap-4 w-full"
-        >
-          <div class="flex items-end grow">
+        <div class="flex flex-wrap flex-col sm:flex-row gap-4 w-full justify-between">
+          <div class="flex items-end sm:w-60">
             <Input
               v-model="config.filename"
               placeholder="Filename"
-              class="w-40"
+              class="w-3/4 sm:min-w-30"
               aria-label="Filename"
             />
             <span class="p-1 text-gray-500">.</span>
             <Input
               v-model="config.extension"
               placeholder="Ext"
-              class="w-16"
+              class="w-1/4 sm:min-w-16"
               aria-label="Extension"
               @focus="$event.target.select()"
             />
           </div>
 
-          <PasswordInput v-model="config.password" />
-          <ExpirySelect v-model="config.expiry" :options="config.site?.expiration_times" />
-          <Button type="submit">Paste</Button>
+          <div class="flex flex-col sm:flex-row gap-4 justify-between">
+            <PasswordInput v-model="config.password" class="w-full sm:w-50 ml-auto" />
+            <ExpirySelect
+              v-model="config.expiry"
+              :options="config.site?.expiration_times"
+              class="w-full sm:w-40"
+            />
+            <Button type="submit">Paste</Button>
+          </div>
         </div>
 
         <Textarea v-model="config.content" placeholder="Paste your text here..." class="h-96" />

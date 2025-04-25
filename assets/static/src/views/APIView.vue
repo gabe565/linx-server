@@ -21,7 +21,7 @@ import { AlphaNum, randomString } from "@/util/random.js";
 </script>
 
 <template>
-  <Card class="container max-w-6xl mx-auto">
+  <Card class="container max-w-3xl mx-auto">
     <CardHeader>
       <CardTitle>API Reference</CardTitle>
     </CardHeader>
@@ -29,7 +29,7 @@ import { AlphaNum, randomString } from "@/util/random.js";
       <Accordion type="single" collapsible class="space-y-4">
         <!-- Upload (Random) -->
         <AccordionItem value="upload-random">
-          <AccordionTrigger class="text-xl font-semibold">
+          <AccordionTrigger class="text-lg font-semibold">
             Upload a File (Random Filename)
           </AccordionTrigger>
           <AccordionContent class="space-y-4">
@@ -80,7 +80,7 @@ import { AlphaNum, randomString } from "@/util/random.js";
 
         <!-- Upload (Choose) -->
         <AccordionItem value="upload-choose">
-          <AccordionTrigger class="text-xl font-semibold">
+          <AccordionTrigger class="text-lg font-semibold">
             Upload a File (Choose Filename)
           </AccordionTrigger>
           <AccordionContent class="space-y-4">
@@ -131,7 +131,7 @@ import { AlphaNum, randomString } from "@/util/random.js";
 
         <!-- Overwrite -->
         <AccordionItem value="overwrite">
-          <AccordionTrigger class="text-xl font-semibold">Overwrite a File</AccordionTrigger>
+          <AccordionTrigger class="text-lg font-semibold">Overwrite a File</AccordionTrigger>
           <AccordionContent class="space-y-4">
             <p>Upload again with the same filename and include the original deletion key:</p>
 
@@ -152,14 +152,15 @@ import { AlphaNum, randomString } from "@/util/random.js";
             <h4 class="text-lg font-medium">Examples</h4>
             <pre
               class="overflow-x-auto p-3 rounded text-sm font-mono"
-            ><code class="hljs">$ curl {{ ApiPath('/upload/myphoto.jpg') }} -s -H 'Linx-Delete-Key: mysecret' -T myphoto.jpg
+            ><code class="hljs">$ curl {{ ApiPath('/upload/myphoto.jpg') }} -s \
+    -H 'Linx-Delete-Key: mysecret' -T myphoto.jpg
 {{ ApiPath('/myphoto.jpg') }}</code></pre>
           </AccordionContent>
         </AccordionItem>
 
         <!-- Delete -->
         <AccordionItem value="delete">
-          <AccordionTrigger class="text-xl font-semibold">Delete a File</AccordionTrigger>
+          <AccordionTrigger class="text-lg font-semibold">Delete a File</AccordionTrigger>
           <AccordionContent class="space-y-4">
             <p>
               Send a <code>DELETE</code> request to the public URL and include the original deletion
@@ -190,7 +191,7 @@ DELETED</code></pre>
 
         <!-- Retrieve Info -->
         <AccordionItem value="info">
-          <AccordionTrigger class="text-xl font-semibold">Retrieve File Info</AccordionTrigger>
+          <AccordionTrigger class="text-lg font-semibold">Retrieve File Info</AccordionTrigger>
           <AccordionContent class="space-y-4">
             <p>Send a <code>GET</code> request to the public URL and request a JSON response.</p>
 
@@ -219,7 +220,7 @@ DELETED</code></pre>
 
         <!-- Client -->
         <AccordionItem value="client">
-          <AccordionTrigger class="text-xl font-semibold">Client</AccordionTrigger>
+          <AccordionTrigger class="text-lg font-semibold">Client</AccordionTrigger>
           <AccordionContent>
             <p>
               For convenience, use

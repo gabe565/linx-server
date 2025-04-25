@@ -1,17 +1,17 @@
 <template>
-  <div class="container max-w-5xl mx-auto p-4">
+  <div class="container mx-auto" :class="[error?.status === 401 ? 'max-w-lg' : 'max-w-5xl']">
     <div v-if="isLoading" class="animate-in fade-in duration-1000 flex flex-col items-center">
       <SpinnerIcon class="text-4xl" />
     </div>
 
-    <Card v-else-if="error?.status === 401">
-      <CardHeader>
-        <CardTitle>Authentication Required</CardTitle>
-      </CardHeader>
-      <CardContent class="flex flex-col gap-4">
-        <p>{{ filename }} is protected with a password:</p>
+    <form v-else-if="error?.status === 401" @submit.prevent="execute">
+      <Card>
+        <CardHeader>
+          <CardTitle>Authentication Required</CardTitle>
+        </CardHeader>
+        <CardContent class="flex flex-col gap-6">
+          <p>{{ filename }} is protected with a password:</p>
 
-        <form class="flex gap-2 m-auto" @submit.prevent="execute">
           <Label class="w-full flex flex-wrap">
             Password
             <Input
@@ -21,11 +21,12 @@
               class="flex-1 min-w-50"
             />
           </Label>
-
-          <Button type="submit" variant="secondary">Submit</Button>
-        </form>
-      </CardContent>
-    </Card>
+        </CardContent>
+        <CardFooter class="flex flex-col items-end">
+          <Button type="submit" variant="secondary" class="w-full sm:w-auto">Submit</Button>
+        </CardFooter>
+      </Card>
+    </form>
 
     <Card v-else-if="error?.status === 404">
       <CardHeader>
@@ -48,8 +49,8 @@
 
     <Card v-else-if="state.meta">
       <CardHeader class="flex flex-wrap justify-between items-center gap-4">
-        <div class="flex flex-col gap-1">
-          <CardTitle>{{ state.meta.filename }}</CardTitle>
+        <div class="flex flex-col gap-1 max-w-full">
+          <CardTitle class="wrap-break-word">{{ state.meta.filename }}</CardTitle>
 
           <UseTimeAgo
             v-if="state.meta.expiry > 0"
@@ -173,6 +174,7 @@ import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card/index.js";

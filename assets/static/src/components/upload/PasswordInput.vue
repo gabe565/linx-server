@@ -5,13 +5,5 @@ const model = defineModel();
 </script>
 
 <template>
-  <div class="m-auto">
-    <Input
-      type="password"
-      v-model="model"
-      placeholder="File Password"
-      class="flex-1 min-w-50"
-      aria-label="Password"
-    />
-  </div>
+  <Input type="password" v-model="model" placeholder="Password" aria-label="Password" />
 </template>

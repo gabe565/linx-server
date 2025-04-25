@@ -6,14 +6,19 @@
           <CardTitle>Upload</CardTitle>
         </CardHeader>
 
-        <CardContent class="flex flex-col sm:flex-row flex-wrap items-center justify-between gap-4">
-          <Label v-if="!config.site?.force_random">
-            <Switch v-model="config.randomFilename" />
-            Random filename
-          </Label>
-
-          <PasswordInput v-model="config.password" />
-          <ExpirySelect v-model="config.expiry" :options="config.site?.expiration_times" />
+        <CardContent class="flex flex-col gap-4">
+          <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <Label v-if="!config.site?.force_random">
+              <Switch v-model="config.randomFilename" />
+              Random filename
+            </Label>
+            <PasswordInput v-model="config.password" class="sm:flex-1" />
+            <ExpirySelect
+              v-model="config.expiry"
+              :options="config.site?.expiration_times"
+              class="w-full sm:w-40"
+            />
+          </div>
           <DropZone @upload="doUpload" :max-file-size="config.site?.max_size" />
         </CardContent>
       </Card>
