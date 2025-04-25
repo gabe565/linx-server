@@ -125,7 +125,7 @@ func POSTHandler(w http.ResponseWriter, r *http.Request) {
 
 	if strings.EqualFold("application/json", r.Header.Get("Accept")) {
 		js := GenerateJSONresponse(upload, r)
-		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+		w.Header().Set("Content-Type", "application/json")
 		_, _ = w.Write(js)
 	} else {
 		http.Redirect(w, r, headers.GetFileURL(r, upload.Filename).String(), http.StatusSeeOther)
@@ -155,7 +155,7 @@ func PUTHandler(w http.ResponseWriter, r *http.Request) {
 
 	if strings.EqualFold("application/json", r.Header.Get("Accept")) {
 		js := GenerateJSONresponse(upload, r)
-		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+		w.Header().Set("Content-Type", "application/json")
 		_, _ = w.Write(js)
 	} else {
 		_, _ = io.WriteString(w, headers.GetFileURL(r, upload.Filename).String()+"\n")
@@ -241,7 +241,7 @@ func Remote(w http.ResponseWriter, r *http.Request) {
 
 	if strings.EqualFold("application/json", r.Header.Get("Accept")) {
 		js := GenerateJSONresponse(upload, r)
-		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+		w.Header().Set("Content-Type", "application/json")
 		_, _ = w.Write(js)
 	} else {
 		var u *url.URL

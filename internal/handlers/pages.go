@@ -60,7 +60,7 @@ func ErrorType(w http.ResponseWriter, r *http.Request, rt RespType, status int, 
 	case RespHTML:
 		AssetHandler(w, r)
 	case RespJSON:
-		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(status)
 		_ = json.NewEncoder(w).Encode(ErrorResponse{Error: msg})
 	case RespPLAIN:

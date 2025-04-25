@@ -46,7 +46,7 @@ func FileDisplay(w http.ResponseWriter, r *http.Request, fileName string, metada
 			res.TorrentURL = headers.GetTorrentURL(r, fileName).String()
 		}
 
-		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(res)
 		return
 	}
