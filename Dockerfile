@@ -1,4 +1,4 @@
-#syntax=docker/dockerfile:1.13
+#syntax=docker/dockerfile:1
 
 FROM --platform=$BUILDPLATFORM node:22-alpine AS frontend
 WORKDIR /app
