@@ -19,6 +19,7 @@
               v-model="accessKey"
               placeholder="Enter password"
               class="flex-1 min-w-50"
+              autofocus
             />
           </Label>
         </CardContent>

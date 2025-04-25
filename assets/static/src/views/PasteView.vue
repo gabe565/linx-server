@@ -35,7 +35,13 @@
           </div>
         </div>
 
-        <Textarea v-model="config.content" placeholder="Paste your text here..." class="h-96" />
+        <Textarea
+          ref="textarea"
+          v-model="config.content"
+          placeholder="Paste your text here..."
+          class="h-96"
+          autofocus
+        />
       </CardContent>
     </Card>
   </form>
@@ -55,7 +61,7 @@ import PasswordInput from "@/components/upload/PasswordInput.vue";
 import { useConfigStore } from "@/stores/config.js";
 import { useUploadStore } from "@/stores/upload.js";
 import { useMagicKeys } from "@vueuse/core";
-import { ref, watch } from "vue";
+import { onMounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 
 const config = useConfigStore();
@@ -88,4 +94,7 @@ const { Ctrl_Enter, Meta_Enter } = useMagicKeys();
 
 watch(Ctrl_Enter, doUpload);
 watch(Meta_Enter, doUpload);
+
+const textarea = ref();
+onMounted(() => textarea.value.$el.focus());
 </script>
