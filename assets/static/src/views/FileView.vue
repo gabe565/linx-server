@@ -246,6 +246,7 @@ const { state, isLoading, error, execute } = useAsyncState(async () => {
     const res = await Promise.all([
       axios.get(meta.direct_url, {
         headers: { "Linx-Access-Key": accessKey.value },
+        responseType: "text",
         validateStatus: (s) => s === 200,
         withCredentials: true,
       }),
