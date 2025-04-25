@@ -104,7 +104,7 @@ func New() *Config {
 		c.Bind = ":8080"
 		c.FilesPath = "/data/files"
 		c.MetaPath = "/data/meta"
-		c.SiteName = "linx"
+		c.SiteName = "Linx"
 	}
 	return c
 }
