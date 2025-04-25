@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"bytes"
 	"encoding/json"
 	"net/http"
 	"path/filepath"
@@ -46,9 +47,17 @@ func FileDisplay(w http.ResponseWriter, r *http.Request, fileName string, metada
 			res.TorrentURL = headers.GetTorrentURL(r, fileName).String()
 		}
 
+		if metadata.AccessKey != "" || config.Default.Auth.File != "" || config.Default.Auth.RemoteFile != "" {
+			w.Header().Set("Cache-Control", "private, no-cache")
+		} else {
+			w.Header().Set("Cache-Control", "public, no-cache")
+		}
+		w.Header().Set("Vary", "Accept, Linx-Delete-Key")
 		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode(res)
-		return
+		w.Header().Set("ETag", strconv.Quote(metadata.Sha256sum))
+		var buf bytes.Buffer
+		_ = json.NewEncoder(&buf).Encode(res)
+		http.ServeContent(w, r, fileName, metadata.ModTime, bytes.NewReader(buf.Bytes()))
 	}
 
 	AssetHandler(w, r)

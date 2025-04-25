@@ -46,7 +46,7 @@ func (b Backend) Head(ctx context.Context, key string) (backends.Metadata, error
 		return backends.Metadata{}, err
 	}
 
-	return unmapMetadata(info.UserMetadata)
+	return unmapMetadata(info)
 }
 
 func (b Backend) Get(ctx context.Context, key string) (backends.Metadata, io.ReadCloser, error) {
@@ -63,7 +63,7 @@ func (b Backend) Get(ctx context.Context, key string) (backends.Metadata, io.Rea
 		return backends.Metadata{}, nil, err
 	}
 
-	m, err := unmapMetadata(info.UserMetadata)
+	m, err := unmapMetadata(info)
 	if err != nil {
 		return backends.Metadata{}, nil, err
 	}
@@ -83,7 +83,7 @@ func (b Backend) ServeFile(key string, w http.ResponseWriter, r *http.Request) e
 		_ = obj.Close()
 	}()
 
-	mod := time.Now()
+	var mod time.Time
 	if stat, err := obj.Stat(); err == nil {
 		mod = stat.LastModified
 	}

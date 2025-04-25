@@ -45,6 +45,8 @@ func ErrorType(w http.ResponseWriter, r *http.Request, rt RespType, status int, 
 		msg = http.StatusText(status)
 	}
 
+	w.Header().Set("Cache-Control", "no-store")
+
 	switch rt {
 	case RespAUTO:
 		switch {

@@ -36,5 +36,6 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.Header().Set("Vary", "Accept, Linx-Delete-Key")
 	_, _ = io.WriteString(w, "DELETED\n")
 }

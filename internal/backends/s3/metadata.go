@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"gabe565.com/linx-server/internal/backends"
+	"github.com/minio/minio-go/v7"
 )
 
 func mapMetadata(m backends.Metadata) map[string]string {
@@ -20,9 +21,9 @@ func mapMetadata(m backends.Metadata) map[string]string {
 	}
 }
 
-func unmapMetadata(input map[string]string) (backends.Metadata, error) {
-	var m backends.Metadata
-	for k, v := range input {
+func unmapMetadata(info minio.ObjectInfo) (backends.Metadata, error) {
+	m := backends.Metadata{ModTime: info.LastModified}
+	for k, v := range info.UserMetadata {
 		k = strings.ToLower(k)
 		switch k {
 		case "deletekey", "delete_key":

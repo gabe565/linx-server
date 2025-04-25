@@ -114,6 +114,10 @@ func (b Backend) Head(_ context.Context, key string) (backends.Metadata, error) 
 	metadata.Expiry = time.Time(mjson.Expiry)
 	metadata.Size = mjson.Size
 
+	if stat, err := f.Stat(); err == nil {
+		metadata.ModTime = stat.ModTime()
+	}
+
 	return metadata, nil
 }
 

@@ -128,6 +128,8 @@ func POSTHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.Header().Set("Vary", "Accept")
+
 	if strings.EqualFold("application/json", r.Header.Get("Accept")) {
 		js := GenerateJSONresponse(upload, r)
 		w.Header().Set("Content-Type", "application/json")
@@ -158,6 +160,7 @@ func PUTHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.Header().Set("Vary", "Accept")
 	if strings.EqualFold("application/json", r.Header.Get("Accept")) {
 		js := GenerateJSONresponse(upload, r)
 		w.Header().Set("Content-Type", "application/json")
@@ -243,6 +246,8 @@ func Remote(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
+
+	w.Header().Set("Cache-Control", "no-store")
 
 	if strings.EqualFold("application/json", r.Header.Get("Accept")) {
 		js := GenerateJSONresponse(upload, r)

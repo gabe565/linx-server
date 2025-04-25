@@ -61,8 +61,12 @@ func FileServeHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", metadata.Mimetype)
 	w.Header().Set("Content-Length", strconv.FormatInt(metadata.Size, 10))
-	w.Header().Set("Etag", strconv.Quote(metadata.Sha256sum))
-	w.Header().Set("Cache-Control", "public, no-cache")
+	w.Header().Set("ETag", strconv.Quote(metadata.Sha256sum))
+	if metadata.AccessKey != "" || config.Default.Auth.File != "" || config.Default.Auth.RemoteFile != "" {
+		w.Header().Set("Cache-Control", "private, no-cache")
+	} else {
+		w.Header().Set("Cache-Control", "public, no-cache")
+	}
 	if r.URL.Query().Has("download") {
 		w.Header().Set("Content-Disposition", "attachment; filename="+strconv.Quote(fileName))
 	}
@@ -116,7 +120,6 @@ func ServeAsset(w http.ResponseWriter, r *http.Request, status int) {
 	}
 
 	w.Header().Set("Vary", "Accept")
-	w.Header().Set("Etag", strconv.Quote(config.TimeStartedStr))
 	http.ServeContent(w, r, path, config.TimeStarted, file.(io.ReadSeeker)) //nolint:errcheck
 }
 

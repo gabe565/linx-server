@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"bytes"
 	"encoding/json"
 	"net/http"
 
@@ -21,7 +22,7 @@ type ExpirationTime struct {
 	Value string `json:"value"`
 }
 
-func Config(w http.ResponseWriter, _ *http.Request) {
+func Config(w http.ResponseWriter, r *http.Request) {
 	expirationTimes := expiry.ListExpirationTimes()
 	conf := ConfigResponse{
 		SiteName:        config.Default.SiteName,
@@ -37,6 +38,9 @@ func Config(w http.ResponseWriter, _ *http.Request) {
 		})
 	}
 
+	w.Header().Set("Cache-Control", "public, no-cache")
 	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(conf)
+	var buf bytes.Buffer
+	_ = json.NewEncoder(&buf).Encode(conf)
+	http.ServeContent(w, r, "", config.TimeStarted, bytes.NewReader(buf.Bytes()))
 }

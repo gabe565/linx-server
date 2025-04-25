@@ -11,6 +11,7 @@ type Metadata struct {
 	Sha256sum    string
 	Mimetype     string
 	Size         int64
+	ModTime      time.Time
 	Expiry       time.Time
 	ArchiveFiles []string
 }
