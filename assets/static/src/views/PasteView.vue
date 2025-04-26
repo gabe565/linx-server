@@ -39,7 +39,7 @@
           ref="textarea"
           v-model="config.content"
           placeholder="Paste your text here..."
-          class="h-96"
+          class="font-mono h-96"
           autofocus
         />
       </CardContent>
