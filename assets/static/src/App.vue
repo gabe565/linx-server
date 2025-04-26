@@ -20,17 +20,32 @@
       </NavigationMenu>
 
       <div class="justify-self-end">
-        <Button
-          as="a"
-          size="icon"
-          variant="ghost"
-          href="https://github.com/gabe565/linx-server"
-          target="_blank"
-          class="rounded-full"
-        >
-          <GitHubIcon />
-          <span class="sr-only">Source code on GitHub</span>
-        </Button>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger as-child :key="mode">
+              <Button variant="ghost" @click="mode = nextMode" class="rounded-full">
+                <component :is="modeIcon" />
+                <span class="sr-only">Change to {{ nextMode }} mode</span>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Change to {{ nextMode }} mode</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger as-child>
+              <Button
+                as="a"
+                variant="ghost"
+                href="https://github.com/gabe565/linx-server"
+                target="_blank"
+                class="rounded-full"
+              >
+                <GitHubIcon />
+                <span class="sr-only">View source on GitHub</span>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>View source on GitHub</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </div>
     </header>
 
@@ -51,9 +66,19 @@ import {
   NavigationMenuList,
 } from "@/components/ui/navigation-menu";
 import { Toaster } from "@/components/ui/sonner";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip/index.js";
 import { useConfigStore } from "@/stores/config";
 import { useColorMode } from "@vueuse/core";
+import { computed } from "vue";
 import { useRouter } from "vue-router";
+import DarkIcon from "~icons/material-symbols/brightness-2-rounded";
+import LightIcon from "~icons/material-symbols/brightness-5-rounded";
+import AutoIcon from "~icons/material-symbols/brightness-auto-rounded";
 import GitHubIcon from "~icons/simple-icons/github";
 
 const config = useConfigStore();
@@ -62,5 +87,17 @@ const routes = useRouter()
   .getRoutes()
   .filter((route) => route.meta?.navigation);
 
-useColorMode({ disableTransition: false });
+const mode = useColorMode({ disableTransition: false, emitAuto: true });
+
+const nextMode = computed(() => {
+  if (mode.value === "auto") return "dark";
+  if (mode.value === "dark") return "light";
+  return "auto";
+});
+
+const modeIcon = computed(() => {
+  if (nextMode.value === "auto") return AutoIcon;
+  if (nextMode.value === "light") return LightIcon;
+  return DarkIcon;
+});
 </script>
