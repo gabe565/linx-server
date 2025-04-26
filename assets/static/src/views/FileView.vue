@@ -24,7 +24,7 @@
           </Label>
         </CardContent>
         <CardFooter class="flex flex-col items-end">
-          <Button type="submit" variant="secondary" class="w-full sm:w-auto">Submit</Button>
+          <Button type="submit" class="w-full sm:w-auto">Unlock</Button>
         </CardFooter>
       </Card>
     </form>
