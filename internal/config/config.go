@@ -82,6 +82,7 @@ func New() *Config {
 		Bind:         "127.0.0.1:8080",
 		FilesPath:    "data/files",
 		MetaPath:     "data/meta",
+		SiteName:     "Linx",
 		SelifPath:    "selif",
 		MaxSize:      4 * bytefmt.GiB,
 		CleanupEvery: Duration{time.Hour},
@@ -104,7 +105,6 @@ func New() *Config {
 		c.Bind = ":8080"
 		c.FilesPath = "/data/files"
 		c.MetaPath = "/data/meta"
-		c.SiteName = "Linx"
 	}
 	return c
 }

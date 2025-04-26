@@ -3,7 +3,7 @@ bind = '127.0.0.1:8080'
 files-path = 'data/files'
 # Path to metadata directory
 meta-path = 'data/meta'
-site-name = ''
+site-name = 'Linx'
 site-url = ''
 # Path relative to site base url where files are accessed directly
 selif-path = 'selif'

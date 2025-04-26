@@ -34,7 +34,7 @@ linx-server [flags]
       --s3-force-path-style           Force path-style addressing for S3 (e.g. https://s3.amazonaws.com/linx/example.txt)
       --s3-region string              S3 region
       --selif-path string             Path relative to site base url where files are accessed directly (default "selif")
-      --site-name string              Name of the site
+      --site-name string              Name of the site (default "Linx")
       --site-url string               Site base url
       --tls-cert string               Path to ssl certificate (for https)
       --tls-key string                Path to ssl key (for https)
