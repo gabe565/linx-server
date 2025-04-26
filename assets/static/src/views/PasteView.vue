@@ -41,6 +41,10 @@
           placeholder="Paste your text here..."
           class="font-mono h-96"
           autofocus
+          autocomplete="off"
+          autocorrect="off"
+          autocapitalize="off"
+          spellcheck="false"
         />
       </CardContent>
     </Card>
