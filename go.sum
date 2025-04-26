@@ -1,5 +1,5 @@
-gabe565.com/utils v0.0.0-20250203234441-e4ad4d8bf6fc h1:n7llDREvlK4/Rfq7vNTnznEaP4tqeccOTLXN0GrzesM=
-gabe565.com/utils v0.0.0-20250203234441-e4ad4d8bf6fc/go.mod h1:YToTsVeo5RGbu9+B16PDW+Ls2dViRvAl2A9legFFHNw=
+gabe565.com/utils v0.0.0-20250302063333-ede73b14282c h1:740ifPX0340EHhAPnr5PJ5FgpDFMX3EEmd8CMLcSi5I=
+gabe565.com/utils v0.0.0-20250302063333-ede73b14282c/go.mod h1:zPhcEoKWZOPz7CH+g3nzkKY/AOs+QEo9SokKKkJyq2U=
 github.com/aymerick/douceur v0.2.0 h1:Mv+mAeH1Q+n9Fr+oyamOlAkUNPWPlA8PPGR0QAaYuPk=
 github.com/aymerick/douceur v0.2.0/go.mod h1:wlT5vV2O3h55X9m7iVYN0TBM0NH/MmbLnd30/FjWUq4=
 github.com/cespare/xxhash/v2 v2.3.0 h1:UL815xU9SqsFlibzuggzjXhog7bL6oX9BbNZnL2UFvs=
