@@ -1,0 +1,142 @@
+pre code.hljs {
+  display: block;
+  overflow-x: auto;
+  padding: 1em;
+}
+code.hljs {
+  padding: 3px 5px;
+}
+
+.hljs {
+  color: var(--hljs-foreground);
+  background: var(--hljs-background);
+}
+.hljs-doctag,
+.hljs-keyword,
+.hljs-meta .hljs-keyword,
+.hljs-template-tag,
+.hljs-template-variable,
+.hljs-type,
+.hljs-variable.language_ {
+  /* prettylights-syntax-keyword */
+  color: var(--hljs-keyword);
+}
+.hljs-title,
+.hljs-title.class_,
+.hljs-title.class_.inherited__,
+.hljs-title.function_ {
+  /* prettylights-syntax-entity */
+  color: var(--hljs-entity);
+}
+.hljs-attr,
+.hljs-attribute,
+.hljs-literal,
+.hljs-meta,
+.hljs-number,
+.hljs-operator,
+.hljs-variable,
+.hljs-selector-attr,
+.hljs-selector-class,
+.hljs-selector-id {
+  /* prettylights-syntax-constant */
+  color: var(--hljs-constant);
+}
+.hljs-regexp,
+.hljs-string,
+.hljs-meta .hljs-string {
+  /* prettylights-syntax-string */
+  color: var(--hljs-string);
+}
+.hljs-built_in,
+.hljs-symbol {
+  /* prettylights-syntax-variable */
+  color: var(--hljs-variable);
+}
+.hljs-comment,
+.hljs-code,
+.hljs-formula {
+  /* prettylights-syntax-comment */
+  color: var(--hljs-comment);
+}
+.hljs-name,
+.hljs-quote,
+.hljs-selector-tag,
+.hljs-selector-pseudo {
+  /* prettylights-syntax-entity-tag */
+  color: var(--hljs-entity-tag);
+}
+.hljs-subst {
+  /* prettylights-syntax-storage-modifier-import */
+  color: var(--hljs-storage-modifier-import);
+}
+.hljs-section {
+  /* prettylights-syntax-markup-heading */
+  color: var(--hljs-markup-heading);
+  font-weight: bold;
+}
+.hljs-bullet {
+  /* prettylights-syntax-markup-list */
+  color: var(--hljs-markup-list);
+}
+.hljs-emphasis {
+  /* prettylights-syntax-markup-italic */
+  color: var(--hljs-markup-italic);
+  font-style: italic;
+}
+.hljs-strong {
+  /* prettylights-syntax-markup-bold */
+  color: var(--hljs-markup-bold);
+  font-weight: bold;
+}
+.hljs-addition {
+  /* prettylights-syntax-markup-inserted */
+  color: var(--hljs-markup-inserted);
+  background-color: var(--hljs-markup-inserted-background);
+}
+.hljs-deletion {
+  /* prettylights-syntax-markup-deleted */
+  color: var(--hljs-markup-deleted);
+  background-color: var(--hljs-markup-deleted-background);
+}
+
+:root {
+  --hljs-background: #f6f8fa;
+  --hljs-foreground: #24292e;
+  --hljs-keyword: #cf222e;
+  --hljs-entity: #6f42c1;
+  --hljs-constant: #0550ae;
+  --hljs-string: #0a3069;
+  --hljs-variable: #e36209;
+  --hljs-comment: #59636e;
+  --hljs-entity-tag: #22863a;
+  --hljs-storage-modifier-import: var(--hljs-foreground);
+  --hljs-markup-heading: #005cc5;
+  --hljs-markup-list: #735c0f;
+  --hljs-markup-italic: var(--hljs-foreground);
+  --hljs-markup-bold: var(--hljs-foreground);
+  --hljs-markup-inserted: #22863a;
+  --hljs-markup-inserted-background: #f0fff4;
+  --hljs-markup-deleted: #b31d28;
+  --hljs-markup-deleted-background: #ffeef0;
+}
+
+.dark {
+  --hljs-background: #0d1117;
+  --hljs-foreground: #c9d1d9;
+  --hljs-keyword: #ff7b72;
+  --hljs-entity: #d2a8ff;
+  --hljs-constant: #79c0ff;
+  --hljs-string: #a5d6ff;
+  --hljs-variable: #ffa657;
+  --hljs-comment: #8b949e;
+  --hljs-entity-tag: #7ee787;
+  --hljs-storage-modifier-import: var(--hljs-foreground);
+  --hljs-markup-heading: #1f6feb;
+  --hljs-markup-list: #f2cc60;
+  --hljs-markup-italic: var(--hljs-foreground);
+  --hljs-markup-bold: var(--hljs-foreground);
+  --hljs-markup-inserted: #aff5b4;
+  --hljs-markup-inserted-background: #033a16;
+  --hljs-markup-deleted: #ffdcd7;
+  --hljs-markup-deleted-background: #67060c;
+}

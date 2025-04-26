@@ -189,7 +189,6 @@ import { getExtension, loadLanguage } from "@/util/extensions.js";
 import { UseTimeAgo } from "@vueuse/components";
 import { useAsyncState } from "@vueuse/core";
 import axios from "axios";
-import "highlight.js/styles/github-dark.css";
 import { computed, ref } from "vue";
 import { toast } from "vue-sonner";
 import SpinnerIcon from "~icons/svg-spinners/ring-resize";

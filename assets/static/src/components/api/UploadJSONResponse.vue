@@ -4,7 +4,6 @@ import { ApiPath } from "@/config/api.js";
 import { AlphaNum, Hex, randomString } from "@/util/random.js";
 import hljs from "highlight.js/lib/core";
 import langJSON from "highlight.js/lib/languages/json";
-import "highlight.js/styles/github-dark.css";
 import { computed } from "vue";
 
 hljs.registerLanguage("json", langJSON);
