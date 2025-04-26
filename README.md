@@ -22,9 +22,11 @@ Self-hosted file/media sharing website.
 
 
 ### Screenshots
-<img width="730" src="https://user-images.githubusercontent.com/4650950/76579039-03c82680-6488-11ea-8e23-4c927386fbd9.png" />
+<img width="730" src="https://github.com/user-attachments/assets/80d826d0-b99b-44a5-8bb0-da6597347fcd#gh-dark-mode-only" />
+<img width="730" src="https://github.com/user-attachments/assets/2db9679f-dce0-42fb-b2a3-944bfa6d9fbc#gh-light-mode-only" />
 
-<img width="180" src="https://user-images.githubusercontent.com/4650950/76578903-771d6880-6487-11ea-8baf-a4a23fef4d26.png" /> <img width="180" src="https://user-images.githubusercontent.com/4650950/76578910-7be21c80-6487-11ea-9a0a-587d59bc5f80.png" /> <img width="180" src="https://user-images.githubusercontent.com/4650950/76578908-7b498600-6487-11ea-8994-ee7b6eb9cdb1.png" /> <img width="180" src="https://user-images.githubusercontent.com/4650950/76578907-7b498600-6487-11ea-8941-8f582bf87fb0.png" />
+<img width="180" src="https://github.com/user-attachments/assets/b20183e6-b726-4bb3-9640-271b2aa101ba#gh-dark-mode-only" /> <img width="180" src="https://github.com/user-attachments/assets/1560d327-b70f-48cb-8cdb-d1dd426547c7#gh-dark-mode-only" /> <img width="180" src="https://github.com/user-attachments/assets/e7f79bcd-acd0-4f64-88ef-d2065f7cdcc6#gh-dark-mode-only" /> <img width="180" src="https://github.com/user-attachments/assets/fe74dda3-216e-4a4d-8fb1-44f1af2bd34d#gh-dark-mode-only" />
+<img width="180" src="https://github.com/user-attachments/assets/4623a8df-459f-4934-a18a-32e1b39eb9a3#gh-light-mode-only" /> <img width="180" src="https://github.com/user-attachments/assets/03c6efcc-b0cd-4dd9-bafc-61fe52d160d5#gh-light-mode-only" /> <img width="180" src="https://github.com/user-attachments/assets/0796c178-b5c9-4666-b46f-b29f88c5ea73#gh-light-mode-only" /> <img width="180" src="https://github.com/user-attachments/assets/91b3b9de-3374-4290-be83-8cafc9fc3c13#gh-light-mode-only" />
 
 
 ## Getting started
