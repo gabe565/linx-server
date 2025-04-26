@@ -99,25 +99,35 @@ func (b Backend) Put(
 	expiry time.Time,
 	deleteKey, accessKey string,
 ) (backends.Metadata, error) {
-	tmp, err := os.CreateTemp("", "linx-upload")
-	if err != nil {
-		return backends.Metadata{}, err
-	}
-	defer func() {
-		_ = tmp.Close()
-		_ = os.Remove(tmp.Name())
-	}()
+	var m backends.Metadata
+	var err error
+	seeker, ok := r.(io.ReadSeeker)
+	if ok {
+		if m, err = helpers.GenerateMetadata(seeker); err != nil {
+			return m, err
+		}
+	} else {
+		tmp, err := os.CreateTemp("", "linx-*-"+key)
+		if err != nil {
+			return backends.Metadata{}, err
+		}
+		defer func() {
+			_ = tmp.Close()
+			_ = os.Remove(tmp.Name())
+		}()
 
-	m, err := helpers.GenerateMetadata(io.TeeReader(r, tmp))
-	if err != nil {
-		return m, err
+		if m, err = helpers.GenerateMetadata(io.TeeReader(r, tmp)); err != nil {
+			return m, err
+		}
+
+		seeker = tmp
 	}
 
 	if m.Size == 0 {
 		return m, backends.ErrFileEmpty
 	}
 
-	if _, err = tmp.Seek(0, io.SeekStart); err != nil {
+	if _, err = seeker.Seek(0, io.SeekStart); err != nil {
 		return m, err
 	}
 
@@ -125,7 +135,7 @@ func (b Backend) Put(
 	m.DeleteKey = deleteKey
 	m.AccessKey = accessKey
 
-	_, err = b.client.PutObject(ctx, b.bucket, key, tmp, m.Size, minio.PutObjectOptions{
+	_, err = b.client.PutObject(ctx, b.bucket, key, seeker, m.Size, minio.PutObjectOptions{
 		UserMetadata: mapMetadata(m),
 	})
 	return m, err
