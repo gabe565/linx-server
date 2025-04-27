@@ -262,24 +262,45 @@ const { state, isLoading, error, execute } = useAsyncState(async () => {
     meta.size < 512 * 1024 &&
     (mode === Modes.TEXT || mode === Modes.MARKDOWN || mode === Modes.CSV)
   ) {
-    const res = await Promise.all([
-      axios.get(meta.direct_url, {
-        headers: { "Linx-Access-Key": accessKey.value },
-        responseType: "text",
-        validateStatus: (s) => s === 200,
-        withCredentials: true,
-      }),
-      loadLanguage(meta.language),
-    ]);
-    content = res[0].data;
+    try {
+      const res = await Promise.all([
+        axios.get(meta.direct_url, {
+          headers: { "Linx-Access-Key": accessKey.value },
+          responseType: "text",
+          validateStatus: (s) => s === 200,
+          withCredentials: true,
+        }),
+        loadLanguage(meta.language),
+      ]);
+      content = res[0].data;
+    } catch (err) {
+      toast.error("Failed to download file", {
+        description: err.message,
+      });
+      throw err;
+    }
+
     if (mode === Modes.MARKDOWN) {
-      const markdown = (await import("@/util/markdown.js")).default;
-      content = markdown(content);
+      try {
+        const markdown = (await import("@/util/markdown.js")).default;
+        content = markdown(content);
+      } catch (err) {
+        toast.error("Failed to format markdown", {
+          description: err.message,
+        });
+      }
     } else if (mode === Modes.CSV) {
-      const papaparse = (await import("papaparse")).default;
-      content = papaparse.parse(content);
+      try {
+        const papaparse = (await import("papaparse")).default;
+        content = papaparse.parse(content);
+      } catch (err) {
+        toast.error("Failed to format CSV", {
+          description: err.message,
+        });
+      }
     }
   }
+
   return {
     meta,
     mode,
