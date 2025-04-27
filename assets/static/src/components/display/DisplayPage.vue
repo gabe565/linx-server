@@ -54,9 +54,9 @@
           <CardTitle class="wrap-break-word">{{ state.meta.filename }}</CardTitle>
 
           <UseTimeAgo
-            v-if="state.meta.expiry > 0"
+            v-if="expiry"
             v-slot="{ timeAgo }"
-            :time="new Date(state.meta.expiry * 1000)"
+            :time="expiry"
             :show-second="true"
             update-interval="1000"
           >
@@ -84,6 +84,7 @@
             :class="{
               'sm:border-l-0 sm:rounded-l-none': showEditButton,
             }"
+            :disabled="expired"
           />
         </div>
       </CardHeader>
@@ -165,6 +166,19 @@
   </div>
 </template>
 
+<script>
+const Modes = Object.freeze({
+  IMAGE: Symbol("image"),
+  AUDIO: Symbol("audio"),
+  VIDEO: Symbol("video"),
+  PDF: Symbol("pdf"),
+  MARKDOWN: Symbol("markdown"),
+  CSV: Symbol("csv"),
+  ARCHIVE: Symbol("archive"),
+  TEXT: Symbol("text"),
+});
+</script>
+
 <script setup>
 import DeadLink from "@/assets/dead-link.svg";
 import HighlightJS from "@/components/HighlightJS.js";
@@ -187,7 +201,7 @@ import { ApiPath } from "@/config/api.js";
 import { useConfigStore } from "@/stores/config.js";
 import { getExtension, loadLanguage } from "@/util/extensions.js";
 import { UseTimeAgo } from "@vueuse/components";
-import { useAsyncState } from "@vueuse/core";
+import { useAsyncState, useTimeoutFn } from "@vueuse/core";
 import axios from "axios";
 import { computed, ref } from "vue";
 import { toast } from "vue-sonner";
@@ -204,16 +218,9 @@ const downloadAttempts = ref(0);
 const wrap = ref(true);
 const csvRows = ref(250);
 
-const Modes = Object.freeze({
-  IMAGE: Symbol("image"),
-  AUDIO: Symbol("audio"),
-  VIDEO: Symbol("video"),
-  PDF: Symbol("pdf"),
-  MARKDOWN: Symbol("markdown"),
-  CSV: Symbol("csv"),
-  ARCHIVE: Symbol("archive"),
-  TEXT: Symbol("text"),
-});
+const expiryMs = ref();
+const expired = ref(false);
+const expiryTimeout = useTimeoutFn(() => (expired.value = true), expiryMs, { immediate: false });
 
 const { state, isLoading, error, execute } = useAsyncState(async () => {
   downloadAttempts.value += 1;
@@ -301,6 +308,16 @@ const { state, isLoading, error, execute } = useAsyncState(async () => {
     }
   }
 
+  expiryTimeout.stop();
+  expired.value = false;
+  if (meta.expiry > 0) {
+    expiryMs.value = new Date(meta.expiry * 1000).getTime() - Date.now();
+    // https://developer.mozilla.org/docs/Web/API/Window/setTimeout#maximum_delay_value
+    if (expiryMs.value < 2 ** 31) {
+      expiryTimeout.start();
+    }
+  }
+
   return {
     meta,
     mode,
@@ -313,5 +330,8 @@ const showEditButton = computed(
   () =>
     !!state.value.content &&
     (state.value.mode === Modes.TEXT || state.value.mode === Modes.MARKDOWN),
+);
+const expiry = computed(() =>
+  state.value.meta?.expiry > 0 ? new Date(state.value?.meta?.expiry * 1000) : false,
 );
 </script>
