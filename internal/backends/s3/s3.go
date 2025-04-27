@@ -136,6 +136,7 @@ func (b Backend) Put(
 	m.AccessKey = accessKey
 
 	_, err = b.client.PutObject(ctx, b.bucket, key, seeker, m.Size, minio.PutObjectOptions{
+		ContentType:  m.Mimetype,
 		UserMetadata: mapMetadata(m),
 	})
 	return m, err

@@ -13,7 +13,6 @@ func mapMetadata(m backends.Metadata) map[string]string {
 	return map[string]string{
 		"expiry":    m.Expiry.Format(time.RFC3339),
 		"deletekey": m.DeleteKey,
-		"mimetype":  m.Mimetype,
 		"sha256sum": m.Sha256sum,
 		"accesskey": m.AccessKey,
 	}
@@ -21,8 +20,9 @@ func mapMetadata(m backends.Metadata) map[string]string {
 
 func unmapMetadata(info minio.ObjectInfo) (backends.Metadata, error) {
 	m := backends.Metadata{
-		ModTime: info.LastModified,
-		Size:    info.Size,
+		Mimetype: info.ContentType,
+		Size:     info.Size,
+		ModTime:  info.LastModified,
 	}
 	for k, v := range info.UserMetadata {
 		k = strings.ToLower(k)
