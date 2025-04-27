@@ -22,6 +22,7 @@ const (
 	FlagSelifPath           = "selif-path"
 	FlagMaxSize             = "max-size"
 	FlagMaxExpiry           = "max-expiry"
+	FlagUploadMaxMemory     = "upload-max-memory"
 	FlagTLSCert             = "tls-cert"
 	FlagTLSKey              = "tls-key"
 	FlagRealIP              = "real-ip"
@@ -81,9 +82,12 @@ func (c *Config) RegisterServeFlags(cmd *cobra.Command) {
 	fs.StringVar(&c.SelifPath, FlagSelifPath, c.SelifPath,
 		"Path relative to site base url where files are accessed directly",
 	)
-	fs.Var(&c.MaxSize, FlagMaxSize, "Maximum upload file size in bytes")
+	fs.Var(&c.MaxSize, FlagMaxSize, "Maximum upload file size")
 	fs.DurationVar(&c.MaxExpiry.Duration, FlagMaxExpiry, c.MaxExpiry.Duration,
 		"Maximum expiration time. A value of 0 means no expiry.",
+	)
+	fs.Var(&c.UploadMaxMemory, FlagUploadMaxMemory,
+		"Maximum memory to buffer multipart uploads; excess is written to temp files",
 	)
 	fs.StringVar(&c.TLS.Cert, FlagTLSCert, c.TLS.Cert, "Path to ssl certificate (for https)")
 	fs.StringVar(&c.TLS.Key, FlagTLSKey, c.TLS.Key, "Path to ssl key (for https)")

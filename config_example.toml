@@ -9,10 +9,12 @@ site-url = ''
 selif-path = 'selif'
 # Serve through fastcgi
 fastcgi = false
-# Maximum upload file size in bytes
+# Maximum upload file size
 max-size = '4 GiB'
 # Maximum expiration time (a value of 0s means no expiry)
 max-expiry = '0s'
+# Maximum memory to buffer multipart uploads; excess is written to temp files
+upload-max-memory = '32 MiB'
 # Allow hot-linking of files
 allow-hotlink = false
 # Enable remote uploads (/upload?url=https://...)

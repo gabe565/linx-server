@@ -23,7 +23,7 @@ linx-server [flags]
       --force-random-filename         Force all uploads to use a random filename
   -h, --help                          help for linx-server
       --max-expiry duration           Maximum expiration time. A value of 0 means no expiry.
-      --max-size string               Maximum upload file size in bytes (default "4 GiB")
+      --max-size string               Maximum upload file size (default "4 GiB")
       --meta-path string              Path to metadata directory (default "data/meta")
       --no-direct-agents              Disable serving files directly for wget/curl user agents
       --no-logs                       Remove logging of each request
@@ -38,6 +38,7 @@ linx-server [flags]
       --site-url string               Site base url
       --tls-cert string               Path to ssl certificate (for https)
       --tls-key string                Path to ssl key (for https)
+      --upload-max-memory string      Maximum memory to buffer multipart uploads; excess is written to temp files (default "32 MiB")
   -v, --version                       version for linx-server
 ```
 

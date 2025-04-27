@@ -71,8 +71,7 @@ func POSTHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 
 	if strings.HasPrefix(contentType, "multipart/form-data") {
-		file, headers, err := r.FormFile("file")
-		if err != nil {
+		if err := r.ParseMultipartForm(int64(config.Default.UploadMaxMemory)); err != nil {
 			var maxBytes *http.MaxBytesError
 			if errors.As(err, &maxBytes) {
 				handlers.ErrorMsg(w, r, http.StatusRequestEntityTooLarge, "File too large")
@@ -80,6 +79,13 @@ func POSTHandler(w http.ResponseWriter, r *http.Request) {
 				slog.Error("Upload failed", "error", err)
 				handlers.Error(w, r, http.StatusInternalServerError)
 			}
+			return
+		}
+
+		file, headers, err := r.FormFile("file")
+		if err != nil {
+			slog.Error("Upload failed", "error", err)
+			handlers.Error(w, r, http.StatusInternalServerError)
 			return
 		}
 		defer func() {

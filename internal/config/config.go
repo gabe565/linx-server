@@ -20,8 +20,9 @@ type Config struct {
 	SelifPath   string `toml:"selif-path"             comment:"Path relative to site base url where files are accessed directly"`
 	Fastcgi     bool   `toml:"fastcgi"                comment:"Serve through fastcgi"`
 
-	MaxSize             Bytes    `toml:"max-size"              comment:"Maximum upload file size in bytes"`
+	MaxSize             Bytes    `toml:"max-size"              comment:"Maximum upload file size"`
 	MaxExpiry           Duration `toml:"max-expiry"            comment:"Maximum expiration time (a value of 0s means no expiry)"`
+	UploadMaxMemory     Bytes    `toml:"upload-max-memory"     comment:"Maximum memory to buffer multipart uploads; excess is written to temp files"`
 	AllowHotlink        bool     `toml:"allow-hotlink"         comment:"Allow hot-linking of files"`
 	RemoteUploads       bool     `toml:"remote-uploads"        comment:"Enable remote uploads (/upload?url=https://...)"`
 	NoDirectAgents      bool     `toml:"no-direct-agents"      comment:"Disable serving files directly for wget/curl user agents"`
@@ -79,13 +80,14 @@ type Header struct {
 
 func New() *Config {
 	c := &Config{
-		Bind:         "127.0.0.1:8080",
-		FilesPath:    "data/files",
-		MetaPath:     "data/meta",
-		SiteName:     "Linx",
-		SelifPath:    "selif",
-		MaxSize:      4 * bytefmt.GiB,
-		CleanupEvery: Duration{time.Hour},
+		Bind:            "127.0.0.1:8080",
+		FilesPath:       "data/files",
+		MetaPath:        "data/meta",
+		SiteName:        "Linx",
+		SelifPath:       "selif",
+		MaxSize:         4 * bytefmt.GiB,
+		UploadMaxMemory: 32 * bytefmt.MiB,
+		CleanupEvery:    Duration{time.Hour},
 		Limit: Limit{
 			UploadMaxRequests: 5,
 			UploadInterval:    Duration{15 * time.Second},
