@@ -66,12 +66,13 @@ func (b Backend) Exists(_ context.Context, key string) (bool, error) {
 		_ = filesRoot.Close()
 	}()
 
-	exists := true
-	if _, err = filesRoot.Stat(key); err != nil && os.IsNotExist(err) {
-		exists = false
-		err = nil
+	if _, err := filesRoot.Stat(key); err != nil {
+		if os.IsNotExist(err) {
+			return false, nil
+		}
+		return false, err
 	}
-	return exists, err
+	return true, nil
 }
 
 func (b Backend) Head(_ context.Context, key string) (backends.Metadata, error) {
