@@ -15,6 +15,7 @@ type ConfigResponse struct {
 	ForceRandom     bool             `json:"force_random"`
 	Auth            bool             `json:"auth"`
 	ExpirationTimes []ExpirationTime `json:"expiration_times"`
+	CustomPages     []string         `json:"custom_pages,omitzero"`
 }
 
 type ExpirationTime struct {
@@ -22,25 +23,28 @@ type ExpirationTime struct {
 	Value string `json:"value"`
 }
 
-func Config(w http.ResponseWriter, r *http.Request) {
-	expirationTimes := expiry.ListExpirationTimes()
-	conf := ConfigResponse{
-		SiteName:        config.Default.SiteName,
-		ForceRandom:     config.Default.ForceRandomFilename,
-		MaxSize:         int64(config.Default.MaxSize),
-		Auth:            config.Default.Auth.Basic || config.Default.Auth.File != "",
-		ExpirationTimes: make([]ExpirationTime, 0, len(expirationTimes)),
-	}
-	for _, t := range expirationTimes {
-		conf.ExpirationTimes = append(conf.ExpirationTimes, ExpirationTime{
-			Name:  t.Human,
-			Value: t.Duration.String(),
-		})
-	}
+func Config(customPages []string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		expirationTimes := expiry.ListExpirationTimes()
+		conf := ConfigResponse{
+			SiteName:        config.Default.SiteName,
+			ForceRandom:     config.Default.ForceRandomFilename,
+			MaxSize:         int64(config.Default.MaxSize),
+			Auth:            config.Default.Auth.Basic || config.Default.Auth.File != "",
+			ExpirationTimes: make([]ExpirationTime, 0, len(expirationTimes)),
+			CustomPages:     customPages,
+		}
+		for _, t := range expirationTimes {
+			conf.ExpirationTimes = append(conf.ExpirationTimes, ExpirationTime{
+				Name:  t.Human,
+				Value: t.Duration.String(),
+			})
+		}
 
-	w.Header().Set("Cache-Control", "public, no-cache")
-	w.Header().Set("Content-Type", "application/json")
-	var buf bytes.Buffer
-	_ = json.NewEncoder(&buf).Encode(conf)
-	http.ServeContent(w, r, "", config.TimeStarted, bytes.NewReader(buf.Bytes()))
+		w.Header().Set("Cache-Control", "public, no-cache")
+		w.Header().Set("Content-Type", "application/json")
+		var buf bytes.Buffer
+		_ = json.NewEncoder(&buf).Encode(conf)
+		http.ServeContent(w, r, "", config.TimeStarted, bytes.NewReader(buf.Bytes()))
+	}
 }

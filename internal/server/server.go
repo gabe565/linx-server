@@ -118,7 +118,17 @@ func Setup(ctx context.Context) (*chi.Mux, error) {
 		}))
 	}
 
-	r.Get("/api/config", handlers.Config)
+	var customPages []string
+	if config.Default.CustomPagesPath != "" {
+		customPages, err = handlers.ListCustomPages(config.Default.CustomPagesPath)
+		if err != nil {
+			return nil, err
+		}
+
+		r.Get("/api/custom_page/{name}", handlers.CustomPage(config.Default.CustomPagesPath))
+	}
+
+	r.Get("/api/config", handlers.Config(customPages))
 
 	r.Group(func(r chi.Router) {
 		r.Use(
@@ -159,13 +169,6 @@ func Setup(ctx context.Context) (*chi.Mux, error) {
 			})
 		}
 	})
-
-	// if config.Default.CustomPagesDir != "" {
-	//	custompages.InitializeCustomPages(config.Default.CustomPagesDir)
-	//	for fileName := range custompages.Names {
-	//		r.Get("/"+fileName, handlers.MakeCustomPage(fileName))
-	//	}
-	//}
 
 	r.NotFound(handlers.AssetHandler)
 

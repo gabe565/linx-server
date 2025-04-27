@@ -36,7 +36,7 @@ const (
 	FlagS3ForcePathStyle    = "s3-force-path-style"
 	FlagForceRandomFilename = "force-random-filename"
 	FlagAuthCookieExpiry    = "auth-cookie-expiry"
-	FlagCustomPagesDir      = "custom-pages-path"
+	FlagCustomPagesPath     = "custom-pages-path"
 	FlagCleanupEvery        = "cleanup-every"
 )
 
@@ -107,7 +107,7 @@ func (c *Config) RegisterServeFlags(cmd *cobra.Command) {
 	fs.DurationVar(&c.Auth.CookieExpiry.Duration, FlagAuthCookieExpiry, c.Auth.CookieExpiry.Duration,
 		"Expiration time for access key cookies in seconds (set 0 to use session cookies)",
 	)
-	fs.StringVar(&c.CustomPagesDir, FlagCustomPagesDir, c.CustomPagesDir,
+	fs.StringVar(&c.CustomPagesPath, FlagCustomPagesPath, c.CustomPagesPath,
 		"Path to directory containing .md files to render as custom pages",
 	)
 	fs.DurationVar(&c.CleanupEvery.Duration, FlagCleanupEvery, c.CleanupEvery.Duration,

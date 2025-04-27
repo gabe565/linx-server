@@ -31,7 +31,7 @@ type Config struct {
 
 	CleanupEvery Duration `toml:"cleanup-every" comment:"How often to clean up expired files. A value of 0 means files will be cleaned up as they are accessed."`
 
-	CustomPagesDir string `toml:"custom-pages-dir" comment:"Path to directory containing .md files to render as custom pages"`
+	CustomPagesPath string `toml:"custom-pages-path" comment:"Path to directory containing .md files to render as custom pages"`
 
 	TLS    TLS    `toml:"tls"    comment:"TLS (HTTPS) configuration"`
 	Auth   Auth   `toml:"auth"`

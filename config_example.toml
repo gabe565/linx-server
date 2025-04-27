@@ -28,7 +28,7 @@ no-torrent = false
 # How often to clean up expired files. A value of 0 means files will be cleaned up as they are accessed.
 cleanup-every = '1h0m0s'
 # Path to directory containing .md files to render as custom pages
-custom-pages-dir = ''
+custom-pages-path = ''
 
 # TLS (HTTPS) configuration
 [tls]

@@ -83,9 +83,13 @@ import GitHubIcon from "~icons/simple-icons/github";
 
 const config = useConfigStore();
 
-const routes = useRouter()
-  .getRoutes()
-  .filter((route) => route.meta?.navigation);
+const router = useRouter();
+const routes = computed(() =>
+  router
+    .getRoutes()
+    .filter((route) => route.meta?.navigation)
+    .concat(config.site?.custom_pages?.map((v) => ({ name: v, path: `/${v}` })) || []),
+);
 
 const mode = useColorMode({ disableTransition: false, emitAuto: true });
 

@@ -112,7 +112,7 @@ func RegisterServeCompletions(cmd *cobra.Command) {
 		),
 		cmd.RegisterFlagCompletionFunc(FlagAuthCookieExpiry, cobra.NoFileCompletions),
 		cmd.RegisterFlagCompletionFunc(
-			FlagCustomPagesDir,
+			FlagCustomPagesPath,
 			func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
 				return nil, cobra.ShellCompDirectiveFilterDirs
 			},
