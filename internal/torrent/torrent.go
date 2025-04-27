@@ -100,9 +100,11 @@ func FileTorrentHandler(w http.ResponseWriter, r *http.Request) {
 	}()
 
 	if expiry.IsTSExpired(metadata.Expiry) {
-		if err := config.StorageBackend.Delete(r.Context(), fileName); err != nil {
-			slog.Error("Failed to delete expired file", "path", fileName)
-		}
+		go func() {
+			if err := config.StorageBackend.Delete(r.Context(), fileName); err != nil {
+				slog.Error("Failed to delete expired file", "path", fileName)
+			}
+		}()
 		handlers.ErrorMsg(w, r, http.StatusNotFound, "File not found")
 		return
 	}
