@@ -60,7 +60,9 @@
             :show-second="true"
             update-interval="1000"
           >
-            <CardDescription class="text-xs">expires {{ timeAgo }}</CardDescription>
+            <CardDescription class="text-xs">
+              {{ expired ? "expired" : "expires" }} {{ timeAgo }}
+            </CardDescription>
           </UseTimeAgo>
         </div>
 
