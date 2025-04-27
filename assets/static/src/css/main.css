@@ -1,6 +1,8 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "./hljs.css";
+@plugin "@tailwindcss/typography";
+@config "@/css/tailwind.config.js";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -154,10 +156,6 @@ button,
   @apply cursor-pointer;
 }
 
-a:not([data-slot]) {
-  @apply text-blue-600 dark:text-blue-400 hover:underline;
-}
-
-code {
-  @apply relative rounded bg-muted px-[0.3rem] py-[0.2rem] font-mono text-sm;
+.prose {
+  @apply dark:prose-invert prose-neutral prose-blue max-w-none;
 }

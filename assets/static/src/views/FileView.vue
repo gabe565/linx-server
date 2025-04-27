@@ -122,7 +122,7 @@
 
         <div
           v-else-if="!!state.content && state.mode === Modes.MARKDOWN"
-          class="markdown-body !bg-inherit"
+          class="prose max-w-none"
           v-html="state.content"
         />
 

@@ -27,7 +27,7 @@
           <Card v-else class="py-4">
             <CardHeader class="px-4">
               <CardTitle class="min-w-0">
-                <RouterLink :to="`/${item.filename}`" class="wrap-break-word">
+                <RouterLink :to="`/${item.filename}`" class="wrap-break-word text-blue-600 dark:text-blue-400 hover:underline">
                   {{ item.filename }}
                   <span
                     v-if="item.original_name && item.filename !== item.original_name"
