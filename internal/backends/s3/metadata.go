@@ -10,12 +10,20 @@ import (
 )
 
 func mapMetadata(m backends.Metadata) map[string]string {
-	return map[string]string{
-		"expiry":    m.Expiry.Format(time.RFC3339),
-		"deletekey": m.DeleteKey,
-		"sha256sum": m.Sha256sum,
-		"accesskey": m.AccessKey,
+	mapped := make(map[string]string, 4)
+	if m.DeleteKey != "" {
+		mapped["deletekey"] = m.DeleteKey
 	}
+	if m.AccessKey != "" {
+		mapped["accesskey"] = m.AccessKey
+	}
+	if m.Sha256sum != "" {
+		mapped["sha256sum"] = m.Sha256sum
+	}
+	if !m.Expiry.IsZero() {
+		mapped["expiry"] = m.Expiry.Format(time.RFC3339)
+	}
+	return mapped
 }
 
 func unmapMetadata(info minio.ObjectInfo) (backends.Metadata, error) {
