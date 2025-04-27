@@ -2,7 +2,6 @@ package s3
 
 import (
 	"encoding/json"
-	"strconv"
 	"strings"
 	"time"
 
@@ -14,7 +13,6 @@ func mapMetadata(m backends.Metadata) map[string]string {
 	return map[string]string{
 		"expiry":    m.Expiry.Format(time.RFC3339),
 		"deletekey": m.DeleteKey,
-		"size":      strconv.FormatInt(m.Size, 10),
 		"mimetype":  m.Mimetype,
 		"sha256sum": m.Sha256sum,
 		"accesskey": m.AccessKey,
@@ -22,7 +20,10 @@ func mapMetadata(m backends.Metadata) map[string]string {
 }
 
 func unmapMetadata(info minio.ObjectInfo) (backends.Metadata, error) {
-	m := backends.Metadata{ModTime: info.LastModified}
+	m := backends.Metadata{
+		ModTime: info.LastModified,
+		Size:    info.Size,
+	}
 	for k, v := range info.UserMetadata {
 		k = strings.ToLower(k)
 		switch k {
@@ -46,12 +47,6 @@ func unmapMetadata(info minio.ObjectInfo) (backends.Metadata, error) {
 			}
 
 			m.Expiry = time.Time(expiry)
-		case "size":
-			var err error
-			m.Size, err = strconv.ParseInt(v, 10, 64)
-			if err != nil {
-				return m, err
-			}
 		}
 	}
 	return m, nil

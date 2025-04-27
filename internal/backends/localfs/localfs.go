@@ -26,7 +26,6 @@ type MetadataJSON struct {
 	AccessKey    string          `json:"access_key,omitzero"`
 	Sha256sum    string          `json:"sha256sum"`
 	Mimetype     string          `json:"mimetype"`
-	Size         int64           `json:"size"`
 	Expiry       backends.Expiry `json:"expiry,omitzero"`
 	ArchiveFiles []string        `json:"archive_files,omitzero"`
 }
@@ -99,10 +98,8 @@ func (b Backend) Head(_ context.Context, key string) (backends.Metadata, error) 
 		_ = f.Close()
 	}()
 
-	decoder := json.NewDecoder(f)
-
-	mjson := MetadataJSON{}
-	if err := decoder.Decode(&mjson); err != nil {
+	var mjson MetadataJSON
+	if err := json.NewDecoder(f).Decode(&mjson); err != nil {
 		return metadata, backends.ErrBadMetadata
 	}
 
@@ -112,10 +109,25 @@ func (b Backend) Head(_ context.Context, key string) (backends.Metadata, error) 
 	metadata.ArchiveFiles = mjson.ArchiveFiles
 	metadata.Sha256sum = mjson.Sha256sum
 	metadata.Expiry = time.Time(mjson.Expiry)
-	metadata.Size = mjson.Size
 
 	if stat, err := f.Stat(); err == nil {
 		metadata.ModTime = stat.ModTime()
+	}
+
+	if metadata.Size == 0 {
+		filesRoot, err := os.OpenRoot(b.filesPath)
+		if err != nil {
+			return metadata, err
+		}
+		defer func() {
+			_ = filesRoot.Close()
+		}()
+
+		fileStat, err := filesRoot.Stat(key)
+		if err != nil {
+			return metadata, err
+		}
+		metadata.Size = fileStat.Size()
 	}
 
 	return metadata, nil
@@ -156,7 +168,6 @@ func (b Backend) writeMetadata(key string, metadata backends.Metadata) error {
 		ArchiveFiles: metadata.ArchiveFiles,
 		Sha256sum:    metadata.Sha256sum,
 		Expiry:       backends.Expiry(metadata.Expiry),
-		Size:         metadata.Size,
 	}
 
 	metaRoot, err := os.OpenRoot(b.metaPath)
