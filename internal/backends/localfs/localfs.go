@@ -39,13 +39,6 @@ func (b Backend) Delete(_ context.Context, key string) error {
 		_ = metaRoot.Close()
 	}()
 
-	metaErr := metaRoot.Remove(key + ".json")
-	if metaErr != nil {
-		if errOldPath := metaRoot.Remove(key); errOldPath == nil {
-			metaErr = nil
-		}
-	}
-
 	filesRoot, err := os.OpenRoot(b.filesPath)
 	if err != nil {
 		return err
@@ -53,6 +46,13 @@ func (b Backend) Delete(_ context.Context, key string) error {
 	defer func() {
 		_ = filesRoot.Close()
 	}()
+
+	metaErr := metaRoot.Remove(key + ".json")
+	if metaErr != nil {
+		if errOldPath := metaRoot.Remove(key); errOldPath == nil {
+			metaErr = nil
+		}
+	}
 
 	return errors.Join(filesRoot.Remove(key), metaErr)
 }
@@ -114,21 +114,19 @@ func (b Backend) Head(_ context.Context, key string) (backends.Metadata, error) 
 		metadata.ModTime = stat.ModTime()
 	}
 
-	if metadata.Size == 0 {
-		filesRoot, err := os.OpenRoot(b.filesPath)
-		if err != nil {
-			return metadata, err
-		}
-		defer func() {
-			_ = filesRoot.Close()
-		}()
-
-		fileStat, err := filesRoot.Stat(key)
-		if err != nil {
-			return metadata, err
-		}
-		metadata.Size = fileStat.Size()
+	filesRoot, err := os.OpenRoot(b.filesPath)
+	if err != nil {
+		return metadata, err
 	}
+	defer func() {
+		_ = filesRoot.Close()
+	}()
+
+	fileStat, err := filesRoot.Stat(key)
+	if err != nil {
+		return metadata, err
+	}
+	metadata.Size = fileStat.Size()
 
 	return metadata, nil
 }
