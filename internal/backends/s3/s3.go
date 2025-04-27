@@ -60,11 +60,13 @@ func (b Backend) Get(ctx context.Context, key string) (backends.Metadata, io.Rea
 
 	info, err := obj.Stat()
 	if err != nil {
+		_ = obj.Close()
 		return backends.Metadata{}, nil, err
 	}
 
 	m, err := unmapMetadata(info)
 	if err != nil {
+		_ = obj.Close()
 		return backends.Metadata{}, nil, err
 	}
 
