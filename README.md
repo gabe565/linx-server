@@ -94,26 +94,6 @@ Run linx-server normally.
 ### 2. Using the built-in https server
 Run linx-server with the `cert-file = path/to/cert.file` and `key-file = path/to/key.file` options.
 
-### 3. Using fastcgi
-
-A suggested deployment is running nginx in front of linx-server serving through fastcgi.
-This allows you to have nginx handle the TLS termination for example.  
-An example configuration:
-```
-server {
-    ...
-    server_name yourlinx.example.org;
-    ...
-    
-    client_max_body_size 4096M;
-    location / {
-        fastcgi_pass 127.0.0.1:8080;
-        include fastcgi_params;
-    }
-}
-```
-And run linx-server with the `fastcgi = true` option.
-
 ## Author
 - Andrei Marcu, https://andreim.net
 - Gabe Cook, https://gabecook.com

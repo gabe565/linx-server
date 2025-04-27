@@ -18,7 +18,6 @@ type Config struct {
 	SiteURL     URL    `toml:"site-url"`
 	FrontendURL string `toml:"frontend-url,omitempty"`
 	SelifPath   string `toml:"selif-path"             comment:"Path relative to site base url where files are accessed directly"`
-	Fastcgi     bool   `toml:"fastcgi"                comment:"Serve through fastcgi"`
 
 	MaxSize             Bytes    `toml:"max-size"              comment:"Maximum upload file size"`
 	MaxExpiry           Duration `toml:"max-expiry"            comment:"Maximum expiration time (a value of 0s means no expiry)"`

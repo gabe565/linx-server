@@ -18,7 +18,6 @@ linx-server [flags]
       --cleanup-every duration        How often to clean up expired files. A value of 0 means files will be cleaned up as they are accessed. (default 1h0m0s)
   -c, --config string                 Path to the config file (default "$HOME/.config/linx-server/config.toml")
       --custom-pages-path string      Path to directory containing .md files to render as custom pages
-      --fastcgi                       Serve through fastcgi
       --files-path string             Path to files directory (default "data/files")
       --force-random-filename         Force all uploads to use a random filename
   -h, --help                          help for linx-server

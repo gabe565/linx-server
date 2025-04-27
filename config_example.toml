@@ -7,8 +7,6 @@ site-name = 'Linx'
 site-url = ''
 # Path relative to site base url where files are accessed directly
 selif-path = 'selif'
-# Serve through fastcgi
-fastcgi = false
 # Maximum upload file size
 max-size = '4 GiB'
 # Maximum expiration time (a value of 0s means no expiry)
