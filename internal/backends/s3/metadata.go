@@ -9,19 +9,27 @@ import (
 	"github.com/minio/minio-go/v7"
 )
 
+const (
+	DeleteKey = "deletekey"
+	AccessKey = "accesskey"
+	Sha256sum = "sha256sum"
+	Mimetype  = "mimetype"
+	Expiry    = "expiry"
+)
+
 func mapMetadata(m backends.Metadata) map[string]string {
 	mapped := make(map[string]string, 4)
 	if m.DeleteKey != "" {
-		mapped["deletekey"] = m.DeleteKey
+		mapped[DeleteKey] = m.DeleteKey
 	}
 	if m.AccessKey != "" {
-		mapped["accesskey"] = m.AccessKey
+		mapped[AccessKey] = m.AccessKey
 	}
 	if m.Sha256sum != "" {
-		mapped["sha256sum"] = m.Sha256sum
+		mapped[Sha256sum] = m.Sha256sum
 	}
 	if !m.Expiry.IsZero() {
-		mapped["expiry"] = m.Expiry.Format(time.RFC3339)
+		mapped[Expiry] = m.Expiry.Format(time.RFC3339)
 	}
 	return mapped
 }
@@ -35,15 +43,15 @@ func unmapMetadata(info minio.ObjectInfo) (backends.Metadata, error) {
 	for k, v := range info.UserMetadata {
 		k = strings.ToLower(k)
 		switch k {
-		case "deletekey", "delete_key":
+		case DeleteKey, "delete_key":
 			m.DeleteKey = v
-		case "accesskey":
+		case AccessKey:
 			m.AccessKey = v
-		case "sha256sum":
+		case Sha256sum:
 			m.Sha256sum = v
-		case "mimetype":
+		case Mimetype:
 			m.Mimetype = v
-		case "expiry":
+		case Expiry:
 			b, err := json.Marshal(v)
 			if err != nil {
 				return m, err
