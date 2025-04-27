@@ -170,6 +170,10 @@ func Setup(ctx context.Context) (*chi.Mux, error) {
 		}
 	})
 
+	for _, p := range append(customPages, "paste", "api") {
+		r.Get("/"+p, handlers.AssetHandler)
+	}
+
 	r.NotFound(handlers.AssetHandler)
 
 	return r, nil
