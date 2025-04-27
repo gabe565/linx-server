@@ -51,6 +51,8 @@ func run(cmd *cobra.Command, _ []string) error {
 
 	cmd.SilenceUsage = true
 
+	slog.Info("Linx Server", "version", cobrax.GetVersion(cmd), "commit", cobrax.GetCommit(cmd))
+
 	mux, err := server.Setup(cmd.Context())
 	if err != nil {
 		return err
