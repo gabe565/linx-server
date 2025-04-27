@@ -121,16 +121,7 @@ func POSTHandler(w http.ResponseWriter, r *http.Request) {
 
 	upload, err := Process(r.Context(), upReq)
 	if err != nil {
-		var maxBytes *http.MaxBytesError
-		switch {
-		case errors.As(err, &maxBytes):
-			handlers.ErrorMsg(w, r, http.StatusRequestEntityTooLarge, "File too large")
-		case errors.Is(err, backends.ErrFileEmpty):
-			handlers.ErrorMsg(w, r, http.StatusBadRequest, "Empty file")
-		default:
-			slog.Error("Upload failed", "error", err)
-			handlers.Error(w, r, http.StatusInternalServerError)
-		}
+		HandleProcessError(w, r, err)
 		return
 	}
 
@@ -154,15 +145,7 @@ func PUTHandler(w http.ResponseWriter, r *http.Request) {
 
 	upload, err := Process(r.Context(), upReq)
 	if err != nil {
-		var maxBytes *http.MaxBytesError
-		switch {
-		case errors.As(err, &maxBytes):
-			handlers.ErrorMsg(w, r, http.StatusRequestEntityTooLarge, "File too large")
-		case errors.Is(err, backends.ErrFileEmpty):
-			handlers.ErrorMsg(w, r, http.StatusBadRequest, "Empty file")
-		default:
-			handlers.Error(w, r, http.StatusInternalServerError)
-		}
+		HandleProcessError(w, r, err)
 		return
 	}
 
@@ -244,12 +227,7 @@ func Remote(w http.ResponseWriter, r *http.Request) {
 
 	upload, err := Process(r.Context(), upReq)
 	if err != nil {
-		var maxBytes *http.MaxBytesError
-		if errors.As(err, &maxBytes) {
-			handlers.ErrorMsg(w, r, http.StatusRequestEntityTooLarge, "File too large")
-		} else {
-			handlers.Error(w, r, http.StatusInternalServerError)
-		}
+		HandleProcessError(w, r, err)
 		return
 	}
 
@@ -403,6 +381,21 @@ func Process(ctx context.Context, upReq Request) (Upload, error) {
 	}
 
 	return upload, err
+}
+
+func HandleProcessError(w http.ResponseWriter, r *http.Request, err error) {
+	var maxBytes *http.MaxBytesError
+	switch {
+	case errors.As(err, &maxBytes):
+		handlers.ErrorMsg(w, r, http.StatusRequestEntityTooLarge, "File too large")
+	case errors.Is(err, backends.ErrFileEmpty):
+		handlers.ErrorMsg(w, r, http.StatusBadRequest, "Empty file")
+	case errors.Is(err, ErrProhibitedFilename):
+		handlers.ErrorMsg(w, r, http.StatusBadRequest, "Prohibited filename")
+	default:
+		slog.Error("Upload failed", "error", err)
+		handlers.Error(w, r, http.StatusInternalServerError)
+	}
 }
 
 func GenerateBarename() string {
