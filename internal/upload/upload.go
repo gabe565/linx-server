@@ -54,6 +54,34 @@ type Upload struct {
 	Metadata backends.Metadata
 }
 
+type JSONResponse struct {
+	URL       string `json:"url"`
+	DirectURL string `json:"direct_url"`
+	Filename  string `json:"filename"`
+	DeleteKey string `json:"delete_key"`
+	AccessKey string `json:"access_key"`
+	Expiry    string `json:"expiry"`
+	Size      string `json:"size"`
+	Mimetype  string `json:"mimetype"`
+}
+
+func (u Upload) JSONResponse(r *http.Request) JSONResponse {
+	var expiry int64
+	if v := u.Metadata.Expiry.Unix(); v > 0 {
+		expiry = v
+	}
+	return JSONResponse{
+		URL:       headers.GetFileURL(r, u.Filename).String(),
+		DirectURL: headers.GetSelifURL(r, u.Filename).String(),
+		Filename:  u.Filename,
+		DeleteKey: u.Metadata.DeleteKey,
+		AccessKey: u.Metadata.AccessKey,
+		Expiry:    strconv.FormatInt(expiry, 10),
+		Size:      strconv.FormatInt(u.Metadata.Size, 10),
+		Mimetype:  u.Metadata.Mimetype,
+	}
+}
+
 func POSTHandler(w http.ResponseWriter, r *http.Request) {
 	if config.Default.FrontendURL == "" {
 		siteURL := headers.GetSiteURL(r).String()
@@ -128,9 +156,8 @@ func POSTHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Vary", "Accept")
 
 	if strings.EqualFold("application/json", r.Header.Get("Accept")) {
-		js := GenerateJSONresponse(upload, r)
 		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write(js)
+		_ = json.NewEncoder(w).Encode(upload.JSONResponse(r))
 	} else {
 		http.Redirect(w, r, headers.GetFileURL(r, upload.Filename).String(), http.StatusSeeOther)
 	}
@@ -151,9 +178,8 @@ func PUTHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Vary", "Accept")
 	if strings.EqualFold("application/json", r.Header.Get("Accept")) {
-		js := GenerateJSONresponse(upload, r)
 		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write(js)
+		_ = json.NewEncoder(w).Encode(upload.JSONResponse(r))
 	} else {
 		_, _ = io.WriteString(w, headers.GetFileURL(r, upload.Filename).String()+"\n")
 	}
@@ -234,9 +260,8 @@ func Remote(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "no-store")
 
 	if strings.EqualFold("application/json", r.Header.Get("Accept")) {
-		js := GenerateJSONresponse(upload, r)
 		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write(js)
+		_ = json.NewEncoder(w).Encode(upload.JSONResponse(r))
 	} else {
 		var u *url.URL
 		if directURL {
@@ -400,26 +425,6 @@ func HandleProcessError(w http.ResponseWriter, r *http.Request, err error) {
 
 func GenerateBarename() string {
 	return uniuri.NewLenChars(8, []byte("abcdefghijklmnopqrstuvwxyz0123456789"))
-}
-
-func GenerateJSONresponse(upload Upload, r *http.Request) []byte {
-	var expiry int64
-	if v := upload.Metadata.Expiry.Unix(); v > 0 {
-		expiry = v
-	}
-	js, _ := json.Marshal(map[string]string{
-		"url":        headers.GetFileURL(r, upload.Filename).String(),
-		"direct_url": headers.GetSelifURL(r, upload.Filename).String(),
-		"filename":   upload.Filename,
-		"delete_key": upload.Metadata.DeleteKey,
-		"access_key": upload.Metadata.AccessKey,
-		"expiry":     strconv.FormatInt(expiry, 10),
-		"size":       strconv.FormatInt(upload.Metadata.Size, 10),
-		"mimetype":   upload.Metadata.Mimetype,
-		"sha256sum":  upload.Metadata.Sha256sum,
-	})
-
-	return js
 }
 
 //nolint:gochecknoglobals
