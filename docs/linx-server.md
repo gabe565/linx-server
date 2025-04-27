@@ -45,4 +45,5 @@ linx-server [flags]
 
 * [linx-server cleanup](linx-server_cleanup.md)	 - Manually clean up expired files
 * [linx-server genkey](linx-server_genkey.md)	 - Generate auth file hashed keys
+* [linx-server migrate](linx-server_migrate.md)	 - Migrate uploads to a new storage backend
 

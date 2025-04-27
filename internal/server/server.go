@@ -2,9 +2,7 @@ package server
 
 import (
 	"context"
-	"fmt"
 	"net/http"
-	"os"
 	"path"
 	"strconv"
 	"strings"
@@ -12,8 +10,6 @@ import (
 
 	"gabe565.com/linx-server/internal/auth/apikeys"
 	"gabe565.com/linx-server/internal/backends"
-	"gabe565.com/linx-server/internal/backends/localfs"
-	"gabe565.com/linx-server/internal/backends/s3"
 	"gabe565.com/linx-server/internal/cleanup"
 	"gabe565.com/linx-server/internal/config"
 	"gabe565.com/linx-server/internal/handlers"
@@ -37,28 +33,9 @@ func Setup(ctx context.Context) (*chi.Mux, error) {
 	}
 	config.Default.SelifPath = strings.Trim(config.Default.SelifPath, "/") + "/"
 
-	if config.Default.S3.Bucket != "" {
-		config.StorageBackend, err = s3.New(ctx,
-			config.Default.S3.Bucket,
-			config.Default.S3.Region,
-			config.Default.S3.Endpoint,
-			config.Default.S3.ForcePathStyle,
-		)
-		if err != nil {
-			return nil, fmt.Errorf("failed to create S3 backend: %w", err)
-		}
-	} else {
-		err := os.MkdirAll(config.Default.FilesPath, 0o755)
-		if err != nil {
-			return nil, fmt.Errorf("could not create files directory: %w", err)
-		}
-
-		err = os.MkdirAll(config.Default.MetaPath, 0o700)
-		if err != nil {
-			return nil, fmt.Errorf("could not create metadata directory: %w", err)
-		}
-
-		config.StorageBackend = localfs.New(config.Default.MetaPath, config.Default.FilesPath)
+	config.StorageBackend, err = config.Default.NewStorageBackend(ctx)
+	if err != nil {
+		return nil, err
 	}
 
 	if config.Default.CleanupEvery.Duration > 0 {

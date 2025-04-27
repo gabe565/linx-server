@@ -53,6 +53,13 @@ func (c *Config) RegisterBasicFlags(cmd *cobra.Command) {
 	fs.StringVar(&c.FilesPath, FlagFilesPath, c.FilesPath, "Path to files directory")
 	fs.StringVar(&c.MetaPath, FlagMetaPath, c.MetaPath, "Path to metadata directory")
 	fs.BoolVar(&c.NoLogs, FlagNoLogs, c.NoLogs, "Remove logging of each request")
+
+	fs.StringVar(&c.S3.Endpoint, FlagS3Endpoint, c.S3.Endpoint, "S3 endpoint")
+	fs.StringVar(&c.S3.Region, FlagS3Region, c.S3.Region, "S3 region")
+	fs.StringVar(&c.S3.Bucket, FlagS3Bucket, c.S3.Bucket, "S3 bucket to use for files and metadata")
+	fs.BoolVar(&c.S3.ForcePathStyle, FlagS3ForcePathStyle, c.S3.ForcePathStyle,
+		"Force path-style addressing for S3 (e.g. https://s3.amazonaws.com/linx/example.txt)",
+	)
 }
 
 func (c *Config) RegisterServeFlags(cmd *cobra.Command) {
@@ -91,12 +98,6 @@ func (c *Config) RegisterServeFlags(cmd *cobra.Command) {
 	)
 	fs.BoolVar(&c.NoDirectAgents, FlagNoDirectAgents, c.NoDirectAgents,
 		"Disable serving files directly for wget/curl user agents",
-	)
-	fs.StringVar(&c.S3.Endpoint, FlagS3Endpoint, c.S3.Endpoint, "S3 endpoint")
-	fs.StringVar(&c.S3.Region, FlagS3Region, c.S3.Region, "S3 region")
-	fs.StringVar(&c.S3.Bucket, FlagS3Bucket, c.S3.Bucket, "S3 bucket to use for files and metadata")
-	fs.BoolVar(&c.S3.ForcePathStyle, FlagS3ForcePathStyle, c.S3.ForcePathStyle,
-		"Force path-style addressing for S3 (e.g. https://s3.amazonaws.com/linx/example.txt)",
 	)
 	fs.BoolVar(&c.ForceRandomFilename, FlagForceRandomFilename, c.ForceRandomFilename,
 		"Force all uploads to use a random filename",

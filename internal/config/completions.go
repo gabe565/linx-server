@@ -28,10 +28,20 @@ func RegisterBasicCompletions(cmd *cobra.Command) {
 				return nil, cobra.ShellCompDirectiveFilterDirs
 			},
 		),
+		cmd.RegisterFlagCompletionFunc(
+			FlagS3Endpoint,
+			func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
+				return []string{"https://"}, cobra.ShellCompDirectiveNoFileComp
+			},
+		),
+		cmd.RegisterFlagCompletionFunc(FlagS3Region, cobra.NoFileCompletions),
+		cmd.RegisterFlagCompletionFunc(FlagS3Bucket, cobra.NoFileCompletions),
 	))
 }
 
 func RegisterServeCompletions(cmd *cobra.Command) {
+	RegisterBasicCompletions(cmd)
+
 	must.Must(errors.Join(
 		cmd.RegisterFlagCompletionFunc(
 			FlagBind,
@@ -100,14 +110,6 @@ func RegisterServeCompletions(cmd *cobra.Command) {
 				return []string{"key"}, cobra.ShellCompDirectiveFilterFileExt
 			},
 		),
-		cmd.RegisterFlagCompletionFunc(
-			FlagS3Endpoint,
-			func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
-				return []string{"https://"}, cobra.ShellCompDirectiveNoFileComp
-			},
-		),
-		cmd.RegisterFlagCompletionFunc(FlagS3Region, cobra.NoFileCompletions),
-		cmd.RegisterFlagCompletionFunc(FlagS3Bucket, cobra.NoFileCompletions),
 		cmd.RegisterFlagCompletionFunc(FlagAuthCookieExpiry, cobra.NoFileCompletions),
 		cmd.RegisterFlagCompletionFunc(
 			FlagCustomPagesDir,

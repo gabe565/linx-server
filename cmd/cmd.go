@@ -14,6 +14,7 @@ import (
 
 	"gabe565.com/linx-server/cmd/cleanup"
 	"gabe565.com/linx-server/cmd/genkey"
+	"gabe565.com/linx-server/cmd/migrate"
 	"gabe565.com/linx-server/internal/config"
 	"gabe565.com/linx-server/internal/server"
 	"gabe565.com/utils/cobrax"
@@ -33,9 +34,9 @@ func New(options ...cobrax.Option) *cobra.Command {
 	cmd.AddCommand(
 		cleanup.New(),
 		genkey.New(),
+		migrate.New(),
 	)
 	config.Default.RegisterServeFlags(cmd)
-	config.RegisterBasicCompletions(cmd)
 	config.RegisterServeCompletions(cmd)
 	for _, option := range options {
 		option(cmd)
