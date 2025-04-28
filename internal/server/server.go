@@ -3,7 +3,6 @@ package server
 import (
 	"net/http"
 	"path"
-	"strconv"
 	"strings"
 	"time"
 
@@ -31,7 +30,6 @@ func Setup() (*chi.Mux, error) {
 	config.Default.SelifPath = strings.Trim(config.Default.SelifPath, "/") + "/"
 
 	config.TimeStarted = time.Now()
-	config.TimeStartedStr = strconv.FormatInt(config.TimeStarted.Unix(), 10)
 
 	// Routing setup
 	r := chi.NewRouter()

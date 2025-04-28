@@ -117,7 +117,6 @@ var (
 	Default        = New()
 	StorageBackend backends.StorageBackend
 	TimeStarted    time.Time
-	TimeStartedStr string
 	RemoteAuthKeys []string
 )
 
