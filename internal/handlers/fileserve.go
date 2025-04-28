@@ -131,7 +131,7 @@ func CheckFile(ctx context.Context, filename string) (backends.Metadata, error) 
 
 	if expiry.IsTSExpired(metadata.Expiry) {
 		go func() {
-			if err := config.StorageBackend.Delete(ctx, filename); err != nil {
+			if err := config.StorageBackend.Delete(context.Background(), filename); err != nil {
 				slog.Error("Failed to delete expired file", "path", filename, "error", err)
 			}
 		}()

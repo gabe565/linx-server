@@ -2,6 +2,7 @@ package torrent
 
 import (
 	"bytes"
+	"context"
 	"crypto/sha1" //nolint:gosec
 	"errors"
 	"io"
@@ -101,7 +102,7 @@ func FileTorrentHandler(w http.ResponseWriter, r *http.Request) {
 
 	if expiry.IsTSExpired(metadata.Expiry) {
 		go func() {
-			if err := config.StorageBackend.Delete(r.Context(), fileName); err != nil {
+			if err := config.StorageBackend.Delete(context.Background(), fileName); err != nil {
 				slog.Error("Failed to delete expired file", "path", fileName)
 			}
 		}()
