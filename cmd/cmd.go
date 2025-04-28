@@ -69,8 +69,8 @@ func run(cmd *cobra.Command, _ []string) error {
 
 	group.Go(func() error {
 		<-ctx.Done()
-		const timeout = 10 * time.Second
-		slog.Info("Gracefully shutting down", "timeout", timeout.String())
+		timeout := config.Default.GracefulShutdown.Duration
+		slog.Info("Gracefully shutting down", "timeout", timeout)
 		ctx, cancel := context.WithTimeout(context.Background(), timeout)
 		defer cancel()
 		return srv.Shutdown(ctx)

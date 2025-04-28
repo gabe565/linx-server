@@ -7,6 +7,8 @@ site-name = 'Linx'
 site-url = ''
 # Path relative to site base url where files are accessed directly
 selif-path = 'selif'
+# Maximum time to wait for requests to finish during shutdown
+graceful-shutdown = '30s'
 # Maximum upload file size
 max-size = '4 GiB'
 # Maximum expiration time (a value of 0s means no expiry)

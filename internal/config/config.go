@@ -11,13 +11,14 @@ import (
 )
 
 type Config struct {
-	Bind        string `toml:"bind"`
-	FilesPath   string `toml:"files-path"             comment:"Path to files directory"`
-	MetaPath    string `toml:"meta-path"              comment:"Path to metadata directory"`
-	SiteName    string `toml:"site-name"`
-	SiteURL     URL    `toml:"site-url"`
-	FrontendURL string `toml:"frontend-url,omitempty"`
-	SelifPath   string `toml:"selif-path"             comment:"Path relative to site base url where files are accessed directly"`
+	Bind             string   `toml:"bind"`
+	FilesPath        string   `toml:"files-path"             comment:"Path to files directory"`
+	MetaPath         string   `toml:"meta-path"              comment:"Path to metadata directory"`
+	SiteName         string   `toml:"site-name"`
+	SiteURL          URL      `toml:"site-url"`
+	FrontendURL      string   `toml:"frontend-url,omitempty"`
+	SelifPath        string   `toml:"selif-path"             comment:"Path relative to site base url where files are accessed directly"`
+	GracefulShutdown Duration `toml:"graceful-shutdown"      comment:"Maximum time to wait for requests to finish during shutdown"`
 
 	MaxSize             Bytes    `toml:"max-size"              comment:"Maximum upload file size"`
 	MaxExpiry           Duration `toml:"max-expiry"            comment:"Maximum expiration time (a value of 0s means no expiry)"`
@@ -79,14 +80,15 @@ type Header struct {
 
 func New() *Config {
 	c := &Config{
-		Bind:            "127.0.0.1:8080",
-		FilesPath:       "data/files",
-		MetaPath:        "data/meta",
-		SiteName:        "Linx",
-		SelifPath:       "selif",
-		MaxSize:         4 * bytefmt.GiB,
-		UploadMaxMemory: 32 * bytefmt.MiB,
-		CleanupEvery:    Duration{time.Hour},
+		Bind:             "127.0.0.1:8080",
+		FilesPath:        "data/files",
+		MetaPath:         "data/meta",
+		SiteName:         "Linx",
+		SelifPath:        "selif",
+		GracefulShutdown: Duration{30 * time.Second},
+		MaxSize:          4 * bytefmt.GiB,
+		UploadMaxMemory:  32 * bytefmt.MiB,
+		CleanupEvery:     Duration{time.Hour},
 		Limit: Limit{
 			UploadMaxRequests: 5,
 			UploadInterval:    Duration{15 * time.Second},

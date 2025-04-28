@@ -20,6 +20,7 @@ const (
 	FlagSiteURL             = "site-url"
 	FlagFrontendURL         = "frontend-url"
 	FlagSelifPath           = "selif-path"
+	FlagGracefulShutdown    = "graceful-shutdown"
 	FlagMaxSize             = "max-size"
 	FlagMaxExpiry           = "max-expiry"
 	FlagUploadMaxMemory     = "upload-max-memory"
@@ -80,6 +81,9 @@ func (c *Config) RegisterServeFlags(cmd *cobra.Command) {
 	must.Must(fs.MarkHidden(FlagFrontendURL))
 	fs.StringVar(&c.SelifPath, FlagSelifPath, c.SelifPath,
 		"Path relative to site base url where files are accessed directly",
+	)
+	fs.DurationVar(&c.GracefulShutdown.Duration, FlagGracefulShutdown, c.GracefulShutdown.Duration,
+		"Maximum time to wait for requests to finish during shutdown",
 	)
 	fs.Var(&c.MaxSize, FlagMaxSize, "Maximum upload file size")
 	fs.DurationVar(&c.MaxExpiry.Duration, FlagMaxExpiry, c.MaxExpiry.Duration,
