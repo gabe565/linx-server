@@ -9,12 +9,20 @@
         <li v-for="(item, key) in items" :key="item.filename || key">
           <Card v-if="'progress' in item" class="relative py-4 overflow-hidden">
             <CardHeader class="px-4">
-              <CardDescription class="flex flex-col gap-3">
-                <Skeleton class="h-3.5 w-1/2" />
-                <Skeleton class="h-2.5 w-1/4" />
+              <CardTitle class="min-w-0 wrap-break-word">{{ item.original_name }}</CardTitle>
+              <CardDescription>
+                <Skeleton class="h-2.5 mt-2 mb-0.5 w-1/4" />
               </CardDescription>
               <CardAction>
-                <Skeleton class="h-9 w-18" />
+                <Button
+                  variant="secondary"
+                  size="icon"
+                  @click.prevent="item.controller.abort()"
+                  class="w-18"
+                >
+                  <span class="sr-only">Cancel</span>
+                  <CloseIcon />
+                </Button>
               </CardAction>
             </CardHeader>
             <Progress
@@ -96,6 +104,7 @@ import { Skeleton } from "@/components/ui/skeleton/index.js";
 import { useUploadStore } from "@/stores/upload.js";
 import { UseTimeAgo } from "@vueuse/components";
 import { computed } from "vue";
+import CloseIcon from "~icons/material-symbols/close-rounded";
 import CopyIcon from "~icons/material-symbols/content-copy-rounded";
 import DeleteIcon from "~icons/material-symbols/delete-rounded";
 

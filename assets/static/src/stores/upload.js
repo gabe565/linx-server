@@ -38,7 +38,8 @@ export const useUploadStore = defineStore(
       password,
       saveOriginalName = true,
     }) => {
-      const upload = ref({ progress: 0 });
+      const controller = new AbortController();
+      const upload = ref({ original_name: file.name, progress: 0, controller });
       const id = uploadID++;
       inProgress.value[id] = upload;
 
@@ -56,6 +57,7 @@ export const useUploadStore = defineStore(
             Accept: "application/json",
             "Linx-Api-Key": config.apiKey,
           },
+          signal: controller.signal,
           validateStatus: (s) => s === 200,
           onUploadProgress({ progress: newVal }) {
             upload.value.progress = newVal * 100;
@@ -77,7 +79,11 @@ export const useUploadStore = defineStore(
         removeExpired();
         return res.data;
       } catch (err) {
-        toast.error("Upload failed", { description: err.response?.data?.error || err.message });
+        let description = err.response?.data?.error || err.message;
+        if (description === "canceled") {
+          description = "Canceled by user";
+        }
+        toast.error("Upload failed", { description });
         throw err;
       } finally {
         delete inProgress.value[id];
