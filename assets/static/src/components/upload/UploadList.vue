@@ -14,15 +14,22 @@
                 <Skeleton class="h-2.5 mt-2 mb-0.5 w-1/4" />
               </CardDescription>
               <CardAction>
-                <Button
-                  variant="secondary"
-                  size="icon"
-                  @click.prevent="item.controller.abort()"
-                  class="w-18"
-                >
-                  <span class="sr-only">Cancel</span>
-                  <CloseIcon />
-                </Button>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <Button
+                        variant="secondary"
+                        size="icon"
+                        @click.prevent="item.controller.abort()"
+                        class="w-18"
+                      >
+                        <span class="sr-only">Cancel</span>
+                        <CloseIcon />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Cancel</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </CardAction>
             </CardHeader>
             <Progress
@@ -62,24 +69,36 @@
               </CardDescription>
 
               <CardAction>
-                <Button
-                  variant="secondary"
-                  size="icon"
-                  @click.prevent="upload.copy(item)"
-                  class="rounded-r-none"
-                >
-                  <span class="sr-only">Copy</span>
-                  <CopyIcon />
-                </Button>
-                <Button
-                  variant="destructive"
-                  size="icon"
-                  @click.prevent="deleteItem(item)"
-                  class="rounded-l-none"
-                >
-                  <span class="sr-only">Delete</span>
-                  <DeleteIcon />
-                </Button>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <Button
+                        variant="secondary"
+                        size="icon"
+                        @click.prevent="upload.copy(item)"
+                        class="rounded-r-none"
+                      >
+                        <span class="sr-only">Copy</span>
+                        <CopyIcon />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Copy Link</TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <Button
+                        variant="destructive"
+                        size="icon"
+                        @click.prevent="deleteItem(item)"
+                        class="rounded-l-none"
+                      >
+                        <span class="sr-only">Delete</span>
+                        <DeleteIcon />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Delete</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </CardAction>
             </CardHeader>
           </Card>
@@ -101,6 +120,12 @@ import {
 } from "@/components/ui/card/index.js";
 import { Progress } from "@/components/ui/progress/index.js";
 import { Skeleton } from "@/components/ui/skeleton/index.js";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip/index.js";
 import { useUploadStore } from "@/stores/upload.js";
 import { UseTimeAgo } from "@vueuse/components";
 import { computed } from "vue";
