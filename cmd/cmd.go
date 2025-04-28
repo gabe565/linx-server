@@ -17,6 +17,7 @@ import (
 	"gabe565.com/linx-server/internal/server"
 	"gabe565.com/utils/cobrax"
 	"github.com/spf13/cobra"
+	"golang.org/x/sync/errgroup"
 )
 
 func New(options ...cobrax.Option) *cobra.Command {
@@ -64,23 +65,27 @@ func run(cmd *cobra.Command, _ []string) error {
 		ReadHeaderTimeout: 3 * time.Second,
 	}
 
-	go func() {
+	group, ctx := errgroup.WithContext(ctx)
+
+	group.Go(func() error {
 		<-ctx.Done()
 		const timeout = 10 * time.Second
 		slog.Info("Gracefully shutting down", "timeout", timeout.String())
 		ctx, cancel := context.WithTimeout(context.Background(), timeout)
 		defer cancel()
-		_ = srv.Shutdown(ctx)
-	}()
+		return srv.Shutdown(ctx)
+	})
 
-	if config.Default.TLS.Cert != "" {
-		slog.Info("Serving over https", "address", config.Default.Bind)
-		err = srv.ListenAndServeTLS(config.Default.TLS.Cert, config.Default.TLS.Key)
-	} else {
+	group.Go(func() error {
+		if config.Default.TLS.Cert != "" {
+			slog.Info("Serving over https", "address", config.Default.Bind)
+			return srv.ListenAndServeTLS(config.Default.TLS.Cert, config.Default.TLS.Key)
+		}
 		slog.Info("Serving over http", "address", config.Default.Bind)
-		err = srv.ListenAndServe()
-	}
+		return srv.ListenAndServe()
+	})
 
+	err = group.Wait()
 	if errors.Is(err, http.ErrServerClosed) {
 		err = nil
 	}
