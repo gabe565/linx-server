@@ -43,12 +43,14 @@ func setup(t *testing.T) (*chi.Mux, *httptest.ResponseRecorder) {
 
 	config.Default.FilesPath = t.TempDir()
 	config.Default.MetaPath = config.Default.FilesPath + "_meta"
+	config.StorageBackend, err = config.Default.NewStorageBackend(t.Context())
+	require.NoError(t, err)
 	config.Default.MaxSize = bytefmt.GiB
 	config.Default.NoLogs = true
 	config.Default.SiteName = "linx"
 	t.Cleanup(func() { config.Default = config.New() })
 
-	r, err := server.Setup(t.Context())
+	r, err := server.Setup()
 	require.NoError(t, err)
 	return r, httptest.NewRecorder()
 }
@@ -623,7 +625,7 @@ func TestPutEmptyUpload(t *testing.T) {
 func TestPutTooLargeUpload(t *testing.T) {
 	_, w := setup(t)
 	config.Default.MaxSize = 2
-	r, err := server.Setup(t.Context())
+	r, err := server.Setup()
 	require.NoError(t, err)
 
 	filename := upload.GenerateBarename() + ".file"

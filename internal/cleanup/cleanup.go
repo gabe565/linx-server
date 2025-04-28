@@ -34,7 +34,7 @@ func Cleanup(ctx context.Context, backend backends.ListBackend, noLogs bool) err
 			if !noLogs {
 				slog.Info("Delete upload", "name", filename)
 			}
-			if err := backend.Delete(context.Background(), filename); err != nil {
+			if err := backend.Delete(ctx, filename); err != nil {
 				errs = append(errs, err)
 			}
 		}
@@ -42,13 +42,19 @@ func Cleanup(ctx context.Context, backend backends.ListBackend, noLogs bool) err
 	return errors.Join(errs...)
 }
 
-func PeriodicCleanup(backend backends.ListBackend, d time.Duration, noLogs bool) {
+func PeriodicCleanup(ctx context.Context, backend backends.ListBackend, d time.Duration, noLogs bool) {
 	ticker := time.NewTicker(time.Second)
 	defer ticker.Stop()
-	for range ticker.C {
-		ticker.Reset(d)
-		if err := Cleanup(context.TODO(), backend, noLogs); err != nil {
-			slog.Error("Cleanup failed", "error", err)
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			ticker.Reset(d)
+			if err := Cleanup(ctx, backend, noLogs); err != nil {
+				slog.Error("Cleanup failed", "error", err)
+			}
+			continue
 		}
 	}
 }

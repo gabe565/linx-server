@@ -1,7 +1,6 @@
 package server
 
 import (
-	"context"
 	"net/http"
 	"path"
 	"strconv"
@@ -9,8 +8,6 @@ import (
 	"time"
 
 	"gabe565.com/linx-server/internal/auth/apikeys"
-	"gabe565.com/linx-server/internal/backends"
-	"gabe565.com/linx-server/internal/cleanup"
 	"gabe565.com/linx-server/internal/config"
 	"gabe565.com/linx-server/internal/handlers"
 	"gabe565.com/linx-server/internal/headers"
@@ -22,7 +19,7 @@ import (
 	"github.com/go-chi/httprate"
 )
 
-func Setup(ctx context.Context) (*chi.Mux, error) {
+func Setup() (*chi.Mux, error) {
 	var err error
 
 	switch config.Default.SiteURL.Path {
@@ -32,17 +29,6 @@ func Setup(ctx context.Context) (*chi.Mux, error) {
 		config.Default.SiteURL.Path = "/" + strings.Trim(config.Default.SiteURL.Path, "/") + "/"
 	}
 	config.Default.SelifPath = strings.Trim(config.Default.SelifPath, "/") + "/"
-
-	config.StorageBackend, err = config.Default.NewStorageBackend(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	if config.Default.CleanupEvery.Duration > 0 {
-		if backend, ok := config.StorageBackend.(backends.ListBackend); ok {
-			go cleanup.PeriodicCleanup(backend, config.Default.CleanupEvery.Duration, config.Default.NoLogs)
-		}
-	}
 
 	config.TimeStarted = time.Now()
 	config.TimeStartedStr = strconv.FormatInt(config.TimeStarted.Unix(), 10)

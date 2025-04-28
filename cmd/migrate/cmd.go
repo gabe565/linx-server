@@ -110,7 +110,7 @@ func run(cmd *cobra.Command, _ []string) error {
 
 var ErrUnknownBackend = errors.New("unknown backend")
 
-func newBackend(ctx context.Context, name string) (backends.ListBackend, error) { //nolint:ireturn
+func newBackend(ctx context.Context, name string) (backends.ListBackend, error) {
 	switch name {
 	case "s3":
 		return config.Default.NewS3Backend(ctx)

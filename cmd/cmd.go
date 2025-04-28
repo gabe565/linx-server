@@ -10,9 +10,11 @@ import (
 	"syscall"
 	"time"
 
-	"gabe565.com/linx-server/cmd/cleanup"
+	cleanupCmd "gabe565.com/linx-server/cmd/cleanup"
 	"gabe565.com/linx-server/cmd/genkey"
 	"gabe565.com/linx-server/cmd/migrate"
+	"gabe565.com/linx-server/internal/backends"
+	"gabe565.com/linx-server/internal/cleanup"
 	"gabe565.com/linx-server/internal/config"
 	"gabe565.com/linx-server/internal/server"
 	"gabe565.com/utils/cobrax"
@@ -30,7 +32,7 @@ func New(options ...cobrax.Option) *cobra.Command {
 		ValidArgsFunction: cobra.NoFileCompletions,
 	}
 	cmd.AddCommand(
-		cleanup.New(),
+		cleanupCmd.New(),
 		genkey.New(),
 		migrate.New(),
 	)
@@ -51,7 +53,12 @@ func run(cmd *cobra.Command, _ []string) error {
 
 	slog.Info("Linx Server", "version", cobrax.GetVersion(cmd), "commit", cobrax.GetCommit(cmd))
 
-	mux, err := server.Setup(cmd.Context())
+	mux, err := server.Setup()
+	if err != nil {
+		return err
+	}
+
+	config.StorageBackend, err = config.Default.NewStorageBackend(cmd.Context())
 	if err != nil {
 		return err
 	}
@@ -84,6 +91,15 @@ func run(cmd *cobra.Command, _ []string) error {
 		slog.Info("Serving over http", "address", config.Default.Bind)
 		return srv.ListenAndServe()
 	})
+
+	if config.Default.CleanupEvery.Duration > 0 {
+		if backend, ok := config.StorageBackend.(backends.ListBackend); ok {
+			group.Go(func() error {
+				cleanup.PeriodicCleanup(ctx, backend, config.Default.CleanupEvery.Duration, config.Default.NoLogs)
+				return nil
+			})
+		}
+	}
 
 	err = group.Wait()
 	if errors.Is(err, http.ErrServerClosed) {

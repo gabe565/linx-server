@@ -30,7 +30,7 @@ func TestContentSecurityPolicy(t *testing.T) {
 	config.Default.Header.ContentSecurityPolicy = testCSPHeaders["Content-Security-Policy"]
 	config.Default.Header.ReferrerPolicy = testCSPHeaders["Referrer-Policy"]
 	config.Default.Header.XFrameOptions = testCSPHeaders["X-Frame-Options"]
-	r, err := Setup(t.Context())
+	r, err := Setup()
 	require.NoError(t, err)
 
 	w := httptest.NewRecorder()
