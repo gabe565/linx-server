@@ -26,7 +26,7 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if metadata.DeleteKey != requestKey {
+	if metadata.DeleteKey == "" || metadata.DeleteKey != requestKey {
 		Error(w, r, http.StatusUnauthorized) // 401 - wrong delete key
 		return
 	}
