@@ -100,20 +100,13 @@ func POSTHandler(w http.ResponseWriter, r *http.Request) {
 
 	if strings.HasPrefix(contentType, "multipart/form-data") {
 		if err := r.ParseMultipartForm(int64(config.Default.UploadMaxMemory)); err != nil {
-			var maxBytes *http.MaxBytesError
-			if errors.As(err, &maxBytes) {
-				handlers.ErrorMsg(w, r, http.StatusRequestEntityTooLarge, "File too large")
-			} else {
-				slog.Error("Upload failed", "error", err)
-				handlers.Error(w, r, http.StatusInternalServerError)
-			}
+			HandleProcessError(w, r, err)
 			return
 		}
 
 		file, headers, err := r.FormFile("file")
 		if err != nil {
-			slog.Error("Upload failed", "error", err)
-			handlers.Error(w, r, http.StatusInternalServerError)
+			HandleProcessError(w, r, err)
 			return
 		}
 		defer func() {
@@ -125,7 +118,7 @@ func POSTHandler(w http.ResponseWriter, r *http.Request) {
 		upReq.filename = headers.Filename
 	} else {
 		if r.PostFormValue("content") == "" {
-			handlers.ErrorMsg(w, r, http.StatusBadRequest, "Empty file")
+			HandleProcessError(w, r, backends.ErrFileEmpty)
 			return
 		}
 		extension := r.PostFormValue("extension")
@@ -417,6 +410,8 @@ func HandleProcessError(w http.ResponseWriter, r *http.Request, err error) {
 		handlers.ErrorMsg(w, r, http.StatusBadRequest, "Empty file")
 	case errors.Is(err, ErrProhibitedFilename):
 		handlers.ErrorMsg(w, r, http.StatusBadRequest, "Prohibited filename")
+	case errors.Is(err, io.ErrUnexpectedEOF):
+		handlers.ErrorMsg(w, r, http.StatusBadRequest, "Upload canceled")
 	default:
 		slog.Error("Upload failed", "error", err)
 		handlers.Error(w, r, http.StatusInternalServerError)
