@@ -65,44 +65,80 @@
                 </UseTimeAgo>
               </CardDescription>
 
-              <CardAction>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger as-child>
-                      <UploadInfo :item="item" />
-                    </TooltipTrigger>
-                    <TooltipContent>Info</TooltipContent>
-                  </Tooltip>
-                  <Tooltip>
-                    <TooltipTrigger as-child>
-                      <Button
-                        variant="secondary"
-                        size="icon"
-                        @click.prevent="upload.copy(item)"
-                        class="rounded-none"
-                      >
-                        <span class="sr-only">Copy</span>
+              <Dialog>
+                <CardAction v-if="smAndLarger">
+                  <TooltipProvider>
+                    <Tooltip>
+                      <DialogTrigger>
+                        <TooltipTrigger as-child>
+                          <Button variant="secondary" size="icon" class="rounded-r-none">
+                            <span class="sr-only">Info</span>
+                            <InfoIcon />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Info</TooltipContent>
+                      </DialogTrigger>
+                    </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger as-child>
+                        <Button
+                          variant="secondary"
+                          size="icon"
+                          @click.prevent="upload.copy(item)"
+                          class="rounded-none"
+                        >
+                          <span class="sr-only">Copy</span>
+                          <CopyIcon />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Copy Link</TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger as-child>
+                        <Button
+                          variant="destructive"
+                          size="icon"
+                          @click.prevent="deleteItem(item)"
+                          class="rounded-l-none"
+                        >
+                          <span class="sr-only">Delete</span>
+                          <DeleteIcon />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Delete</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </CardAction>
+
+                <CardAction v-else>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger>
+                      <Button variant="ghost" size="icon" class="rounded-full">
+                        <MoreIcon />
+                      </Button>
+                    </DropdownMenuTrigger>
+
+                    <DropdownMenuContent side="left">
+                      <DialogTrigger as-child>
+                        <DropdownMenuItem>
+                          <InfoIcon />
+                          Info
+                        </DropdownMenuItem>
+                      </DialogTrigger>
+                      <DropdownMenuItem @click.prevent="upload.copy(item)">
                         <CopyIcon />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Copy Link</TooltipContent>
-                  </Tooltip>
-                  <Tooltip>
-                    <TooltipTrigger as-child>
-                      <Button
-                        variant="destructive"
-                        size="icon"
-                        @click.prevent="deleteItem(item)"
-                        class="rounded-l-none"
-                      >
-                        <span class="sr-only">Delete</span>
+                        Copy
+                      </DropdownMenuItem>
+                      <DropdownMenuItem @click.prevent="deleteItem(item)">
                         <DeleteIcon />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Delete</TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </CardAction>
+                        Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </CardAction>
+
+                <UploadInfo :item="item" />
+              </Dialog>
             </CardHeader>
           </Card>
         </li>
@@ -121,6 +157,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card/index.js";
+import { Dialog, DialogTrigger } from "@/components/ui/dialog/index.js";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu/index.js";
 import { Progress } from "@/components/ui/progress/index.js";
 import { Skeleton } from "@/components/ui/skeleton/index.js";
 import {
@@ -132,10 +175,13 @@ import {
 import UploadInfo from "@/components/upload/UploadInfo.vue";
 import { useUploadStore } from "@/stores/upload.js";
 import { UseTimeAgo } from "@vueuse/components";
+import { breakpointsTailwind, useBreakpoints } from "@vueuse/core";
 import { computed } from "vue";
+import MoreIcon from "~icons/ic/round-more-horiz";
 import CloseIcon from "~icons/material-symbols/close-rounded";
 import CopyIcon from "~icons/material-symbols/content-copy-rounded";
 import DeleteIcon from "~icons/material-symbols/delete-rounded";
+import InfoIcon from "~icons/material-symbols/info-rounded";
 
 const upload = useUploadStore();
 
@@ -144,6 +190,9 @@ const emit = defineEmits(["delete", "error"]);
 const items = computed(() => {
   return Object.values(upload.inProgress).concat(upload.uploads);
 });
+
+const breakpoints = useBreakpoints(breakpointsTailwind);
+const smAndLarger = breakpoints.greaterOrEqual("sm");
 
 const deleteItem = async (item) => {
   try {
