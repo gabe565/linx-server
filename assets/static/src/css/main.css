@@ -159,3 +159,7 @@ button,
 .prose {
   @apply dark:prose-invert prose-neutral prose-blue max-w-none;
 }
+
+@utility link {
+  @apply text-blue-600 dark:text-blue-400 hover:underline;
+}
