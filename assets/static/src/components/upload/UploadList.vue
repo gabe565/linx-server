@@ -16,7 +16,7 @@
               <CardAction>
                 <TooltipProvider>
                   <Tooltip>
-                    <TooltipTrigger>
+                    <TooltipTrigger as-child>
                       <Button
                         variant="secondary"
                         size="icon"
@@ -71,7 +71,7 @@
               <CardAction>
                 <TooltipProvider>
                   <Tooltip>
-                    <TooltipTrigger>
+                    <TooltipTrigger as-child>
                       <Button
                         variant="secondary"
                         size="icon"
@@ -85,7 +85,7 @@
                     <TooltipContent>Copy Link</TooltipContent>
                   </Tooltip>
                   <Tooltip>
-                    <TooltipTrigger>
+                    <TooltipTrigger as-child>
                       <Button
                         variant="destructive"
                         size="icon"
