@@ -72,11 +72,17 @@
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger as-child>
+                      <UploadInfo :item="item" />
+                    </TooltipTrigger>
+                    <TooltipContent>Info</TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger as-child>
                       <Button
                         variant="secondary"
                         size="icon"
                         @click.prevent="upload.copy(item)"
-                        class="rounded-r-none"
+                        class="rounded-none"
                       >
                         <span class="sr-only">Copy</span>
                         <CopyIcon />
@@ -126,6 +132,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip/index.js";
+import UploadInfo from "@/components/upload/UploadInfo.vue";
 import { useUploadStore } from "@/stores/upload.js";
 import { UseTimeAgo } from "@vueuse/components";
 import { computed } from "vue";
