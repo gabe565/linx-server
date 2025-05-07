@@ -67,6 +67,7 @@ export const useUploadStore = defineStore(
         if (saveOriginalName) {
           res.data.original_name = file.name;
         }
+        res.data.uploaded = new Date();
 
         toast.success("File uploaded", {
           description: res.data.filename,
