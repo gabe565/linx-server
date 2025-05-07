@@ -1,6 +1,6 @@
 <template>
-  <form @submit.prevent="doUpload" v-bind="$attrs">
-    <Card class="container max-w-4xl mx-auto">
+  <form @submit.prevent="doUpload">
+    <Card class="container max-w-4xl mx-auto" v-bind="$attrs">
       <CardHeader>
         <CardTitle>Paste</CardTitle>
       </CardHeader>
