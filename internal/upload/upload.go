@@ -345,16 +345,14 @@ func Process(ctx context.Context, upReq Request) (Upload, error) {
 		fileexists = true
 	}
 
+	origBarename := barename
+	var counter int
 	for fileexists {
 		if randomize {
 			barename = GenerateBarename()
 		} else {
-			counter, err := strconv.Atoi(string(barename[len(barename)-1]))
-			if err != nil {
-				barename += "1"
-			} else {
-				barename = barename[:len(barename)-1] + strconv.Itoa(counter+1)
-			}
+			counter++
+			barename = origBarename + strconv.Itoa(counter)
 		}
 		upload.Filename = barename + "." + extension
 
