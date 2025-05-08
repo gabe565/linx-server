@@ -19,7 +19,7 @@ linx-server [flags]
   -c, --config string                 Path to the config file (default "$HOME/.config/linx-server/config.toml")
       --custom-pages-path string      Path to directory containing .md files to render as custom pages
       --files-path string             Path to files directory (default "data/files")
-      --force-random-filename         Force all uploads to use a random filename
+      --force-random-filename         Force all uploads to use a random filename (default true)
       --graceful-shutdown duration    Maximum time to wait for requests to finish during shutdown (default 30s)
   -h, --help                          help for linx-server
       --max-expiry duration           Maximum expiration time. A value of 0 means no expiry.

@@ -89,6 +89,7 @@ func New() *Config {
 		GracefulShutdown:     Duration{30 * time.Second},
 		MaxSize:              4 * bytefmt.GiB,
 		UploadMaxMemory:      32 * bytefmt.MiB,
+		ForceRandomFilename:  true,
 		KeepOriginalFilename: true,
 		CleanupEvery:         Duration{time.Hour},
 		Limit: Limit{

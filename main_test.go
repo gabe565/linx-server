@@ -48,6 +48,7 @@ func setup(t *testing.T) (*chi.Mux, *httptest.ResponseRecorder) {
 	config.Default.MaxSize = bytefmt.GiB
 	config.Default.NoLogs = true
 	config.Default.SiteName = "linx"
+	config.Default.ForceRandomFilename = false
 	t.Cleanup(func() { config.Default = config.New() })
 
 	r, err := server.Setup()

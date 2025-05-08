@@ -138,10 +138,7 @@ func POSTHandler(w http.ResponseWriter, r *http.Request) {
 
 	upReq.expiry = ParseExpiry(r.PostFormValue("expires"))
 	upReq.accessKey = r.PostFormValue(handlers.ParamName)
-
-	if r.PostFormValue("randomize") == "true" {
-		upReq.randomBarename = true
-	}
+	upReq.randomBarename = r.PostFormValue("randomize") == "true"
 
 	upload, err := Process(r.Context(), upReq)
 	if err != nil {
@@ -270,9 +267,7 @@ func Remote(w http.ResponseWriter, r *http.Request) {
 }
 
 func HeaderProcess(r *http.Request, upReq *Request) {
-	if r.Header.Get("Linx-Randomize") == InputYes {
-		upReq.randomBarename = true
-	}
+	upReq.randomBarename = r.Header.Get("Linx-Randomize") == InputYes
 
 	upReq.deleteKey = r.Header.Get("Linx-Delete-Key")
 	upReq.accessKey = r.Header.Get(handlers.HeaderName)

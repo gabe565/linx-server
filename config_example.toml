@@ -22,7 +22,7 @@ remote-uploads = false
 # Disable serving files directly for wget/curl user agents
 no-direct-agents = false
 # Force all uploads to use a random filename
-force-random-filename = false
+force-random-filename = true
 # Download as the original filename instead of random filename
 keep-original-filename = true
 # Remove stdout output for each request
