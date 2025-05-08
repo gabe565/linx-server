@@ -125,6 +125,7 @@ func Setup() (*chi.Mux, error) {
 		r.Put("/upload/{name}", upload.PUTHandler)
 		if config.Default.RemoteUploads {
 			r.Get("/upload", upload.Remote)
+			r.Get("/upload/{name}", upload.Remote)
 
 			if config.Default.Auth.RemoteFile != "" {
 				config.RemoteAuthKeys = apikeys.ReadAuthKeys(config.Default.Auth.RemoteFile)

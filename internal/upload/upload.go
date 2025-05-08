@@ -7,6 +7,7 @@ import (
 	"errors"
 	"io"
 	"log/slog"
+	"mime"
 	"net/http"
 	"net/url"
 	"os"
@@ -207,7 +208,6 @@ func Remote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	upReq := Request{}
 	grabURL, err := url.Parse(r.FormValue("url"))
 	if err != nil {
 		handlers.ErrorMsg(w, r, http.StatusBadRequest, "Invalid URL")
@@ -215,13 +215,24 @@ func Remote(w http.ResponseWriter, r *http.Request) {
 	}
 	directURL := util.ParseBool(r.FormValue("direct_url"), false)
 
+	upReq := Request{
+		filename: filepath.Base(grabURL.Path),
+	}
+
 	req, err := http.NewRequestWithContext(r.Context(), http.MethodGet, grabURL.String(), nil)
 	if err != nil {
 		handlers.ErrorMsg(w, r, http.StatusInternalServerError, "Failed to create request")
 		return
 	}
 
-	resp, err := http.DefaultClient.Do(req)
+	client := &http.Client{
+		CheckRedirect: func(req *http.Request, _ []*http.Request) error {
+			upReq.filename = filepath.Base(req.URL.Path)
+			return nil
+		},
+	}
+
+	resp, err := client.Do(req)
 	if err != nil {
 		handlers.ErrorMsg(w, r, http.StatusServiceUnavailable, "Could not retrieve URL")
 		return
@@ -236,7 +247,17 @@ func Remote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	upReq.filename = filepath.Base(grabURL.Path)
+	if v := chi.URLParam(r, "name"); v != "" {
+		upReq.filename = v
+	} else if upReq.filename == "" {
+		if disposition := resp.Header.Get("Content-Disposition"); disposition != "" {
+			_, params, err := mime.ParseMediaType(disposition)
+			if err == nil && params["filename"] != "" {
+				upReq.filename = params["filename"]
+			}
+		}
+	}
+
 	upReq.src = http.MaxBytesReader(w, resp.Body, int64(config.Default.MaxSize))
 	upReq.deleteKey = r.FormValue("deletekey")
 	upReq.accessKey = r.FormValue(handlers.ParamName)
