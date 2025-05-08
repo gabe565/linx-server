@@ -166,6 +166,7 @@ func Setup() (*chi.Mux, error) {
 
 func rateLimit(requestLimit int, windowLength time.Duration) func(next http.Handler) http.Handler {
 	limiter := httprate.NewRateLimiter(requestLimit, windowLength,
+		httprate.WithKeyByIP(),
 		httprate.WithLimitHandler(func(w http.ResponseWriter, r *http.Request) {
 			handlers.ErrorMsg(w, r, http.StatusTooManyRequests, "Too many requests")
 		}),
