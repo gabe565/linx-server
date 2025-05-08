@@ -224,6 +224,7 @@ func Remote(w http.ResponseWriter, r *http.Request) {
 		handlers.ErrorMsg(w, r, http.StatusInternalServerError, "Failed to create request")
 		return
 	}
+	req.Header.Set("User-Agent", r.UserAgent())
 
 	client := &http.Client{
 		CheckRedirect: func(req *http.Request, _ []*http.Request) error {
