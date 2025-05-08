@@ -27,83 +27,19 @@ import { AlphaNum, randomString } from "@/util/random.js";
     </CardHeader>
     <CardContent>
       <Accordion type="single" collapsible class="space-y-4">
-        <!-- Upload (Random) -->
-        <AccordionItem value="upload-random">
-          <AccordionTrigger class="text-lg font-semibold">
-            Upload a File (Random Filename)
-          </AccordionTrigger>
-          <AccordionContent class="prose space-y-4">
-            <p>Send a <code class="font-mono px-1 rounded">PUT</code> request to:</p>
-            <pre class="overflow-x-auto p-3 rounded text-sm font-mono"><code>{{
-              ApiPath('/upload')
-            }}</code></pre>
-
-            <UploadHeaders />
-
-            <h4 class="text-lg font-medium">Default Response</h4>
-            <p>The URL of the uploaded file.</p>
-
-            <h4 class="text-lg font-medium">JSON Response</h4>
-            <UploadJSONResponse full />
-
-            <h4 class="text-lg font-medium">Examples</h4>
-            <h5 class="font-medium">Basic upload</h5>
-            <pre
-              class="overflow-x-auto p-3 rounded"
-            ><code>$ curl {{ ApiPath('/upload') }} -s -T myphoto.jpg
-{{ ApiPath(`${randomString(8, AlphaNum)}.jpg`) }}</code></pre>
-
-            <h5 class="font-medium">Upload with expiry</h5>
-            <pre
-              class="overflow-x-auto p-3 rounded text-sm font-mono"
-            ><code>$ curl {{ ApiPath('/upload') }} -s -H 'Linx-Expiry: 20m' -T myphoto.jpg
-{{ ApiPath(`${randomString(8, AlphaNum)}.jpg`) }}</code></pre>
-
-            <h5 class="font-medium">Upload from pipe</h5>
-            <pre
-              class="overflow-x-auto p-3 rounded text-sm font-mono"
-            ><code>$ echo hello world | curl {{ ApiPath('/upload') }} -s -T -
-{{ ApiPath(`${randomString(8, AlphaNum)}.txt`) }}</code></pre>
-
-            <h5 class="font-medium">Upload with hardcoded extension</h5>
-            <p>
-              Nested extensions will not be detected correctly. To avoid this, specify the file
-              extension explicitly. For example, <code>example.tar.gz</code> would be uploaded with
-              a <code>.gz</code> extension.
-            </p>
-            <pre
-              class="overflow-x-auto p-3 rounded text-sm font-mono"
-            ><code>$ curl {{ ApiPath('/upload/.tar.gz') }} -s -T example.tar.gz
-{{ ApiPath(`${randomString(8, AlphaNum)}.tar.gz`) }}</code></pre>
-          </AccordionContent>
-        </AccordionItem>
-
-        <!-- Upload (Choose) -->
+        <!-- Upload -->
         <AccordionItem value="upload-choose">
-          <AccordionTrigger class="text-lg font-semibold">
-            Upload a File (Choose Filename)
-          </AccordionTrigger>
+          <AccordionTrigger class="text-lg font-semibold">Upload a File</AccordionTrigger>
           <AccordionContent class="prose space-y-4">
             <p>Send a <code class="font-mono px-1 rounded">PUT</code> request to:</p>
             <pre
               class="overflow-x-auto p-3 rounded text-sm font-mono"
-            ><code>{{ ApiPath('/upload') }}/[filename].[extension]</code></pre>
+            ><code>{{ ApiPath('/upload') }}/</code></pre>
 
-            <p>Both the filename and extension parameters are optional:</p>
-            <ul>
-              <li>
-                <strong>Both Provided:</strong> The file is saved exactly as given. If a file with
-                that name already exists, a numeric suffix is appended.
-              </li>
-              <li>
-                <strong>Filename only:</strong> The server infers the extension from the file’s MIME
-                type.
-              </li>
-              <li>
-                <strong>Extension only:</strong> A random filename is generated, with the specified
-                extension applied.
-              </li>
-            </ul>
+            <p>
+              <strong>Note:</strong> The trailing <code>/</code> is important. This will make curl
+              append the filename to the URL. See the examples below.
+            </p>
 
             <UploadHeaders />
 
@@ -115,17 +51,22 @@ import { AlphaNum, randomString } from "@/util/random.js";
 
             <h4 class="text-lg font-medium">Examples</h4>
             <h5 class="font-medium">Basic upload</h5>
-            <p>Note the trailing <code>/</code>. This makes curl append the filename to the URL.</p>
             <pre
               class="overflow-x-auto p-3 rounded text-sm font-mono"
             ><code>$ curl {{ ApiPath('/upload/') }} -s -T myphoto.jpg
 {{ ApiPath(`/${randomString(8, AlphaNum)}.jpg`) }}</code></pre>
 
+            <h5 class="font-medium">Upload with expiry</h5>
+            <pre
+              class="overflow-x-auto p-3 rounded text-sm font-mono"
+            ><code>$ curl {{ ApiPath('/upload/') }} -s -H 'Linx-Expiry: 20m' -T myphoto.jpg
+{{ ApiPath(`${randomString(8, AlphaNum)}.jpg`) }}</code></pre>
+
             <h5 class="font-medium">Upload from pipe</h5>
             <pre
               class="overflow-x-auto p-3 rounded text-sm font-mono"
             ><code>$ echo hello | curl {{ ApiPath('/upload/hello.txt') }} -s -T -
-{{ ApiPath('/hello.txt') }}</code></pre>
+{{ ApiPath(`${randomString(8, AlphaNum)}.txt`) }}</code></pre>
           </AccordionContent>
         </AccordionItem>
 

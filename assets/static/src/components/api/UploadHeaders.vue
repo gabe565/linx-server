@@ -52,6 +52,10 @@ const config = useConfigStore();
         <TableCell><code>Linx-Expiry: 1h</code></TableCell>
         <TableCell>Set file expiry (Go duration or seconds)</TableCell>
       </TableRow>
+      <TableRow v-if="!config.site.force_random">
+        <TableCell><code>Linx-Randomize: no</code></TableCell>
+        <TableCell>Disable random filename</TableCell>
+      </TableRow>
       <TableRow>
         <TableCell><code>Accept: application/json</code></TableCell>
         <TableCell>Request JSON response</TableCell>
