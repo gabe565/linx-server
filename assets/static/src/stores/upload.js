@@ -70,7 +70,7 @@ export const useUploadStore = defineStore(
         res.data.uploaded = new Date();
 
         toast.success("File uploaded", {
-          description: res.data.filename,
+          description: res.data.original_name || res.data.filename,
           action: {
             label: "Copy",
             onClick: async () => await copy(res.data),

@@ -15,6 +15,7 @@ import (
 )
 
 type DisplayJSON struct {
+	OriginalName string   `json:"original_name,omitzero"`
 	Filename     string   `json:"filename"`
 	DirectURL    string   `json:"direct_url"`
 	TorrentURL   string   `json:"torrent_url,omitzero"`
@@ -29,6 +30,7 @@ type DisplayJSON struct {
 func FileDisplay(w http.ResponseWriter, r *http.Request, fileName string, metadata backends.Metadata) {
 	if strings.EqualFold("application/json", r.Header.Get("Accept")) {
 		res := DisplayJSON{
+			OriginalName: metadata.OriginalName,
 			Filename:     fileName,
 			DirectURL:    headers.GetSelifURL(r, fileName).String(),
 			Expiry:       strconv.FormatInt(max(metadata.Expiry.Unix(), 0), 10),

@@ -96,7 +96,7 @@ func (b Backend) ServeFile(key string, w http.ResponseWriter, r *http.Request) e
 
 func (b Backend) Put(
 	ctx context.Context,
-	key string,
+	originalName, key string,
 	r io.Reader,
 	expiry time.Time,
 	deleteKey, accessKey string,
@@ -133,6 +133,7 @@ func (b Backend) Put(
 		return m, err
 	}
 
+	m.OriginalName = originalName
 	m.Expiry = expiry
 	m.DeleteKey = deleteKey
 	m.AccessKey = accessKey

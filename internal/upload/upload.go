@@ -50,19 +50,21 @@ type Request struct {
 
 // Metadata associated with a file as it would actually be stored.
 type Upload struct {
-	Filename string // Final filename on disk
-	Metadata backends.Metadata
+	OriginalName string
+	Filename     string // Final filename on disk
+	Metadata     backends.Metadata
 }
 
 type JSONResponse struct {
-	URL       string `json:"url"`
-	DirectURL string `json:"direct_url"`
-	Filename  string `json:"filename"`
-	DeleteKey string `json:"delete_key"`
-	AccessKey string `json:"access_key"`
-	Expiry    string `json:"expiry"`
-	Size      string `json:"size"`
-	Mimetype  string `json:"mimetype"`
+	URL          string `json:"url"`
+	OriginalName string `json:"original_name,omitzero"`
+	DirectURL    string `json:"direct_url"`
+	Filename     string `json:"filename"`
+	DeleteKey    string `json:"delete_key"`
+	AccessKey    string `json:"access_key"`
+	Expiry       string `json:"expiry"`
+	Size         string `json:"size"`
+	Mimetype     string `json:"mimetype"`
 }
 
 func (u Upload) JSONResponse(r *http.Request) JSONResponse {
@@ -71,14 +73,15 @@ func (u Upload) JSONResponse(r *http.Request) JSONResponse {
 		expiry = v
 	}
 	return JSONResponse{
-		URL:       headers.GetFileURL(r, u.Filename).String(),
-		DirectURL: headers.GetSelifURL(r, u.Filename).String(),
-		Filename:  u.Filename,
-		DeleteKey: u.Metadata.DeleteKey,
-		AccessKey: u.Metadata.AccessKey,
-		Expiry:    strconv.FormatInt(expiry, 10),
-		Size:      strconv.FormatInt(u.Metadata.Size, 10),
-		Mimetype:  u.Metadata.Mimetype,
+		URL:          headers.GetFileURL(r, u.Filename).String(),
+		OriginalName: u.OriginalName,
+		DirectURL:    headers.GetSelifURL(r, u.Filename).String(),
+		Filename:     u.Filename,
+		DeleteKey:    u.Metadata.DeleteKey,
+		AccessKey:    u.Metadata.AccessKey,
+		Expiry:       strconv.FormatInt(expiry, 10),
+		Size:         strconv.FormatInt(u.Metadata.Size, 10),
+		Mimetype:     u.Metadata.Mimetype,
 	}
 }
 
@@ -291,6 +294,10 @@ func Process(ctx context.Context, upReq Request) (Upload, error) {
 	barename, extension := BarePlusExt(upReq.filename)
 	randomize := false
 
+	if config.Default.KeepOriginalFilename && !strings.HasPrefix(upReq.filename, ".") {
+		upload.OriginalName = upReq.filename
+	}
+
 	// Randomize the "barename" (filename without extension) if needed
 	if upReq.randomBarename || len(barename) == 0 {
 		barename = GenerateBarename()
@@ -386,6 +393,7 @@ func Process(ctx context.Context, upReq Request) (Upload, error) {
 	}
 
 	upload.Metadata, err = config.StorageBackend.Put(ctx,
+		upload.OriginalName,
 		upload.Filename,
 		upReq.src,
 		fileExpiry,

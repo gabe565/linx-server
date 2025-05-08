@@ -10,15 +10,19 @@ import (
 )
 
 const (
-	DeleteKey = "deletekey"
-	AccessKey = "accesskey"
-	Sha256sum = "sha256sum"
-	Mimetype  = "mimetype"
-	Expiry    = "expiry"
+	OriginalName = "originalname"
+	DeleteKey    = "deletekey"
+	AccessKey    = "accesskey"
+	Sha256sum    = "sha256sum"
+	Mimetype     = "mimetype"
+	Expiry       = "expiry"
 )
 
 func mapMetadata(m backends.Metadata) map[string]string {
 	mapped := make(map[string]string, 4)
+	if m.OriginalName != "" {
+		mapped[OriginalName] = m.OriginalName
+	}
 	if m.DeleteKey != "" {
 		mapped[DeleteKey] = m.DeleteKey
 	}
@@ -43,6 +47,8 @@ func unmapMetadata(info minio.ObjectInfo) (backends.Metadata, error) {
 	for k, v := range info.UserMetadata {
 		k = strings.ToLower(k)
 		switch k {
+		case OriginalName:
+			m.OriginalName = v
 		case DeleteKey, "delete_key":
 			m.DeleteKey = v
 		case AccessKey:

@@ -43,13 +43,7 @@
             <CardHeader class="px-4">
               <CardTitle class="min-w-0">
                 <RouterLink :to="`/${item.filename}`" class="wrap-break-word link">
-                  {{ item.filename }}
-                  <span
-                    v-if="item.original_name && item.filename !== item.original_name"
-                    class="text-sm"
-                  >
-                    ({{ item.original_name }})
-                  </span>
+                  {{ item.original_name || item.filename }}
                 </RouterLink>
               </CardTitle>
 

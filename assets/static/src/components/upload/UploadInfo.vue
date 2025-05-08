@@ -1,7 +1,9 @@
 <template>
   <DialogContent>
     <DialogHeader class="min-w-0">
-      <DialogTitle class="wrap-break-word pr-4">{{ item.filename }}</DialogTitle>
+      <DialogTitle class="wrap-break-word pr-4">{{
+        item.original_name || item.filename
+      }}</DialogTitle>
       <DialogDescription v-if="item.expiry > 0">
         <UseTimeAgo
           v-slot="{ timeAgo }"
@@ -15,9 +17,13 @@
     </DialogHeader>
 
     <Table class="[&>tr]:flex [&>tr]:sm:table-row [&>tr]:flex-col [&_td:first-child]:font-semibold">
-      <TableRow v-if="item.original_name">
-        <TableCell>Original Name</TableCell>
-        <TableCell>{{ item.original_name }}</TableCell>
+      <TableRow>
+        <TableCell>Path</TableCell>
+        <TableCell>
+          <RouterLink :to="`/${item.filename}`" class="link">
+            {{ item.filename }}
+          </RouterLink>
+        </TableCell>
       </TableRow>
       <TableRow v-if="item.access_key">
         <TableCell>Password</TableCell>

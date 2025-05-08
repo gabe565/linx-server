@@ -22,6 +22,7 @@ type Backend struct {
 }
 
 type MetadataJSON struct {
+	OriginalName string          `json:"original_name,omitzero"`
 	DeleteKey    string          `json:"delete_key"`
 	AccessKey    string          `json:"access_key,omitzero"`
 	Sha256sum    string          `json:"sha256sum"`
@@ -104,6 +105,7 @@ func (b Backend) Head(_ context.Context, key string) (backends.Metadata, error) 
 		return metadata, backends.ErrBadMetadata
 	}
 
+	metadata.OriginalName = mjson.OriginalName
 	metadata.DeleteKey = mjson.DeleteKey
 	metadata.AccessKey = mjson.AccessKey
 	metadata.Mimetype = mjson.Mimetype
@@ -161,6 +163,7 @@ func (b Backend) ServeFile(key string, w http.ResponseWriter, r *http.Request) e
 
 func (b Backend) writeMetadata(key string, metadata backends.Metadata) error {
 	mjson := MetadataJSON{
+		OriginalName: metadata.OriginalName,
 		DeleteKey:    metadata.DeleteKey,
 		AccessKey:    metadata.AccessKey,
 		Mimetype:     metadata.Mimetype,
@@ -204,7 +207,7 @@ func (b Backend) writeMetadata(key string, metadata backends.Metadata) error {
 
 func (b Backend) Put(
 	_ context.Context,
-	key string,
+	originalName, key string,
 	r io.Reader,
 	expiry time.Time,
 	deleteKey, accessKey string,
@@ -242,6 +245,7 @@ func (b Backend) Put(
 		return m, backends.ErrFileEmpty
 	}
 
+	m.OriginalName = originalName
 	m.Expiry = expiry
 	m.DeleteKey = deleteKey
 	m.AccessKey = accessKey

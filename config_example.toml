@@ -23,6 +23,8 @@ remote-uploads = false
 no-direct-agents = false
 # Force all uploads to use a random filename
 force-random-filename = false
+# Download as the original filename instead of random filename
+keep-original-filename = true
 # Remove stdout output for each request
 no-logs = false
 # Disable the torrent file endpoint

@@ -67,8 +67,13 @@ func FileServeHandler(w http.ResponseWriter, r *http.Request) {
 	} else {
 		w.Header().Set("Cache-Control", "public, no-cache")
 	}
-	if r.URL.Query().Has("download") {
-		w.Header().Set("Content-Disposition", "attachment; filename="+strconv.Quote(fileName))
+
+	if r.URL.Query().Has("download") || IsDirectUA(r) {
+		dlName := fileName
+		if metadata.OriginalName != "" {
+			dlName = metadata.OriginalName
+		}
+		w.Header().Set("Content-Disposition", "attachment; filename="+strconv.Quote(dlName))
 	}
 
 	if r.Method != http.MethodHead {

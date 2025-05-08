@@ -51,7 +51,9 @@
     <Card v-else-if="state.meta">
       <CardHeader class="flex flex-wrap justify-between items-center gap-4">
         <div class="flex flex-col gap-1 max-w-full">
-          <CardTitle class="wrap-break-word">{{ state.meta.filename }}</CardTitle>
+          <CardTitle class="wrap-break-word">{{
+            state.meta.original_name || state.meta.filename
+          }}</CardTitle>
 
           <UseTimeAgo
             v-if="expiry"
@@ -157,7 +159,7 @@
         />
 
         <div v-else class="text-center">
-          You are requesting {{ state.meta.filename }},
+          You are requesting {{ state.meta.original_name || state.meta.filename }},
           <a
             :href="`${state.meta.direct_url}?download`"
             :download="state.meta.filename"
@@ -216,7 +218,9 @@ const props = defineProps({
   filename: { type: String, required: true },
 });
 
-document.title = props.filename + " · " + useConfigStore().site.site_name;
+const config = useConfigStore();
+
+document.title = props.filename + " · " + config.site.site_name;
 
 const accessKey = ref();
 const downloadAttempts = ref(0);
@@ -249,6 +253,10 @@ const { state, isLoading, error, execute } = useAsyncState(async () => {
   }
 
   const meta = res.data;
+
+  if (meta.original_name) {
+    document.title = meta.original_name + " · " + config.site.site_name;
+  }
 
   let mode;
   if (meta.mimetype.startsWith("image/")) {

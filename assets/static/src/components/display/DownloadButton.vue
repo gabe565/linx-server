@@ -5,7 +5,7 @@
       variant="outline"
       size="lg"
       :href="`${meta.direct_url}?download`"
-      :download="meta.filename"
+      :download="meta.original_name || meta.filename"
       class="flex-1"
       :class="{ 'rounded-r-none': meta.torrent_url }"
       v-bind="$attrs"
@@ -24,7 +24,7 @@
         <DropdownMenuItem
           as="a"
           :href="meta.torrent_url"
-          :download="`${meta.filename}.torrent`"
+          :download="`${meta.original_name || meta.filename}.torrent`"
           :disabled="disabled"
         >
           Download Torrent
