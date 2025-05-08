@@ -24,6 +24,7 @@ import (
 	"gabe565.com/linx-server/internal/csrf"
 	"gabe565.com/linx-server/internal/handlers"
 	"gabe565.com/linx-server/internal/headers"
+	"gabe565.com/linx-server/internal/util"
 	"gabe565.com/utils/bytefmt"
 	"github.com/dchest/uniuri"
 	"github.com/gabriel-vasile/mimetype"
@@ -138,7 +139,7 @@ func POSTHandler(w http.ResponseWriter, r *http.Request) {
 
 	upReq.expiry = ParseExpiry(r.PostFormValue("expires"))
 	upReq.accessKey = r.PostFormValue(handlers.ParamName)
-	upReq.randomBarename = r.PostFormValue("randomize") == "true"
+	upReq.randomBarename = util.ParseBool(r.PostFormValue("randomize"), false)
 
 	upload, err := Process(r.Context(), upReq)
 	if err != nil {
@@ -178,8 +179,6 @@ func PUTHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-const InputYes = "yes"
-
 func Remote(w http.ResponseWriter, r *http.Request) {
 	if config.Default.Auth.RemoteFile != "" {
 		key := r.FormValue("key")
@@ -214,7 +213,7 @@ func Remote(w http.ResponseWriter, r *http.Request) {
 		handlers.ErrorMsg(w, r, http.StatusBadRequest, "Invalid URL")
 		return
 	}
-	directURL := r.FormValue("direct_url") == InputYes
+	directURL := util.ParseBool(r.FormValue("direct_url"), false)
 
 	req, err := http.NewRequestWithContext(r.Context(), http.MethodGet, grabURL.String(), nil)
 	if err != nil {
@@ -241,7 +240,7 @@ func Remote(w http.ResponseWriter, r *http.Request) {
 	upReq.src = http.MaxBytesReader(w, resp.Body, int64(config.Default.MaxSize))
 	upReq.deleteKey = r.FormValue("deletekey")
 	upReq.accessKey = r.FormValue(handlers.ParamName)
-	upReq.randomBarename = r.FormValue("randomize") == InputYes
+	upReq.randomBarename = util.ParseBool(r.FormValue("randomize"), false)
 	upReq.expiry = ParseExpiry(r.FormValue("expiry"))
 
 	upload, err := Process(r.Context(), upReq)
@@ -267,7 +266,7 @@ func Remote(w http.ResponseWriter, r *http.Request) {
 }
 
 func HeaderProcess(r *http.Request, upReq *Request) {
-	upReq.randomBarename = r.Header.Get("Linx-Randomize") == InputYes
+	upReq.randomBarename = util.ParseBool(r.Header.Get("Linx-Randomize"), false)
 
 	upReq.deleteKey = r.Header.Get("Linx-Delete-Key")
 	upReq.accessKey = r.Header.Get(handlers.HeaderName)

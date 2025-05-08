@@ -555,7 +555,7 @@ func TestPutRandomizedUpload(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	req.Header.Set("Linx-Randomize", "yes")
+	req.Header.Set("Linx-Randomize", "true")
 
 	r.ServeHTTP(w, req)
 	assertResponse(t, w, http.StatusOK, "text/plain; charset=utf-8")
@@ -578,7 +578,7 @@ func TestPutForceRandomUpload(t *testing.T) {
 
 	// while this should also work without this header, let's try to force
 	// the randomized filename off to be sure
-	req.Header.Set("Linx-Randomize", "no")
+	req.Header.Set("Linx-Randomize", "false")
 
 	r.ServeHTTP(w, req)
 	assertResponse(t, w, http.StatusOK, "text/plain; charset=utf-8")
@@ -598,7 +598,7 @@ func TestPutNoExtensionUpload(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	req.Header.Set("Linx-Randomize", "yes")
+	req.Header.Set("Linx-Randomize", "true")
 
 	r.ServeHTTP(w, req)
 	assertResponse(t, w, http.StatusOK, "text/plain; charset=utf-8")
@@ -617,7 +617,7 @@ func TestPutEmptyUpload(t *testing.T) {
 		http.MethodPut, path.Join("/upload", filename), strings.NewReader(""),
 	)
 	require.NoError(t, err)
-	req.Header.Set("Linx-Randomize", "yes")
+	req.Header.Set("Linx-Randomize", "true")
 
 	r.ServeHTTP(w, req)
 	assertResponse(t, w, http.StatusBadRequest, "text/html; charset=utf-8")
@@ -635,7 +635,7 @@ func TestPutTooLargeUpload(t *testing.T) {
 		http.MethodPut, path.Join("/upload", filename), strings.NewReader("File too big"),
 	)
 	require.NoError(t, err)
-	req.Header.Set("Linx-Randomize", "yes")
+	req.Header.Set("Linx-Randomize", "true")
 
 	r.ServeHTTP(w, req)
 	assertResponse(t, w, http.StatusRequestEntityTooLarge, "text/html; charset=utf-8")
@@ -674,7 +674,7 @@ func TestPutRandomizedJSONUpload(t *testing.T) {
 	)
 	require.NoError(t, err)
 	req.Header.Set("Accept", "application/json")
-	req.Header.Set("Linx-Randomize", "yes")
+	req.Header.Set("Linx-Randomize", "true")
 
 	r.ServeHTTP(w, req)
 	assertResponse(t, w, http.StatusOK, "application/json")
