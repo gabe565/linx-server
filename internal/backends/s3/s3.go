@@ -167,11 +167,15 @@ func (b Backend) Size(ctx context.Context, key string) (int64, error) {
 
 func (b Backend) List(ctx context.Context) iter.Seq2[string, error] {
 	return func(yield func(string, error) bool) {
-		for item := range b.client.ListObjects(ctx, b.bucket, minio.ListObjectsOptions{Recursive: true}) {
+		ctx, cancel := context.WithCancel(ctx)
+		defer cancel()
+
+		for item := range b.client.ListObjectsIter(ctx, b.bucket, minio.ListObjectsOptions{Recursive: true}) {
 			if item.Err != nil {
 				yield("", item.Err)
 				return
 			}
+
 			if !yield(item.Key, nil) {
 				return
 			}
