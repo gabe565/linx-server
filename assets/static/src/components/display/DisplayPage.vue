@@ -244,12 +244,12 @@ const { state, isLoading, error, execute } = useAsyncState(async () => {
       withCredentials: true,
     });
   } catch (err) {
+    console.error(err);
     if (downloadAttempts.value > 1) {
       toast.error("Failed to load file", {
         description: err.message,
       });
     }
-    throw err;
   }
 
   const meta = res.data;
@@ -294,10 +294,10 @@ const { state, isLoading, error, execute } = useAsyncState(async () => {
       ]);
       content = res[0].data;
     } catch (err) {
+      console.error(err);
       toast.error("Failed to download file", {
         description: err.message,
       });
-      throw err;
     }
 
     if (mode === Modes.MARKDOWN) {

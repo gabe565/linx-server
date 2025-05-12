@@ -22,7 +22,7 @@
       </CardContent>
     </Card>
 
-    <UploadList @error="showAuth = true" />
+    <UploadList v-model:show-auth="showAuth" />
   </div>
 
   <AuthDialog v-if="config.site?.auth" v-model="showAuth" @submit="doUpload(retryFile)" />
@@ -60,9 +60,7 @@ const doUpload = async (file) => {
     if (err.response?.status === 401) {
       retryFile = file;
       showAuth.value = true;
-      return;
     }
-    throw err;
   }
 };
 </script>

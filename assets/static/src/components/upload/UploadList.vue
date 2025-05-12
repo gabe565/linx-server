@@ -177,23 +177,21 @@ import CopyIcon from "~icons/material-symbols/content-copy-rounded";
 import DeleteIcon from "~icons/material-symbols/delete-rounded";
 import InfoIcon from "~icons/material-symbols/info-rounded";
 
+const showAuth = defineModel("showAuth");
+const breakpoints = useBreakpoints(breakpointsTailwind);
+const smAndLarger = breakpoints.greaterOrEqual("sm");
 const upload = useUploadStore();
-
-const emit = defineEmits(["delete", "error"]);
-
 const items = computed(() => {
   return Object.values(upload.inProgress).concat(upload.uploads);
 });
-
-const breakpoints = useBreakpoints(breakpointsTailwind);
-const smAndLarger = breakpoints.greaterOrEqual("sm");
 
 const deleteItem = async (item) => {
   try {
     await upload.deleteItem(item);
   } catch (err) {
-    emit("error", err);
-    throw err;
+    if (err.response?.status === 401) {
+      showAuth.value = true;
+    }
   }
 };
 </script>
