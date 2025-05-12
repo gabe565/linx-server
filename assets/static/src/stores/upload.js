@@ -24,10 +24,10 @@ export const useUploadStore = defineStore(
           description: url,
         });
       } catch (err) {
+        console.error(err);
         toast.error("Failed to copy.", {
           description: err,
         });
-        throw err;
       }
     };
 

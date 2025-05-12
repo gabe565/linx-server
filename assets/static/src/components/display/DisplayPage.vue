@@ -244,6 +244,7 @@ const { state, isLoading, error, execute } = useAsyncState(async () => {
       withCredentials: true,
     });
   } catch (err) {
+    console.error(err);
     if (downloadAttempts.value > 1) {
       toast.error("Failed to load file", {
         description: err.message,
@@ -294,6 +295,7 @@ const { state, isLoading, error, execute } = useAsyncState(async () => {
       ]);
       content = res[0].data;
     } catch (err) {
+      console.error(err);
       toast.error("Failed to download file", {
         description: err.message,
       });
@@ -305,6 +307,7 @@ const { state, isLoading, error, execute } = useAsyncState(async () => {
         const markdown = (await import("@/util/markdown.js")).default;
         content = markdown(content);
       } catch (err) {
+        console.error(err);
         toast.error("Failed to format markdown", {
           description: err.message,
         });
@@ -314,6 +317,7 @@ const { state, isLoading, error, execute } = useAsyncState(async () => {
         const papaparse = (await import("papaparse")).default;
         content = papaparse.parse(content);
       } catch (err) {
+        console.error(err);
         toast.error("Failed to format CSV", {
           description: err.message,
         });

@@ -86,11 +86,10 @@ const doUpload = async () => {
     config.extension = "txt";
     await router.push(`/${res.filename}`);
   } catch (err) {
+    console.error(err);
     if (err.response?.status === 401) {
       showAuth.value = true;
-      return;
     }
-    throw err;
   }
 };
 

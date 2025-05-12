@@ -32,6 +32,7 @@ const { state, isLoading } = useAsyncState(async () => {
     const content = markdown(res.data);
     return content;
   } catch (err) {
+    console.error(err);
     toast.error("Failed to load page", {
       description: err.message,
     });
