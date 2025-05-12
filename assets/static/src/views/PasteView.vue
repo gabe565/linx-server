@@ -64,7 +64,7 @@ import ExpirySelect from "@/components/upload/ExpirySelect.vue";
 import PasswordInput from "@/components/upload/PasswordInput.vue";
 import { useConfigStore } from "@/stores/config.js";
 import { useUploadStore } from "@/stores/upload.js";
-import { useMagicKeys } from "@vueuse/core";
+import { useDropZone, useEventListener, useMagicKeys } from "@vueuse/core";
 import { onMounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 
@@ -100,4 +100,28 @@ watch(Meta_Enter, doUpload);
 
 const textarea = ref();
 onMounted(() => textarea.value.$el.focus());
+
+const loadFile = async (file) => {
+  if (file.size > 1024 * 1024) return;
+  config.filename = file.name?.split(".").slice(0, -1).join(".") || "";
+  config.extension = file.name?.split(".").pop() || "txt";
+  config.content = await file.text();
+};
+
+useDropZone(window, {
+  dataTypes(t) {
+    t = t[0];
+    return t.startsWith("text/") || t === "application/json" || t.endsWith("yaml");
+  },
+  async onDrop(files) {
+    if (!files?.length) return;
+    await loadFile(files[0]);
+  },
+  preventDefaultForUnhandled: true,
+});
+
+useEventListener(window, "paste", async (e) => {
+  if (!e.clipboardData?.files?.length) return;
+  await loadFile(e.clipboardData.files[0]);
+});
 </script>
