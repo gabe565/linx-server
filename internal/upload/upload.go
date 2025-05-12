@@ -1,7 +1,6 @@
 package upload
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -25,6 +24,7 @@ import (
 	"gabe565.com/linx-server/internal/csrf"
 	"gabe565.com/linx-server/internal/handlers"
 	"gabe565.com/linx-server/internal/headers"
+	"gabe565.com/linx-server/internal/helpers"
 	"gabe565.com/linx-server/internal/util"
 	"gabe565.com/utils/bytefmt"
 	"github.com/dchest/uniuri"
@@ -43,6 +43,7 @@ var fileDenylist = []string{
 type Request struct {
 	src            io.Reader
 	size           int64
+	allowZeroSize  bool
 	filename       string
 	expiry         time.Duration // Seconds until expiry, 0 = never
 	deleteKey      string        // Empty string if not defined
@@ -98,49 +99,61 @@ func POSTHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	upReq := Request{}
+	upReq := Request{
+		expiry: config.Default.MaxExpiry.Duration,
+	}
 	HeaderProcess(r, &upReq)
 
-	contentType := r.Header.Get("Content-Type")
-
-	if strings.HasPrefix(contentType, "multipart/form-data") {
-		if err := r.ParseMultipartForm(int64(config.Default.UploadMaxMemory)); err != nil {
+	multipart, err := r.MultipartReader()
+	if err != nil {
+		if errors.Is(err, http.ErrNotMultipart) || r.Body == nil {
+			handlers.ErrorMsg(w, r, http.StatusBadRequest, err.Error())
+		} else {
 			HandleProcessError(w, r, err)
-			return
 		}
+		return
+	}
 
-		file, headers, err := r.FormFile("file")
+	for {
+		part, err := multipart.NextPart()
 		if err != nil {
 			HandleProcessError(w, r, err)
 			return
 		}
-		defer func() {
-			_ = file.Close()
-		}()
 
-		upReq.src = file
-		upReq.size = headers.Size
-		upReq.filename = headers.Filename
-	} else {
-		if r.PostFormValue("content") == "" {
-			HandleProcessError(w, r, backends.ErrFileEmpty)
+		if part.FormName() == "file" {
+			upReq.src = part
+			upReq.filename = part.FileName()
+			break
+		}
+
+		b, err := io.ReadAll(io.LimitReader(part, 32*bytefmt.KiB))
+		if err != nil {
+			HandleProcessError(w, r, err)
 			return
 		}
-		extension := r.PostFormValue("extension")
-		if extension == "" {
-			extension = "txt"
+		_ = part.Close()
+
+		switch part.FormName() {
+		case "size":
+			upReq.size, err = strconv.ParseInt(string(b), 10, 64)
+			if err != nil {
+				handlers.ErrorMsg(w, r, http.StatusBadRequest, "size must be an integer")
+				return
+			}
+		case "expires":
+			upReq.expiry = ParseExpiry(string(b))
+		case handlers.AccessKeyParam:
+			upReq.accessKey = string(b)
+		case "randomize":
+			upReq.randomBarename = util.ParseBool(string(b), false)
 		}
-
-		content := r.PostFormValue("content")
-
-		upReq.src = strings.NewReader(content)
-		upReq.size = int64(len(content))
-		upReq.filename = r.PostFormValue("filename") + "." + extension
 	}
 
-	upReq.expiry = ParseExpiry(r.PostFormValue("expires"))
-	upReq.accessKey = r.PostFormValue(handlers.ParamName)
-	upReq.randomBarename = util.ParseBool(r.PostFormValue("randomize"), false)
+	if upReq.src == nil {
+		HandleProcessError(w, r, backends.ErrFileEmpty)
+		return
+	}
 
 	upload, err := Process(r.Context(), upReq)
 	if err != nil {
@@ -164,6 +177,7 @@ func PUTHandler(w http.ResponseWriter, r *http.Request) {
 
 	upReq.filename = chi.URLParam(r, "name")
 	upReq.src = r.Body
+	upReq.size = r.ContentLength
 
 	upload, err := Process(r.Context(), upReq)
 	if err != nil {
@@ -216,7 +230,8 @@ func Remote(w http.ResponseWriter, r *http.Request) {
 	directURL := util.ParseBool(r.FormValue("direct_url"), false)
 
 	upReq := Request{
-		filename: filepath.Base(grabURL.Path),
+		filename:      filepath.Base(grabURL.Path),
+		allowZeroSize: true,
 	}
 
 	req, err := http.NewRequestWithContext(r.Context(), http.MethodGet, grabURL.String(), nil)
@@ -260,8 +275,9 @@ func Remote(w http.ResponseWriter, r *http.Request) {
 	}
 
 	upReq.src = http.MaxBytesReader(w, resp.Body, int64(config.Default.MaxSize))
+	upReq.size = resp.ContentLength
 	upReq.deleteKey = r.FormValue("deletekey")
-	upReq.accessKey = r.FormValue(handlers.ParamName)
+	upReq.accessKey = r.FormValue(handlers.AccessKeyParam)
 	upReq.randomBarename = util.ParseBool(r.FormValue("randomize"), false)
 	upReq.expiry = ParseExpiry(r.FormValue("expiry"))
 
@@ -291,7 +307,7 @@ func HeaderProcess(r *http.Request, upReq *Request) {
 	upReq.randomBarename = util.ParseBool(r.Header.Get("Linx-Randomize"), false)
 
 	upReq.deleteKey = r.Header.Get("Linx-Delete-Key")
-	upReq.accessKey = r.Header.Get(handlers.HeaderName)
+	upReq.accessKey = r.Header.Get(handlers.AccessKeyHeader)
 
 	// Get seconds until expiry. Non-integer responses never expire.
 	expStr := r.Header.Get("Linx-Expiry")
@@ -302,9 +318,17 @@ var ErrProhibitedFilename = errors.New("prohibited filename")
 
 func Process(ctx context.Context, upReq Request) (Upload, error) {
 	var upload Upload
-	if upReq.size > int64(config.Default.MaxSize) {
+
+	switch {
+	case upReq.size > int64(config.Default.MaxSize):
 		return upload, &http.MaxBytesError{Limit: int64(config.Default.MaxSize)}
+	case upReq.size < 0:
+		return upload, backends.ErrFileEmpty
+	case upReq.size == 0 && !upReq.allowZeroSize:
+		return upload, backends.ErrFileEmpty
 	}
+
+	upReq.src = io.LimitReader(upReq.src, min(upReq.size, int64(config.Default.MaxSize)))
 
 	// Determine the appropriate filename
 	barename, extension := BarePlusExt(upReq.filename)
@@ -321,16 +345,13 @@ func Process(ctx context.Context, upReq Request) (Upload, error) {
 	}
 
 	if len(extension) == 0 {
-		var header bytes.Buffer
-		header.Grow(3 * bytefmt.KiB)
-
 		// Determine the type of file from the file header
-		kind, err := mimetype.DetectReader(io.TeeReader(upReq.src, &header))
+		var kind *mimetype.MIME
+		var err error
+		kind, upReq.src, err = helpers.DetectMimetype(upReq.src)
 		if err != nil {
 			return upload, err
 		}
-
-		upReq.src = io.MultiReader(bytes.NewReader(header.Bytes()), upReq.src)
 
 		if len(kind.Extension()) < 2 {
 			extension = "file"
@@ -408,14 +429,12 @@ func Process(ctx context.Context, upReq Request) (Upload, error) {
 		upReq.deleteKey = uniuri.NewLen(30)
 	}
 
-	upload.Metadata, err = config.StorageBackend.Put(ctx,
-		upload.OriginalName,
-		upload.Filename,
-		upReq.src,
-		fileExpiry,
-		upReq.deleteKey,
-		upReq.accessKey,
-	)
+	upload.Metadata, err = config.StorageBackend.Put(ctx, upReq.src, upload.Filename, upReq.size, backends.PutOptions{
+		OriginalName: upload.OriginalName,
+		Expiry:       fileExpiry,
+		DeleteKey:    upReq.deleteKey,
+		AccessKey:    upReq.accessKey,
+	})
 	if err != nil {
 		return upload, err
 	}
@@ -428,12 +447,16 @@ func HandleProcessError(w http.ResponseWriter, r *http.Request, err error) {
 	switch {
 	case errors.As(err, &maxBytes):
 		handlers.ErrorMsg(w, r, http.StatusRequestEntityTooLarge, "File too large")
+	case errors.Is(err, io.EOF):
+		handlers.ErrorMsg(w, r, http.StatusBadRequest, "Unexpected EOF")
 	case errors.Is(err, backends.ErrFileEmpty):
 		handlers.ErrorMsg(w, r, http.StatusBadRequest, "Empty file")
 	case errors.Is(err, ErrProhibitedFilename):
 		handlers.ErrorMsg(w, r, http.StatusBadRequest, "Prohibited filename")
 	case errors.Is(err, io.ErrUnexpectedEOF):
 		handlers.ErrorMsg(w, r, http.StatusBadRequest, "Upload canceled")
+	case errors.Is(err, backends.ErrSizeMismatch):
+		handlers.ErrorMsg(w, r, http.StatusBadRequest, "Size mismatch")
 	default:
 		slog.Error("Upload failed", "error", err)
 		handlers.Error(w, r, http.StatusInternalServerError)

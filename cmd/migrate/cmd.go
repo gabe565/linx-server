@@ -93,7 +93,12 @@ func run(cmd *cobra.Command, _ []string) error {
 				return ctx.Err()
 			}
 
-			if _, err := dstBackend.Put(ctx, meta.OriginalName, path, r, meta.Expiry, meta.DeleteKey, meta.AccessKey); err != nil {
+			if _, err := dstBackend.Put(ctx, r, path, meta.Size, backends.PutOptions{
+				OriginalName: meta.OriginalName,
+				Expiry:       meta.Expiry,
+				DeleteKey:    meta.DeleteKey,
+				AccessKey:    meta.AccessKey,
+			}); err != nil {
 				return fmt.Errorf("failed to put upload: %w", err)
 			}
 

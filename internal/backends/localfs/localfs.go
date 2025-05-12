@@ -25,7 +25,8 @@ type MetadataJSON struct {
 	OriginalName string          `json:"original_name,omitzero"`
 	DeleteKey    string          `json:"delete_key"`
 	AccessKey    string          `json:"access_key,omitzero"`
-	Sha256sum    string          `json:"sha256sum"`
+	Sha256sum    string          `json:"sha256sum,omitzero"`
+	Checksum     string          `json:"checksum"`
 	Mimetype     string          `json:"mimetype"`
 	Expiry       backends.Expiry `json:"expiry,omitzero"`
 	ArchiveFiles []string        `json:"archive_files,omitzero"`
@@ -110,7 +111,10 @@ func (b Backend) Head(_ context.Context, key string) (backends.Metadata, error) 
 	metadata.AccessKey = mjson.AccessKey
 	metadata.Mimetype = mjson.Mimetype
 	metadata.ArchiveFiles = mjson.ArchiveFiles
-	metadata.Sha256sum = mjson.Sha256sum
+	metadata.Checksum = mjson.Checksum
+	if metadata.Checksum == "" {
+		metadata.Checksum = mjson.Sha256sum
+	}
 	metadata.Expiry = time.Time(mjson.Expiry)
 
 	if stat, err := f.Stat(); err == nil {
@@ -168,7 +172,7 @@ func (b Backend) writeMetadata(key string, metadata backends.Metadata) error {
 		AccessKey:    metadata.AccessKey,
 		Mimetype:     metadata.Mimetype,
 		ArchiveFiles: metadata.ArchiveFiles,
-		Sha256sum:    metadata.Sha256sum,
+		Checksum:     metadata.Checksum,
 		Expiry:       backends.Expiry(metadata.Expiry),
 	}
 
@@ -207,10 +211,10 @@ func (b Backend) writeMetadata(key string, metadata backends.Metadata) error {
 
 func (b Backend) Put(
 	_ context.Context,
-	originalName, key string,
 	r io.Reader,
-	expiry time.Time,
-	deleteKey, accessKey string,
+	key string,
+	size int64,
+	opts backends.PutOptions,
 ) (backends.Metadata, error) {
 	var m backends.Metadata
 
@@ -234,6 +238,12 @@ func (b Backend) Put(
 		}
 	}()
 
+	if size > 0 {
+		if err := f.Truncate(size); err != nil {
+			return m, err
+		}
+	}
+
 	m, err = helpers.GenerateMetadata(io.TeeReader(r, f))
 	if err != nil {
 		return m, err
@@ -241,22 +251,25 @@ func (b Backend) Put(
 
 	_, _ = f.Seek(0, io.SeekStart)
 
-	if m.Size == 0 {
+	switch {
+	case m.Size == 0:
 		return m, backends.ErrFileEmpty
+	case size != 0 && m.Size != size:
+		return m, backends.ErrSizeMismatch
 	}
 
-	m.OriginalName = originalName
-	m.Expiry = expiry
-	m.DeleteKey = deleteKey
-	m.AccessKey = accessKey
+	m.OriginalName = opts.OriginalName
+	m.Expiry = opts.Expiry
+	m.DeleteKey = opts.DeleteKey
+	m.AccessKey = opts.AccessKey
 	m.ArchiveFiles, _ = helpers.ListArchiveFiles(m.Mimetype, m.Size, f)
 
-	err = b.writeMetadata(key, m)
-	if err != nil {
+	if err := f.Close(); err != nil {
 		return m, err
 	}
 
-	if err := f.Close(); err != nil {
+	err = b.writeMetadata(key, m)
+	if err != nil {
 		return m, err
 	}
 

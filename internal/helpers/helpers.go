@@ -1,42 +1,56 @@
 package helpers
 
 import (
+	"bytes"
+	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
 	"io"
 
 	"gabe565.com/linx-server/internal/backends"
+	"gabe565.com/utils/bytefmt"
 	"github.com/gabriel-vasile/mimetype"
-	"github.com/minio/sha256-simd"
 )
 
-func GenerateMetadata(r io.Reader) (backends.Metadata, error) {
-	hasher := sha256.New()
-	sz := &sizeWriter{w: hasher}
+func DetectMimetype(r io.Reader) (*mimetype.MIME, io.Reader, error) {
+	if seeker, ok := r.(io.Seeker); ok {
+		kind, err := mimetype.DetectReader(r)
+		if err != nil {
+			return nil, r, err
+		}
 
-	kind, err := mimetype.DetectReader(io.TeeReader(r, sz))
+		if _, err := seeker.Seek(0, io.SeekStart); err != nil {
+			return nil, r, err
+		}
+
+		return kind, r, nil
+	}
+
+	var buf bytes.Buffer
+	buf.Grow(3 * bytefmt.KiB)
+
+	kind, err := mimetype.DetectReader(io.TeeReader(r, &buf))
+	if err == nil && buf.Len() == 0 {
+		err = backends.ErrFileEmpty
+	}
+	return kind, io.MultiReader(bytes.NewReader(buf.Bytes()), r), err
+}
+
+func GenerateMetadata(r io.Reader) (backends.Metadata, error) {
+	mime, r, err := DetectMimetype(r)
 	if err != nil {
 		return backends.Metadata{}, fmt.Errorf("detecting mimetype: %w", err)
 	}
 
-	if _, err := io.Copy(sz, r); err != nil {
+	hasher := sha256.New()
+	n, err := io.Copy(hasher, r)
+	if err != nil {
 		return backends.Metadata{}, fmt.Errorf("hashing data: %w", err)
 	}
 
 	return backends.Metadata{
-		Size:      sz.size,
-		Sha256sum: hex.EncodeToString(hasher.Sum(nil)),
-		Mimetype:  kind.String(),
+		Size:     n,
+		Checksum: hex.EncodeToString(hasher.Sum(nil)),
+		Mimetype: mime.String(),
 	}, nil
-}
-
-type sizeWriter struct {
-	w    io.Writer
-	size int64
-}
-
-func (s *sizeWriter) Write(p []byte) (int, error) {
-	n, err := s.w.Write(p)
-	s.size += int64(n)
-	return n, err
 }

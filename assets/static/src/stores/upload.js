@@ -44,12 +44,15 @@ export const useUploadStore = defineStore(
       inProgress.value[id] = upload;
 
       const form = new FormData();
-      form.append("file", file);
+      form.append("size", file.size);
       form.append("expires", expiry);
       if (password) {
         form.append("access_key", password);
       }
       form.append("randomize", randomFilename);
+
+      // This field must be last so it can be streamed
+      form.append("file", file);
 
       try {
         const res = await axios.post(ApiPath(`/upload`), form, {

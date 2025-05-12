@@ -29,9 +29,6 @@ func mapMetadata(m backends.Metadata) map[string]string {
 	if m.AccessKey != "" {
 		mapped[AccessKey] = m.AccessKey
 	}
-	if m.Sha256sum != "" {
-		mapped[Sha256sum] = m.Sha256sum
-	}
 	if !m.Expiry.IsZero() {
 		mapped[Expiry] = m.Expiry.Format(time.RFC3339)
 	}
@@ -40,6 +37,7 @@ func mapMetadata(m backends.Metadata) map[string]string {
 
 func unmapMetadata(info minio.ObjectInfo) (backends.Metadata, error) {
 	m := backends.Metadata{
+		Checksum: info.ETag,
 		Mimetype: info.ContentType,
 		Size:     info.Size,
 		ModTime:  info.LastModified,
@@ -54,7 +52,7 @@ func unmapMetadata(info minio.ObjectInfo) (backends.Metadata, error) {
 		case AccessKey:
 			m.AccessKey = v
 		case Sha256sum:
-			m.Sha256sum = v
+			m.Checksum = v
 		case Mimetype:
 			m.Mimetype = v
 		case Expiry:

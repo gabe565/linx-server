@@ -27,8 +27,8 @@ const (
 )
 
 const (
-	HeaderName = "Linx-Access-Key"
-	ParamName  = "access_key"
+	AccessKeyHeader = "Linx-Access-Key"
+	AccessKeyParam  = "access_key"
 )
 
 //nolint:gochecknoglobals
@@ -47,7 +47,7 @@ func CheckAccessKey(r *http.Request, metadata *backends.Metadata) (AccessKeySour
 		return AccessKeySourceNone, nil
 	}
 
-	cookieKey, err := r.Cookie(HeaderName)
+	cookieKey, err := r.Cookie(AccessKeyHeader)
 	if err == nil {
 		if cookieKey.Value == key {
 			return AccessKeySourceCookie, nil
@@ -55,21 +55,21 @@ func CheckAccessKey(r *http.Request, metadata *backends.Metadata) (AccessKeySour
 		return AccessKeySourceCookie, errInvalidAccessKey
 	}
 
-	headerKey := r.Header.Get(HeaderName)
+	headerKey := r.Header.Get(AccessKeyHeader)
 	if headerKey == key {
 		return AccessKeySourceHeader, nil
 	} else if headerKey != "" {
 		return AccessKeySourceHeader, errInvalidAccessKey
 	}
 
-	formKey := r.PostFormValue(ParamName)
+	formKey := r.PostFormValue(AccessKeyParam)
 	if formKey == key {
 		return AccessKeySourceForm, nil
 	} else if formKey != "" {
 		return AccessKeySourceForm, errInvalidAccessKey
 	}
 
-	queryKey := r.URL.Query().Get(ParamName)
+	queryKey := r.URL.Query().Get(AccessKeyParam)
 	if queryKey == key {
 		return AccessKeySourceQuery, nil
 	} else if formKey != "" {
@@ -82,7 +82,7 @@ func CheckAccessKey(r *http.Request, metadata *backends.Metadata) (AccessKeySour
 func SetAccessKeyCookies(w http.ResponseWriter, r *http.Request, fileName, value string, expires time.Time) {
 	u := headers.GetSiteURL(r)
 	cookie := http.Cookie{
-		Name:     HeaderName,
+		Name:     AccessKeyHeader,
 		Value:    value,
 		HttpOnly: true,
 		Domain:   u.Hostname(),
