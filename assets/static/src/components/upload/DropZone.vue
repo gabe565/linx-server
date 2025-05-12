@@ -1,6 +1,5 @@
 <template>
   <div
-    ref="dropZone"
     class="w-full h-50 border-2 border-dashed border-gray-500 text-gray-500 dark:border-gray-400 dark:text-gray-400 opacity-75 hover:opacity-100 rounded-lg flex flex-col items-center justify-center text-center cursor-pointer transition"
     :class="{ 'opacity-100': isOverDropZone }"
     @click.prevent="triggerFileInput"
@@ -38,7 +37,6 @@ defineProps({
   maxFileSize: { type: Number, required: false },
 });
 
-const dropZone = ref();
 const fileInput = ref();
 const emit = defineEmits(["upload"]);
 
@@ -59,9 +57,8 @@ const onFileChange = (e) => {
   fileInput.value.value = null;
 };
 
-const { isOverDropZone } = useDropZone(dropZone, {
+const { isOverDropZone } = useDropZone(window, {
   onDrop(files) {
-    if (!files?.length) return;
     for (const file of files) {
       emit("upload", file);
     }
