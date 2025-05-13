@@ -76,12 +76,10 @@ func FileServeHandler(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Disposition", "attachment; filename="+strconv.Quote(dlName))
 	}
 
-	if r.Method != http.MethodHead {
-		if err := config.StorageBackend.ServeFile(fileName, w, r); err != nil {
-			slog.Error("Failed to serve file", "path", fileName, "error", err)
-			Error(w, r, http.StatusInternalServerError)
-			return
-		}
+	if err := config.StorageBackend.ServeFile(fileName, w, r); err != nil {
+		slog.Error("Failed to serve file", "path", fileName, "error", err)
+		Error(w, r, http.StatusInternalServerError)
+		return
 	}
 }
 
