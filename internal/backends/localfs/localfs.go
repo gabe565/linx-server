@@ -250,12 +250,12 @@ func (b Backend) Put(
 	m.AccessKey = opts.AccessKey
 	m.ArchiveFiles, _ = helpers.ListArchiveFiles(m.Mimetype, m.Size, f)
 
-	err = b.writeMetadata(key, m)
-	if err != nil {
+	if err := f.Close(); err != nil {
 		return m, err
 	}
 
-	if err := f.Close(); err != nil {
+	err = b.writeMetadata(key, m)
+	if err != nil {
 		return m, err
 	}
 
