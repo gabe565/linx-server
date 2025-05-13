@@ -1,7 +1,6 @@
 package upload
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -25,8 +24,8 @@ import (
 	"gabe565.com/linx-server/internal/csrf"
 	"gabe565.com/linx-server/internal/handlers"
 	"gabe565.com/linx-server/internal/headers"
+	"gabe565.com/linx-server/internal/helpers"
 	"gabe565.com/linx-server/internal/util"
-	"gabe565.com/utils/bytefmt"
 	"github.com/dchest/uniuri"
 	"github.com/gabriel-vasile/mimetype"
 	"github.com/go-chi/chi/v5"
@@ -321,16 +320,13 @@ func Process(ctx context.Context, upReq Request) (Upload, error) {
 	}
 
 	if len(extension) == 0 {
-		var header bytes.Buffer
-		header.Grow(3 * bytefmt.KiB)
-
 		// Determine the type of file from the file header
-		kind, err := mimetype.DetectReader(io.TeeReader(upReq.src, &header))
+		var kind *mimetype.MIME
+		var err error
+		kind, upReq.src, err = helpers.DetectMimetype(upReq.src)
 		if err != nil {
 			return upload, err
 		}
-
-		upReq.src = io.MultiReader(bytes.NewReader(header.Bytes()), upReq.src)
 
 		if len(kind.Extension()) < 2 {
 			extension = "file"
