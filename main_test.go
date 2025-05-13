@@ -37,7 +37,9 @@ type RespErrJSON struct {
 
 const testURL = "http://linx.example.org/"
 
-func setup(t *testing.T) (*chi.Mux, *httptest.ResponseRecorder) {
+func setup(t *testing.T, overrides func()) (*chi.Mux, *httptest.ResponseRecorder) {
+	t.Cleanup(func() { config.Default = config.New() })
+
 	u, err := url.Parse(testURL)
 	require.NoError(t, err)
 	config.Default.SiteURL.URL = *u
@@ -50,7 +52,10 @@ func setup(t *testing.T) (*chi.Mux, *httptest.ResponseRecorder) {
 	config.Default.NoLogs = true
 	config.Default.SiteName = "linx"
 	config.Default.ForceRandomFilename = false
-	t.Cleanup(func() { config.Default = config.New() })
+
+	if overrides != nil {
+		overrides()
+	}
 
 	r, err := server.Setup()
 	require.NoError(t, err)
@@ -63,7 +68,7 @@ func assertResponse(t *testing.T, w *httptest.ResponseRecorder, wantStatus int, 
 }
 
 func TestIndex(t *testing.T) {
-	r, w := setup(t)
+	r, w := setup(t, nil)
 
 	req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, "/", nil)
 	require.NoError(t, err)
@@ -74,9 +79,9 @@ func TestIndex(t *testing.T) {
 }
 
 func TestConfigStandardMaxExpiry(t *testing.T) {
-	r, w := setup(t)
-
-	config.Default.MaxExpiry.Duration = 60 * time.Second
+	r, w := setup(t, func() {
+		config.Default.MaxExpiry.Duration = 60 * time.Second
+	})
 
 	req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, "/api/config", nil)
 	require.NoError(t, err)
@@ -87,9 +92,9 @@ func TestConfigStandardMaxExpiry(t *testing.T) {
 }
 
 func TestConfigWeirdMaxExpiry(t *testing.T) {
-	r, w := setup(t)
-
-	config.Default.MaxExpiry.Duration = 25 * time.Minute
+	r, w := setup(t, func() {
+		config.Default.MaxExpiry.Duration = 25 * time.Minute
+	})
 
 	req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, "/api/config", nil)
 	require.NoError(t, err)
@@ -100,8 +105,9 @@ func TestConfigWeirdMaxExpiry(t *testing.T) {
 }
 
 func TestAddHeader(t *testing.T) {
-	config.Default.Header.AddHeaders = map[string]string{"Linx-Test": "It works!"}
-	r, w := setup(t)
+	r, w := setup(t, func() {
+		config.Default.Header.AddHeaders = map[string]string{"Linx-Test": "It works!"}
+	})
 
 	req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, "/", nil)
 	require.NoError(t, err)
@@ -112,7 +118,7 @@ func TestAddHeader(t *testing.T) {
 }
 
 func TestNotFound(t *testing.T) {
-	r, w := setup(t)
+	r, w := setup(t, nil)
 
 	req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, "/url/should/not/exist", nil)
 	require.NoError(t, err)
@@ -123,10 +129,9 @@ func TestNotFound(t *testing.T) {
 }
 
 func TestFileNotFound(t *testing.T) {
-	r, w := setup(t)
+	r, w := setup(t, nil)
 
 	filename := upload.GenerateBarename()
-
 	req, err := http.NewRequestWithContext(t.Context(),
 		http.MethodGet, path.Join("/", config.Default.SelifPath, filename), nil,
 	)
@@ -137,10 +142,9 @@ func TestFileNotFound(t *testing.T) {
 }
 
 func TestDisplayNotFound(t *testing.T) {
-	r, w := setup(t)
+	r, w := setup(t, nil)
 
 	filename := upload.GenerateBarename()
-
 	req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, path.Join("/", filename), nil)
 	require.NoError(t, err)
 
@@ -159,14 +163,8 @@ func newPostForm(
 	var b bytes.Buffer
 	mw := multipart.NewWriter(&b)
 
-	fw, err := mw.CreateFormField("size")
-	require.NoError(t, err)
-
-	_, err = io.WriteString(fw, strconv.Itoa(len(content)))
-	require.NoError(t, err)
-
 	if expiry != 0 {
-		fw, err = mw.CreateFormField("expires")
+		fw, err := mw.CreateFormField("expires")
 		require.NoError(t, err)
 
 		_, err = io.WriteString(fw, expiry.String())
@@ -174,14 +172,14 @@ func newPostForm(
 	}
 
 	if accessKey != "" {
-		fw, err = mw.CreateFormField("access_key")
+		fw, err := mw.CreateFormField("access_key")
 		require.NoError(t, err)
 
 		_, err = io.WriteString(fw, accessKey)
 		require.NoError(t, err)
 	}
 
-	fw, err = mw.CreateFormField("randomize")
+	fw, err := mw.CreateFormField("randomize")
 	require.NoError(t, err)
 
 	_, err = io.WriteString(fw, strconv.FormatBool(randomize))
@@ -200,7 +198,7 @@ func newPostForm(
 const ExtTxt = "txt"
 
 func TestPostUpload(t *testing.T) {
-	r, w := setup(t)
+	r, w := setup(t, nil)
 
 	filename := upload.GenerateBarename() + "." + ExtTxt
 	mw, b := newPostForm(t, filename, "File content", 0, "", false)
@@ -217,7 +215,7 @@ func TestPostUpload(t *testing.T) {
 }
 
 func TestPostUploadWhitelistedHeader(t *testing.T) {
-	r, w := setup(t)
+	r, w := setup(t, nil)
 
 	filename := upload.GenerateBarename() + "." + ExtTxt
 	mw, b := newPostForm(t, filename, "File content", 0, "", false)
@@ -232,7 +230,7 @@ func TestPostUploadWhitelistedHeader(t *testing.T) {
 }
 
 func TestPostUploadBadOrigin(t *testing.T) {
-	r, w := setup(t)
+	r, w := setup(t, nil)
 
 	filename := upload.GenerateBarename() + "." + ExtTxt
 	mw, b := newPostForm(t, filename, "File content", 0, "", false)
@@ -248,7 +246,7 @@ func TestPostUploadBadOrigin(t *testing.T) {
 }
 
 func TestPostJSONUpload(t *testing.T) {
-	r, w := setup(t)
+	r, w := setup(t, nil)
 
 	filename := upload.GenerateBarename() + ".txt"
 	mw, b := newPostForm(t, filename, "File content", 0, "", false)
@@ -273,8 +271,9 @@ func TestPostJSONUpload(t *testing.T) {
 }
 
 func TestPostJSONUploadMaxExpiry(t *testing.T) {
-	r, _ := setup(t)
-	config.Default.MaxExpiry.Duration = 5 * time.Minute
+	r, _ := setup(t, func() {
+		config.Default.MaxExpiry.Duration = 5 * time.Minute
+	})
 
 	// include 0 to test edge case
 	// https://github.com/andreimarcu/linx-server/issues/111
@@ -305,12 +304,10 @@ func TestPostJSONUploadMaxExpiry(t *testing.T) {
 		expected := time.Now().Add(config.Default.MaxExpiry.Duration).Unix()
 		assert.Equal(t, expected, myExp)
 	}
-
-	config.Default.MaxExpiry.Duration = 0
 }
 
 func TestPostExpiresJSONUpload(t *testing.T) {
-	r, w := setup(t)
+	r, w := setup(t, nil)
 
 	filename := upload.GenerateBarename() + ".txt"
 	mw, b := newPostForm(t, filename, "File content", time.Minute, "", false)
@@ -339,7 +336,7 @@ func TestPostExpiresJSONUpload(t *testing.T) {
 }
 
 func TestPostRandomizeJSONUpload(t *testing.T) {
-	r, w := setup(t)
+	r, w := setup(t, nil)
 
 	filename := upload.GenerateBarename() + "." + ExtTxt
 	mw, b := newPostForm(t, filename, "File content", 0, "", true)
@@ -362,7 +359,7 @@ func TestPostRandomizeJSONUpload(t *testing.T) {
 }
 
 func TestPostEmptyUpload(t *testing.T) {
-	r, w := setup(t)
+	r, w := setup(t, nil)
 
 	filename := upload.GenerateBarename() + "." + ExtTxt
 	mw, b := newPostForm(t, filename, "", 0, "", false)
@@ -378,8 +375,9 @@ func TestPostEmptyUpload(t *testing.T) {
 }
 
 func TestPostTooLargeUpload(t *testing.T) {
-	r, w := setup(t)
-	config.Default.MaxSize = 2
+	r, w := setup(t, func() {
+		config.Default.MaxSize = 2
+	})
 
 	filename := upload.GenerateBarename() + "." + ExtTxt
 	mw, b := newPostForm(t, filename, "File content", 0, "", false)
@@ -395,7 +393,7 @@ func TestPostTooLargeUpload(t *testing.T) {
 }
 
 func TestPostEmptyJSONUpload(t *testing.T) {
-	r, w := setup(t)
+	r, w := setup(t, nil)
 
 	filename := upload.GenerateBarename() + "." + ExtTxt
 	mw, b := newPostForm(t, filename, "", 0, "", false)
@@ -418,10 +416,9 @@ func TestPostEmptyJSONUpload(t *testing.T) {
 }
 
 func TestPutUpload(t *testing.T) {
-	r, w := setup(t)
+	r, w := setup(t, nil)
 
 	filename := upload.GenerateBarename() + ".file"
-
 	req, err := http.NewRequestWithContext(t.Context(),
 		http.MethodPut, path.Join("/upload", filename), strings.NewReader("File content"),
 	)
@@ -436,10 +433,9 @@ func TestPutUpload(t *testing.T) {
 }
 
 func TestPutRandomizedUpload(t *testing.T) {
-	r, w := setup(t)
+	r, w := setup(t, nil)
 
 	filename := upload.GenerateBarename() + ".file"
-
 	req, err := http.NewRequestWithContext(t.Context(),
 		http.MethodPut, path.Join("/upload", filename), strings.NewReader("File content"),
 	)
@@ -456,11 +452,11 @@ func TestPutRandomizedUpload(t *testing.T) {
 }
 
 func TestPutForceRandomUpload(t *testing.T) {
-	r, w := setup(t)
+	r, w := setup(t, func() {
+		config.Default.ForceRandomFilename = true
+	})
 
-	config.Default.ForceRandomFilename = true
 	filename := "randomizeme.file"
-
 	req, err := http.NewRequestWithContext(t.Context(),
 		http.MethodPut, path.Join("/upload", filename), strings.NewReader("File content"),
 	)
@@ -479,10 +475,9 @@ func TestPutForceRandomUpload(t *testing.T) {
 }
 
 func TestPutNoExtensionUpload(t *testing.T) {
-	r, w := setup(t)
+	r, w := setup(t, nil)
 
 	filename := upload.GenerateBarename()
-
 	req, err := http.NewRequestWithContext(t.Context(),
 		http.MethodPut, path.Join("/upload", filename), strings.NewReader("File content"),
 	)
@@ -499,10 +494,9 @@ func TestPutNoExtensionUpload(t *testing.T) {
 }
 
 func TestPutEmptyUpload(t *testing.T) {
-	r, w := setup(t)
+	r, w := setup(t, nil)
 
 	filename := upload.GenerateBarename() + ".file"
-
 	req, err := http.NewRequestWithContext(t.Context(),
 		http.MethodPut, path.Join("/upload", filename), strings.NewReader(""),
 	)
@@ -514,13 +508,11 @@ func TestPutEmptyUpload(t *testing.T) {
 }
 
 func TestPutTooLargeUpload(t *testing.T) {
-	_, w := setup(t)
-	config.Default.MaxSize = 2
-	r, err := server.Setup()
-	require.NoError(t, err)
+	r, w := setup(t, func() {
+		config.Default.MaxSize = 2
+	})
 
 	filename := upload.GenerateBarename() + ".file"
-
 	req, err := http.NewRequestWithContext(t.Context(),
 		http.MethodPut, path.Join("/upload", filename), strings.NewReader("File too big"),
 	)
@@ -533,10 +525,9 @@ func TestPutTooLargeUpload(t *testing.T) {
 }
 
 func TestPutJSONUpload(t *testing.T) {
-	r, w := setup(t)
+	r, w := setup(t, nil)
 
 	filename := upload.GenerateBarename() + ".file"
-
 	req, err := http.NewRequestWithContext(t.Context(),
 		http.MethodPut, path.Join("/upload", filename), strings.NewReader("File content"),
 	)
@@ -553,12 +544,9 @@ func TestPutJSONUpload(t *testing.T) {
 }
 
 func TestPutRandomizedJSONUpload(t *testing.T) {
-	var myjson RespOkJSON
-
-	r, w := setup(t)
+	r, w := setup(t, nil)
 
 	filename := upload.GenerateBarename() + ".file"
-
 	req, err := http.NewRequestWithContext(t.Context(),
 		http.MethodPut, path.Join("/upload", filename), strings.NewReader("File content"),
 	)
@@ -569,18 +557,16 @@ func TestPutRandomizedJSONUpload(t *testing.T) {
 	r.ServeHTTP(w, req)
 	assertResponse(t, w, http.StatusOK, "application/json")
 
+	var myjson RespOkJSON
 	err = json.Unmarshal(w.Body.Bytes(), &myjson)
 	require.NoError(t, err)
 	assert.NotEqual(t, filename, myjson.Filename, "filename was not random")
 }
 
 func TestPutExpireJSONUpload(t *testing.T) {
-	var myjson RespOkJSON
-
-	r, w := setup(t)
+	r, w := setup(t, nil)
 
 	filename := upload.GenerateBarename() + ".file"
-
 	req, err := http.NewRequestWithContext(t.Context(),
 		http.MethodPut, path.Join("/upload/", filename), strings.NewReader("File content"),
 	)
@@ -591,6 +577,7 @@ func TestPutExpireJSONUpload(t *testing.T) {
 	r.ServeHTTP(w, req)
 	assertResponse(t, w, http.StatusOK, "application/json")
 
+	var myjson RespOkJSON
 	err = json.Unmarshal(w.Body.Bytes(), &myjson)
 	require.NoError(t, err)
 
@@ -600,9 +587,7 @@ func TestPutExpireJSONUpload(t *testing.T) {
 }
 
 func TestPutAndDelete(t *testing.T) {
-	var myjson RespOkJSON
-
-	r, w := setup(t)
+	r, w := setup(t, nil)
 
 	req, err := http.NewRequestWithContext(t.Context(), http.MethodPut, "/upload", strings.NewReader("File content"))
 	require.NoError(t, err)
@@ -611,6 +596,7 @@ func TestPutAndDelete(t *testing.T) {
 	r.ServeHTTP(w, req)
 	assertResponse(t, w, http.StatusOK, "application/json")
 
+	var myjson RespOkJSON
 	err = json.Unmarshal(w.Body.Bytes(), &myjson)
 	require.NoError(t, err)
 
@@ -639,9 +625,7 @@ func TestPutAndDelete(t *testing.T) {
 }
 
 func TestPutAndOverwrite(t *testing.T) {
-	var myjson RespOkJSON
-
-	r, w := setup(t)
+	r, w := setup(t, nil)
 
 	req, err := http.NewRequestWithContext(t.Context(), http.MethodPut, "/upload", strings.NewReader("File content"))
 	require.NoError(t, err)
@@ -650,6 +634,7 @@ func TestPutAndOverwrite(t *testing.T) {
 	r.ServeHTTP(w, req)
 	assertResponse(t, w, http.StatusOK, "application/json")
 
+	var myjson RespOkJSON
 	err = json.Unmarshal(w.Body.Bytes(), &myjson)
 	require.NoError(t, err)
 
@@ -678,11 +663,9 @@ func TestPutAndOverwrite(t *testing.T) {
 }
 
 func TestPutAndOverwriteForceRandom(t *testing.T) {
-	var myjson RespOkJSON
-
-	r, w := setup(t)
-
-	config.Default.ForceRandomFilename = true
+	r, w := setup(t, func() {
+		config.Default.ForceRandomFilename = true
+	})
 
 	req, err := http.NewRequestWithContext(t.Context(), http.MethodPut, "/upload", strings.NewReader("File content"))
 	require.NoError(t, err)
@@ -691,6 +674,7 @@ func TestPutAndOverwriteForceRandom(t *testing.T) {
 	r.ServeHTTP(w, req)
 	assertResponse(t, w, http.StatusOK, "application/json")
 
+	var myjson RespOkJSON
 	err = json.Unmarshal(w.Body.Bytes(), &myjson)
 	require.NoError(t, err)
 
@@ -718,9 +702,7 @@ func TestPutAndOverwriteForceRandom(t *testing.T) {
 }
 
 func TestPutAndSpecificDelete(t *testing.T) {
-	var myjson RespOkJSON
-
-	r, w := setup(t)
+	r, w := setup(t, nil)
 
 	req, err := http.NewRequestWithContext(t.Context(), http.MethodPut, "/upload", strings.NewReader("File content"))
 	require.NoError(t, err)
@@ -730,6 +712,7 @@ func TestPutAndSpecificDelete(t *testing.T) {
 	r.ServeHTTP(w, req)
 	assertResponse(t, w, http.StatusOK, "application/json")
 
+	var myjson RespOkJSON
 	err = json.Unmarshal(w.Body.Bytes(), &myjson)
 	require.NoError(t, err)
 
@@ -760,8 +743,7 @@ func TestPutAndSpecificDelete(t *testing.T) {
 }
 
 func TestPutAndGetCLI(t *testing.T) {
-	var myjson RespOkJSON
-	r, _ := setup(t)
+	r, _ := setup(t, nil)
 
 	// upload file
 	w := httptest.NewRecorder()
@@ -772,6 +754,7 @@ func TestPutAndGetCLI(t *testing.T) {
 	r.ServeHTTP(w, req)
 	assertResponse(t, w, http.StatusOK, "application/json")
 
+	var myjson RespOkJSON
 	err = json.Unmarshal(w.Body.Bytes(), &myjson)
 	require.NoError(t, err)
 
