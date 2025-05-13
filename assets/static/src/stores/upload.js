@@ -56,9 +56,11 @@ export const useUploadStore = defineStore(
       inProgress.value[id] = upload;
 
       const form = new FormData();
+      form.append("size", file.size);
       form.append("expires", expiry);
       if (password) form.append("access_key", password);
       form.append("randomize", randomFilename);
+      // This field must be last since it is streamed
       form.append("file", file);
 
       try {

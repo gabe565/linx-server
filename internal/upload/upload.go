@@ -26,6 +26,7 @@ import (
 	"gabe565.com/linx-server/internal/headers"
 	"gabe565.com/linx-server/internal/helpers"
 	"gabe565.com/linx-server/internal/util"
+	"gabe565.com/utils/bytefmt"
 	"github.com/dchest/uniuri"
 	"github.com/gabriel-vasile/mimetype"
 	"github.com/go-chi/chi/v5"
@@ -98,11 +99,14 @@ func POSTHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	var upReq Request
+	upReq := Request{
+		expiry: config.Default.MaxExpiry.Duration,
+	}
 	HeaderProcess(r, &upReq)
 
-	if err := r.ParseMultipartForm(int64(config.Default.UploadMaxMemory)); err != nil {
-		if errors.Is(err, http.ErrNotMultipart) || errors.Is(err, http.ErrMissingBoundary) {
+	multipart, err := r.MultipartReader()
+	if err != nil {
+		if errors.Is(err, http.ErrNotMultipart) || r.Body == nil {
 			handlers.ErrorMsg(w, r, http.StatusBadRequest, err.Error())
 		} else {
 			HandleProcessError(w, r, err)
@@ -110,21 +114,46 @@ func POSTHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	file, fileHeader, err := r.FormFile("file")
-	if err != nil {
-		HandleProcessError(w, r, err)
+	for {
+		part, err := multipart.NextPart()
+		if err != nil {
+			HandleProcessError(w, r, err)
+			return
+		}
+
+		if part.FormName() == "file" {
+			upReq.src = part
+			upReq.filename = part.FileName()
+			break
+		}
+
+		b, err := io.ReadAll(io.LimitReader(part, 32*bytefmt.KiB))
+		if err != nil {
+			HandleProcessError(w, r, err)
+			return
+		}
+		_ = part.Close()
+
+		switch part.FormName() {
+		case "size":
+			upReq.size, err = strconv.ParseInt(string(b), 10, 64)
+			if err != nil {
+				handlers.ErrorMsg(w, r, http.StatusBadRequest, "size must be an integer")
+				return
+			}
+		case "expires":
+			upReq.expiry = ParseExpiry(string(b))
+		case handlers.AccessKeyParam:
+			upReq.accessKey = string(b)
+		case "randomize":
+			upReq.randomBarename = util.ParseBool(string(b), false)
+		}
+	}
+
+	if upReq.src == nil {
+		HandleProcessError(w, r, backends.ErrFileEmpty)
 		return
 	}
-	defer func() {
-		_ = file.Close()
-	}()
-
-	upReq.src = file
-	upReq.size = fileHeader.Size
-	upReq.filename = fileHeader.Filename
-	upReq.expiry = ParseExpiry(r.PostFormValue("expires"))
-	upReq.accessKey = r.PostFormValue(handlers.AccessKeyParam)
-	upReq.randomBarename = util.ParseBool(r.PostFormValue("randomize"), false)
 
 	upload, err := Process(r.Context(), upReq)
 	if err != nil {
