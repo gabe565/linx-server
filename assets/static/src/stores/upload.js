@@ -1,8 +1,9 @@
 import { ApiPath } from "@/config/api.js";
 import { useConfigStore } from "@/stores/config.js";
+import { useWakeLock } from "@vueuse/core";
 import axios from "axios";
 import { defineStore } from "pinia";
-import { ref } from "vue";
+import { reactive, ref } from "vue";
 import { toast } from "vue-sonner";
 
 const config = useConfigStore();
@@ -31,6 +32,8 @@ export const useUploadStore = defineStore(
       }
     };
 
+    const wakelock = reactive(useWakeLock());
+
     const uploadFile = async ({
       file,
       expiry,
@@ -41,6 +44,9 @@ export const useUploadStore = defineStore(
       const controller = new AbortController();
       const upload = ref({ original_name: file.name, progress: { progress: 0 }, controller });
       const id = uploadID++;
+      if (Object.keys(inProgress.value).length === 0) {
+        wakelock.request("screen");
+      }
       inProgress.value[id] = upload;
 
       const form = new FormData();
@@ -91,6 +97,9 @@ export const useUploadStore = defineStore(
         throw err;
       } finally {
         delete inProgress.value[id];
+        if (Object.keys(inProgress.value).length === 0) {
+          wakelock.release();
+        }
       }
     };
 
