@@ -159,14 +159,8 @@ func newPostForm(
 	var b bytes.Buffer
 	mw := multipart.NewWriter(&b)
 
-	fw, err := mw.CreateFormFile("file", filename)
-	require.NoError(t, err)
-
-	_, err = io.WriteString(fw, content)
-	require.NoError(t, err)
-
 	if expiry != 0 {
-		fw, err = mw.CreateFormField("expires")
+		fw, err := mw.CreateFormField("expires")
 		require.NoError(t, err)
 
 		_, err = io.WriteString(fw, expiry.String())
@@ -174,17 +168,23 @@ func newPostForm(
 	}
 
 	if accessKey != "" {
-		fw, err = mw.CreateFormField("access_key")
+		fw, err := mw.CreateFormField("access_key")
 		require.NoError(t, err)
 
 		_, err = io.WriteString(fw, accessKey)
 		require.NoError(t, err)
 	}
 
-	fw, err = mw.CreateFormField("randomize")
+	fw, err := mw.CreateFormField("randomize")
 	require.NoError(t, err)
 
 	_, err = io.WriteString(fw, strconv.FormatBool(randomize))
+	require.NoError(t, err)
+
+	fw, err = mw.CreateFormFile("file", filename)
+	require.NoError(t, err)
+
+	_, err = io.WriteString(fw, content)
 	require.NoError(t, err)
 
 	require.NoError(t, mw.Close())
