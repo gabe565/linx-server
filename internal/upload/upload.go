@@ -42,6 +42,7 @@ var fileDenylist = []string{
 type Request struct {
 	src            io.Reader
 	size           int64
+	allowZeroSize  bool
 	filename       string
 	expiry         time.Duration // Seconds until expiry, 0 = never
 	deleteKey      string        // Empty string if not defined
@@ -163,6 +164,7 @@ func PUTHandler(w http.ResponseWriter, r *http.Request) {
 
 	upReq.filename = chi.URLParam(r, "name")
 	upReq.src = r.Body
+	upReq.size = r.ContentLength
 
 	upload, err := Process(r.Context(), upReq)
 	if err != nil {
@@ -215,7 +217,8 @@ func Remote(w http.ResponseWriter, r *http.Request) {
 	directURL := util.ParseBool(r.FormValue("direct_url"), false)
 
 	upReq := Request{
-		filename: filepath.Base(grabURL.Path),
+		filename:      filepath.Base(grabURL.Path),
+		allowZeroSize: true,
 	}
 
 	req, err := http.NewRequestWithContext(r.Context(), http.MethodGet, grabURL.String(), nil)
@@ -259,6 +262,7 @@ func Remote(w http.ResponseWriter, r *http.Request) {
 	}
 
 	upReq.src = http.MaxBytesReader(w, resp.Body, int64(config.Default.MaxSize))
+	upReq.size = resp.ContentLength
 	upReq.deleteKey = r.FormValue("deletekey")
 	upReq.accessKey = r.FormValue(handlers.AccessKeyParam)
 	upReq.randomBarename = util.ParseBool(r.FormValue("randomize"), false)
@@ -301,6 +305,7 @@ var ErrProhibitedFilename = errors.New("prohibited filename")
 
 func Process(ctx context.Context, upReq Request) (Upload, error) {
 	var upload Upload
+
 	if upReq.size > int64(config.Default.MaxSize) {
 		return upload, &http.MaxBytesError{Limit: int64(config.Default.MaxSize)}
 	}
@@ -404,7 +409,7 @@ func Process(ctx context.Context, upReq Request) (Upload, error) {
 		upReq.deleteKey = uniuri.NewLen(30)
 	}
 
-	upload.Metadata, err = config.StorageBackend.Put(ctx, upReq.src, upload.Filename, backends.PutOptions{
+	upload.Metadata, err = config.StorageBackend.Put(ctx, upReq.src, upload.Filename, upReq.size, backends.PutOptions{
 		OriginalName: upload.OriginalName,
 		Expiry:       fileExpiry,
 		DeleteKey:    upReq.deleteKey,
@@ -422,12 +427,16 @@ func HandleProcessError(w http.ResponseWriter, r *http.Request, err error) {
 	switch {
 	case errors.As(err, &maxBytes):
 		handlers.ErrorMsg(w, r, http.StatusRequestEntityTooLarge, "File too large")
+	case errors.Is(err, io.EOF):
+		handlers.ErrorMsg(w, r, http.StatusBadRequest, "Unexpected EOF")
 	case errors.Is(err, backends.ErrFileEmpty):
 		handlers.ErrorMsg(w, r, http.StatusBadRequest, "Empty file")
 	case errors.Is(err, ErrProhibitedFilename):
 		handlers.ErrorMsg(w, r, http.StatusBadRequest, "Prohibited filename")
 	case errors.Is(err, io.ErrUnexpectedEOF):
 		handlers.ErrorMsg(w, r, http.StatusBadRequest, "Upload canceled")
+	case errors.Is(err, backends.ErrSizeMismatch):
+		handlers.ErrorMsg(w, r, http.StatusBadRequest, "Size mismatch")
 	default:
 		slog.Error("Upload failed", "error", err)
 		handlers.Error(w, r, http.StatusInternalServerError)

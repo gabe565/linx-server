@@ -98,6 +98,7 @@ func (b Backend) Put(
 	ctx context.Context,
 	r io.Reader,
 	key string,
+	_ int64,
 	opts backends.PutOptions,
 ) (backends.Metadata, error) {
 	var m backends.Metadata

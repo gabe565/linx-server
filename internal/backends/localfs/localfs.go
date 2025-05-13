@@ -209,6 +209,7 @@ func (b Backend) Put(
 	_ context.Context,
 	r io.Reader,
 	key string,
+	size int64,
 	opts backends.PutOptions,
 ) (backends.Metadata, error) {
 	var m backends.Metadata
@@ -240,8 +241,11 @@ func (b Backend) Put(
 
 	_, _ = f.Seek(0, io.SeekStart)
 
-	if m.Size == 0 {
+	switch {
+	case m.Size == 0:
 		return m, backends.ErrFileEmpty
+	case size > 0 && m.Size != size:
+		return m, backends.ErrSizeMismatch
 	}
 
 	m.OriginalName = opts.OriginalName

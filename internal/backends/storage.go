@@ -14,7 +14,7 @@ type StorageBackend interface {
 	Exists(ctx context.Context, key string) (bool, error)
 	Head(ctx context.Context, key string) (Metadata, error)
 	Get(ctx context.Context, key string) (Metadata, io.ReadCloser, error)
-	Put(ctx context.Context, r io.Reader, key string, opts PutOptions) (Metadata, error)
+	Put(ctx context.Context, r io.Reader, key string, size int64, opts PutOptions) (Metadata, error)
 	PutMetadata(ctx context.Context, key string, m Metadata) error
 	ServeFile(key string, w http.ResponseWriter, r *http.Request) error
 	Size(ctx context.Context, key string) (int64, error)
@@ -33,6 +33,7 @@ type ListBackend interface {
 }
 
 var (
-	ErrNotFound  = errors.New("file not found")
-	ErrFileEmpty = errors.New("empty file")
+	ErrNotFound     = errors.New("file not found")
+	ErrFileEmpty    = errors.New("empty file")
+	ErrSizeMismatch = errors.New("size mismatch")
 )

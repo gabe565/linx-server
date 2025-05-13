@@ -93,7 +93,7 @@ func run(cmd *cobra.Command, _ []string) error {
 				return ctx.Err()
 			}
 
-			if _, err := dstBackend.Put(ctx, r, path, backends.PutOptions{
+			if _, err := dstBackend.Put(ctx, r, path, meta.Size, backends.PutOptions{
 				OriginalName: meta.OriginalName,
 				Expiry:       meta.Expiry,
 				DeleteKey:    meta.DeleteKey,
