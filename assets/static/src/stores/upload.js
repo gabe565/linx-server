@@ -1,6 +1,6 @@
 import { ApiPath } from "@/config/api.js";
 import { useConfigStore } from "@/stores/config.js";
-import { useWakeLock } from "@vueuse/core";
+import { useEventListener, useWakeLock } from "@vueuse/core";
 import axios from "axios";
 import { defineStore } from "pinia";
 import { reactive, ref } from "vue";
@@ -33,6 +33,12 @@ export const useUploadStore = defineStore(
     };
 
     const wakelock = reactive(useWakeLock());
+
+    useEventListener(window, "beforeunload", (e) => {
+      if (Object.keys(inProgress.value).length !== 0) {
+        e.preventDefault();
+      }
+    });
 
     const uploadFile = async ({
       file,
