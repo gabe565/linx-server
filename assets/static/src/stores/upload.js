@@ -39,7 +39,7 @@ export const useUploadStore = defineStore(
       saveOriginalName = true,
     }) => {
       const controller = new AbortController();
-      const upload = ref({ original_name: file.name, progress: 0, controller });
+      const upload = ref({ original_name: file.name, progress: { progress: 0 }, controller });
       const id = uploadID++;
       inProgress.value[id] = upload;
 
@@ -59,8 +59,8 @@ export const useUploadStore = defineStore(
           },
           signal: controller.signal,
           validateStatus: (s) => s === 200,
-          onUploadProgress({ progress: newVal }) {
-            upload.value.progress = newVal * 100;
+          onUploadProgress(state) {
+            upload.value.progress = state;
           },
         });
 
