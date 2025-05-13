@@ -243,8 +243,6 @@ func (b Backend) Put(
 		return m, err
 	}
 
-	_, _ = f.Seek(0, io.SeekStart)
-
 	switch {
 	case m.Size == 0:
 		return m, backends.ErrFileEmpty
@@ -256,7 +254,10 @@ func (b Backend) Put(
 	m.Expiry = opts.Expiry
 	m.DeleteKey = opts.DeleteKey
 	m.AccessKey = opts.AccessKey
-	m.ArchiveFiles, _ = helpers.ListArchiveFiles(m.Mimetype, m.Size, f)
+
+	if _, err := f.Seek(0, io.SeekStart); err == nil {
+		m.ArchiveFiles, _ = helpers.ListArchiveFiles(m.Mimetype, m.Size, f)
+	}
 
 	if err := f.Close(); err != nil {
 		return m, err
