@@ -139,7 +139,7 @@ func POSTHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	upReq.expiry = ParseExpiry(r.PostFormValue("expires"))
-	upReq.accessKey = r.PostFormValue(handlers.ParamName)
+	upReq.accessKey = r.PostFormValue(handlers.AccessKeyParam)
 	upReq.randomBarename = util.ParseBool(r.PostFormValue("randomize"), false)
 
 	upload, err := Process(r.Context(), upReq)
@@ -261,7 +261,7 @@ func Remote(w http.ResponseWriter, r *http.Request) {
 
 	upReq.src = http.MaxBytesReader(w, resp.Body, int64(config.Default.MaxSize))
 	upReq.deleteKey = r.FormValue("deletekey")
-	upReq.accessKey = r.FormValue(handlers.ParamName)
+	upReq.accessKey = r.FormValue(handlers.AccessKeyParam)
 	upReq.randomBarename = util.ParseBool(r.FormValue("randomize"), false)
 	upReq.expiry = ParseExpiry(r.FormValue("expiry"))
 
@@ -291,7 +291,7 @@ func HeaderProcess(r *http.Request, upReq *Request) {
 	upReq.randomBarename = util.ParseBool(r.Header.Get("Linx-Randomize"), false)
 
 	upReq.deleteKey = r.Header.Get("Linx-Delete-Key")
-	upReq.accessKey = r.Header.Get(handlers.HeaderName)
+	upReq.accessKey = r.Header.Get(handlers.AccessKeyHeader)
 
 	// Get seconds until expiry. Non-integer responses never expire.
 	expStr := r.Header.Get("Linx-Expiry")
