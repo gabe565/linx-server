@@ -98,46 +98,30 @@ func POSTHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	upReq := Request{}
+	var upReq Request
 	HeaderProcess(r, &upReq)
 
-	contentType := r.Header.Get("Content-Type")
-
-	if strings.HasPrefix(contentType, "multipart/form-data") {
-		if err := r.ParseMultipartForm(int64(config.Default.UploadMaxMemory)); err != nil {
+	if err := r.ParseMultipartForm(int64(config.Default.UploadMaxMemory)); err != nil {
+		if errors.Is(err, http.ErrNotMultipart) || errors.Is(err, http.ErrMissingBoundary) {
+			handlers.ErrorMsg(w, r, http.StatusBadRequest, err.Error())
+		} else {
 			HandleProcessError(w, r, err)
-			return
 		}
-
-		file, headers, err := r.FormFile("file")
-		if err != nil {
-			HandleProcessError(w, r, err)
-			return
-		}
-		defer func() {
-			_ = file.Close()
-		}()
-
-		upReq.src = file
-		upReq.size = headers.Size
-		upReq.filename = headers.Filename
-	} else {
-		if r.PostFormValue("content") == "" {
-			HandleProcessError(w, r, backends.ErrFileEmpty)
-			return
-		}
-		extension := r.PostFormValue("extension")
-		if extension == "" {
-			extension = "txt"
-		}
-
-		content := r.PostFormValue("content")
-
-		upReq.src = strings.NewReader(content)
-		upReq.size = int64(len(content))
-		upReq.filename = r.PostFormValue("filename") + "." + extension
+		return
 	}
 
+	file, fileHeader, err := r.FormFile("file")
+	if err != nil {
+		HandleProcessError(w, r, err)
+		return
+	}
+	defer func() {
+		_ = file.Close()
+	}()
+
+	upReq.src = file
+	upReq.size = fileHeader.Size
+	upReq.filename = fileHeader.Filename
 	upReq.expiry = ParseExpiry(r.PostFormValue("expires"))
 	upReq.accessKey = r.PostFormValue(handlers.AccessKeyParam)
 	upReq.randomBarename = util.ParseBool(r.PostFormValue("randomize"), false)

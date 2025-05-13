@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"io"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
@@ -148,137 +149,55 @@ func TestDisplayNotFound(t *testing.T) {
 	assert.Contains(t, w.Body.String(), `<div id="app">`)
 }
 
+func newPostForm(
+	t *testing.T,
+	filename, content string,
+	expiry time.Duration,
+	accessKey string, //nolint:unparam
+	randomize bool,
+) (*multipart.Writer, bytes.Buffer) {
+	var b bytes.Buffer
+	mw := multipart.NewWriter(&b)
+
+	fw, err := mw.CreateFormFile("file", filename)
+	require.NoError(t, err)
+
+	_, err = io.WriteString(fw, content)
+	require.NoError(t, err)
+
+	if expiry != 0 {
+		fw, err = mw.CreateFormField("expires")
+		require.NoError(t, err)
+
+		_, err = io.WriteString(fw, expiry.String())
+		require.NoError(t, err)
+	}
+
+	if accessKey != "" {
+		fw, err = mw.CreateFormField("access_key")
+		require.NoError(t, err)
+
+		_, err = io.WriteString(fw, accessKey)
+		require.NoError(t, err)
+	}
+
+	fw, err = mw.CreateFormField("randomize")
+	require.NoError(t, err)
+
+	_, err = io.WriteString(fw, strconv.FormatBool(randomize))
+	require.NoError(t, err)
+
+	require.NoError(t, mw.Close())
+	return mw, b
+}
+
 const ExtTxt = "txt"
-
-func TestPostCodeUpload(t *testing.T) {
-	r, w := setup(t)
-
-	filename := upload.GenerateBarename()
-	extension := ExtTxt
-
-	form := url.Values{}
-	form.Add("content", "File content")
-	form.Add("filename", filename)
-	form.Add("extension", extension)
-
-	req, err := http.NewRequestWithContext(t.Context(), http.MethodPost, "/upload", nil)
-	require.NoError(t, err)
-	req.PostForm = form
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	req.Header.Set("Referer", config.Default.SiteURL.String())
-
-	r.ServeHTTP(w, req)
-	assertResponse(t, w, http.StatusSeeOther, "")
-	assert.Equal(t, testURL+filename+"."+extension, w.Header().Get("Location"))
-}
-
-func TestPostCodeUploadWhitelistedHeader(t *testing.T) {
-	r, w := setup(t)
-
-	filename := upload.GenerateBarename()
-	extension := ExtTxt
-
-	form := url.Values{}
-	form.Add("content", "File content")
-	form.Add("filename", filename)
-	form.Add("extension", extension)
-
-	req, err := http.NewRequestWithContext(t.Context(), http.MethodPost, "/upload", nil)
-	require.NoError(t, err)
-	req.PostForm = form
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	req.Header.Set("Linx-Expiry", "0")
-
-	r.ServeHTTP(w, req)
-	assertResponse(t, w, http.StatusSeeOther, "")
-}
-
-func TestPostCodeUploadNoReferrer(t *testing.T) {
-	r, w := setup(t)
-
-	filename := upload.GenerateBarename()
-	extension := ExtTxt
-
-	form := url.Values{}
-	form.Add("content", "File content")
-	form.Add("filename", filename)
-	form.Add("extension", extension)
-
-	req, err := http.NewRequestWithContext(t.Context(), http.MethodPost, "/upload", nil)
-	require.NoError(t, err)
-	req.PostForm = form
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-
-	r.ServeHTTP(w, req)
-	assertResponse(t, w, http.StatusBadRequest, "text/html; charset=utf-8")
-}
-
-func TestPostCodeUploadBadOrigin(t *testing.T) {
-	r, w := setup(t)
-
-	filename := upload.GenerateBarename()
-	extension := ExtTxt
-
-	form := url.Values{}
-	form.Add("content", "File content")
-	form.Add("filename", filename)
-	form.Add("extension", extension)
-
-	req, err := http.NewRequestWithContext(t.Context(), http.MethodPost, "/upload", nil)
-	require.NoError(t, err)
-	req.PostForm = form
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	req.Header.Set("Referer", config.Default.SiteURL.String())
-	req.Header.Set("Origin", "http://example.com")
-
-	r.ServeHTTP(w, req)
-	assertResponse(t, w, http.StatusBadRequest, "text/html; charset=utf-8")
-}
-
-func TestPostCodeExpiryJSONUpload(t *testing.T) {
-	r, w := setup(t)
-
-	form := url.Values{}
-	form.Add("content", "File content")
-	form.Add("filename", "")
-	form.Add("expires", "60")
-
-	req, err := http.NewRequestWithContext(t.Context(), http.MethodPost, "/upload", nil)
-	require.NoError(t, err)
-	req.PostForm = form
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	req.Header.Set("Accept", "application/json")
-	req.Header.Set("Referer", config.Default.SiteURL.String())
-	req.Header.Set("Origin", strings.TrimSuffix(config.Default.SiteURL.String(), "/"))
-
-	r.ServeHTTP(w, req)
-	assert.Equal(t, http.StatusOK, w.Code)
-	assertResponse(t, w, http.StatusOK, "application/json")
-
-	var myjson RespOkJSON
-	err = json.Unmarshal(w.Body.Bytes(), &myjson)
-	require.NoError(t, err)
-
-	myExp, err := strconv.ParseInt(myjson.Expiry, 10, 64)
-	require.NoError(t, err)
-	curTime := time.Now().Unix()
-	assert.Less(t, curTime, myExp, "file expiry smaller than current time")
-	assert.Equal(t, "12", myjson.Size)
-}
 
 func TestPostUpload(t *testing.T) {
 	r, w := setup(t)
 
-	filename := upload.GenerateBarename() + ".txt"
-
-	var b bytes.Buffer
-	mw := multipart.NewWriter(&b)
-	fw, err := mw.CreateFormFile("file", filename)
-	require.NoError(t, err)
-
-	_, err = fw.Write([]byte("File content"))
-	require.NoError(t, err)
-	require.NoError(t, mw.Close())
+	filename := upload.GenerateBarename() + "." + ExtTxt
+	mw, b := newPostForm(t, filename, "File content", 0, "", false)
 
 	req, err := http.NewRequestWithContext(t.Context(), http.MethodPost, "/upload", &b)
 	require.NoError(t, err)
@@ -291,19 +210,42 @@ func TestPostUpload(t *testing.T) {
 	assert.Equal(t, testURL+filename, w.Header().Get("Location"))
 }
 
+func TestPostUploadWhitelistedHeader(t *testing.T) {
+	r, w := setup(t)
+
+	filename := upload.GenerateBarename() + "." + ExtTxt
+	mw, b := newPostForm(t, filename, "File content", 0, "", false)
+
+	req, err := http.NewRequestWithContext(t.Context(), http.MethodPost, "/upload", &b)
+	require.NoError(t, err)
+	req.Header.Set("Content-Type", mw.FormDataContentType())
+	req.Header.Set("Linx-Expiry", "0")
+
+	r.ServeHTTP(w, req)
+	assertResponse(t, w, http.StatusSeeOther, "")
+}
+
+func TestPostUploadBadOrigin(t *testing.T) {
+	r, w := setup(t)
+
+	filename := upload.GenerateBarename() + "." + ExtTxt
+	mw, b := newPostForm(t, filename, "File content", 0, "", false)
+
+	req, err := http.NewRequestWithContext(t.Context(), http.MethodPost, "/upload", &b)
+	require.NoError(t, err)
+	req.Header.Set("Content-Type", mw.FormDataContentType())
+	req.Header.Set("Referer", config.Default.SiteURL.String())
+	req.Header.Set("Origin", "http://example.com")
+
+	r.ServeHTTP(w, req)
+	assertResponse(t, w, http.StatusBadRequest, "text/html; charset=utf-8")
+}
+
 func TestPostJSONUpload(t *testing.T) {
 	r, w := setup(t)
 
 	filename := upload.GenerateBarename() + ".txt"
-
-	var b bytes.Buffer
-	mw := multipart.NewWriter(&b)
-	fw, err := mw.CreateFormFile("file", filename)
-	require.NoError(t, err)
-
-	_, err = fw.Write([]byte("File content"))
-	require.NoError(t, err)
-	require.NoError(t, mw.Close())
+	mw, b := newPostForm(t, filename, "File content", 0, "", false)
 
 	req, err := http.NewRequestWithContext(t.Context(), http.MethodPost, "/upload", &b)
 	require.NoError(t, err)
@@ -334,16 +276,8 @@ func TestPostJSONUploadMaxExpiry(t *testing.T) {
 	for _, expiry := range testExpiries {
 		w := httptest.NewRecorder()
 
-		filename := upload.GenerateBarename() + ".txt"
-
-		var b bytes.Buffer
-		mw := multipart.NewWriter(&b)
-		fw, err := mw.CreateFormFile("file", filename)
-		require.NoError(t, err)
-
-		_, err = fw.Write([]byte("File content"))
-		require.NoError(t, err)
-		require.NoError(t, mw.Close())
+		filename := upload.GenerateBarename() + "." + ExtTxt
+		mw, b := newPostForm(t, filename, "File content", 0, "", false)
 
 		req, err := http.NewRequestWithContext(t.Context(), http.MethodPost, "/upload", &b)
 		require.NoError(t, err)
@@ -373,20 +307,7 @@ func TestPostExpiresJSONUpload(t *testing.T) {
 	r, w := setup(t)
 
 	filename := upload.GenerateBarename() + ".txt"
-
-	var b bytes.Buffer
-	mw := multipart.NewWriter(&b)
-	fw, err := mw.CreateFormFile("file", filename)
-	require.NoError(t, err)
-	_, err = fw.Write([]byte("File content"))
-	require.NoError(t, err)
-
-	exp, err := mw.CreateFormField("expires")
-	require.NoError(t, err)
-	_, err = exp.Write([]byte("60"))
-	require.NoError(t, err)
-
-	require.NoError(t, mw.Close())
+	mw, b := newPostForm(t, filename, "File content", time.Minute, "", false)
 
 	req, err := http.NewRequestWithContext(t.Context(), http.MethodPost, "/upload", &b)
 	require.NoError(t, err)
@@ -414,21 +335,8 @@ func TestPostExpiresJSONUpload(t *testing.T) {
 func TestPostRandomizeJSONUpload(t *testing.T) {
 	r, w := setup(t)
 
-	filename := upload.GenerateBarename() + ".txt"
-
-	var b bytes.Buffer
-	mw := multipart.NewWriter(&b)
-	fw, err := mw.CreateFormFile("file", filename)
-	require.NoError(t, err)
-	_, err = fw.Write([]byte("File content"))
-	require.NoError(t, err)
-
-	rnd, err := mw.CreateFormField("randomize")
-	require.NoError(t, err)
-	_, err = rnd.Write([]byte("true"))
-	require.NoError(t, err)
-
-	require.NoError(t, mw.Close())
+	filename := upload.GenerateBarename() + "." + ExtTxt
+	mw, b := newPostForm(t, filename, "File content", 0, "", true)
 
 	req, err := http.NewRequestWithContext(t.Context(), http.MethodPost, "/upload", &b)
 	require.NoError(t, err)
@@ -450,16 +358,8 @@ func TestPostRandomizeJSONUpload(t *testing.T) {
 func TestPostEmptyUpload(t *testing.T) {
 	r, w := setup(t)
 
-	filename := upload.GenerateBarename() + ".txt"
-
-	var b bytes.Buffer
-	mw := multipart.NewWriter(&b)
-	fw, err := mw.CreateFormFile("file", filename)
-	require.NoError(t, err)
-
-	_, err = fw.Write([]byte(""))
-	require.NoError(t, err)
-	require.NoError(t, mw.Close())
+	filename := upload.GenerateBarename() + "." + ExtTxt
+	mw, b := newPostForm(t, filename, "", 0, "", false)
 
 	req, err := http.NewRequestWithContext(t.Context(), http.MethodPost, "/upload", &b)
 	require.NoError(t, err)
@@ -475,16 +375,8 @@ func TestPostTooLargeUpload(t *testing.T) {
 	r, w := setup(t)
 	config.Default.MaxSize = 2
 
-	filename := upload.GenerateBarename() + ".txt"
-
-	var b bytes.Buffer
-	mw := multipart.NewWriter(&b)
-	fw, err := mw.CreateFormFile("file", filename)
-	require.NoError(t, err)
-
-	_, err = fw.Write([]byte("test content"))
-	require.NoError(t, err)
-	require.NoError(t, mw.Close())
+	filename := upload.GenerateBarename() + "." + ExtTxt
+	mw, b := newPostForm(t, filename, "File content", 0, "", false)
 
 	req, err := http.NewRequestWithContext(t.Context(), http.MethodPost, "/upload", &b)
 	require.NoError(t, err)
@@ -499,16 +391,8 @@ func TestPostTooLargeUpload(t *testing.T) {
 func TestPostEmptyJSONUpload(t *testing.T) {
 	r, w := setup(t)
 
-	filename := upload.GenerateBarename() + ".txt"
-
-	var b bytes.Buffer
-	mw := multipart.NewWriter(&b)
-	fw, err := mw.CreateFormFile("file", filename)
-	require.NoError(t, err)
-
-	_, err = fw.Write([]byte(""))
-	require.NoError(t, err)
-	require.NoError(t, mw.Close())
+	filename := upload.GenerateBarename() + "." + ExtTxt
+	mw, b := newPostForm(t, filename, "", 0, "", false)
 
 	req, err := http.NewRequestWithContext(t.Context(), http.MethodPost, "/upload", &b)
 	require.NoError(t, err)
