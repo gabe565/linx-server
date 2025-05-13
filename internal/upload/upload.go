@@ -404,14 +404,12 @@ func Process(ctx context.Context, upReq Request) (Upload, error) {
 		upReq.deleteKey = uniuri.NewLen(30)
 	}
 
-	upload.Metadata, err = config.StorageBackend.Put(ctx,
-		upload.OriginalName,
-		upload.Filename,
-		upReq.src,
-		fileExpiry,
-		upReq.deleteKey,
-		upReq.accessKey,
-	)
+	upload.Metadata, err = config.StorageBackend.Put(ctx, upReq.src, upload.Filename, backends.PutOptions{
+		OriginalName: upload.OriginalName,
+		Expiry:       fileExpiry,
+		DeleteKey:    upReq.deleteKey,
+		AccessKey:    upReq.accessKey,
+	})
 	if err != nil {
 		return upload, err
 	}

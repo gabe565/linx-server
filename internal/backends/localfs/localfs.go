@@ -207,10 +207,9 @@ func (b Backend) writeMetadata(key string, metadata backends.Metadata) error {
 
 func (b Backend) Put(
 	_ context.Context,
-	originalName, key string,
 	r io.Reader,
-	expiry time.Time,
-	deleteKey, accessKey string,
+	key string,
+	opts backends.PutOptions,
 ) (backends.Metadata, error) {
 	var m backends.Metadata
 
@@ -245,10 +244,10 @@ func (b Backend) Put(
 		return m, backends.ErrFileEmpty
 	}
 
-	m.OriginalName = originalName
-	m.Expiry = expiry
-	m.DeleteKey = deleteKey
-	m.AccessKey = accessKey
+	m.OriginalName = opts.OriginalName
+	m.Expiry = opts.Expiry
+	m.DeleteKey = opts.DeleteKey
+	m.AccessKey = opts.AccessKey
 	m.ArchiveFiles, _ = helpers.ListArchiveFiles(m.Mimetype, m.Size, f)
 
 	err = b.writeMetadata(key, m)

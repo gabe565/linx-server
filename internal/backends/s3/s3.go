@@ -96,10 +96,9 @@ func (b Backend) ServeFile(key string, w http.ResponseWriter, r *http.Request) e
 
 func (b Backend) Put(
 	ctx context.Context,
-	originalName, key string,
 	r io.Reader,
-	expiry time.Time,
-	deleteKey, accessKey string,
+	key string,
+	opts backends.PutOptions,
 ) (backends.Metadata, error) {
 	var m backends.Metadata
 	var err error
@@ -133,10 +132,10 @@ func (b Backend) Put(
 		return m, err
 	}
 
-	m.OriginalName = originalName
-	m.Expiry = expiry
-	m.DeleteKey = deleteKey
-	m.AccessKey = accessKey
+	m.OriginalName = opts.OriginalName
+	m.Expiry = opts.Expiry
+	m.DeleteKey = opts.DeleteKey
+	m.AccessKey = opts.AccessKey
 
 	_, err = b.client.PutObject(ctx, b.bucket, key, seeker, m.Size, minio.PutObjectOptions{
 		ContentType:  m.Mimetype,
