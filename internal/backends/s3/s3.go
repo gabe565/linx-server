@@ -2,11 +2,13 @@ package s3
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"io"
 	"iter"
 	"net/http"
 	"net/url"
-	"os"
+	"strings"
 	"time"
 
 	"gabe565.com/linx-server/internal/backends"
@@ -98,50 +100,43 @@ func (b Backend) Put(
 	ctx context.Context,
 	r io.Reader,
 	key string,
-	_ int64,
+	size int64,
 	opts backends.PutOptions,
 ) (backends.Metadata, error) {
 	var m backends.Metadata
-	var err error
-	seeker, ok := r.(io.ReadSeeker)
-	if ok {
-		if m, err = helpers.GenerateMetadata(seeker); err != nil {
-			return m, err
-		}
-	} else {
-		tmp, err := os.CreateTemp("", "linx-*-"+key)
-		if err != nil {
-			return backends.Metadata{}, err
-		}
-		defer func() {
-			_ = tmp.Close()
-			_ = os.Remove(tmp.Name())
-		}()
 
-		if m, err = helpers.GenerateMetadata(io.TeeReader(r, tmp)); err != nil {
-			return m, err
-		}
-
-		seeker = tmp
-	}
-
-	if m.Size == 0 {
-		return m, backends.ErrFileEmpty
-	}
-
-	if _, err = seeker.Seek(0, io.SeekStart); err != nil {
+	mime, r, err := helpers.DetectMimetype(r)
+	if err != nil {
 		return m, err
 	}
 
-	m.OriginalName = opts.OriginalName
-	m.Expiry = opts.Expiry
-	m.DeleteKey = opts.DeleteKey
-	m.AccessKey = opts.AccessKey
+	if size == 0 {
+		size = -1
+	}
 
-	_, err = b.client.PutObject(ctx, b.bucket, key, seeker, m.Size, minio.PutObjectOptions{
+	m = backends.Metadata{
+		OriginalName: opts.OriginalName,
+		DeleteKey:    opts.DeleteKey,
+		AccessKey:    opts.AccessKey,
+		Mimetype:     mime.String(),
+		Expiry:       opts.Expiry,
+	}
+
+	info, err := b.client.PutObject(ctx, b.bucket, key, r, size, minio.PutObjectOptions{
 		ContentType:  m.Mimetype,
 		UserMetadata: mapMetadata(m),
 	})
+	if err != nil {
+		var urlErr *url.Error
+		if errors.As(err, &urlErr) && strings.Contains(err.Error(), "ContentLength=") &&
+			strings.Contains(err.Error(), "with Body length") {
+			err = fmt.Errorf("%w: %w", backends.ErrSizeMismatch, err)
+		}
+	}
+
+	m.Size = info.Size
+	m.Checksum = info.ETag
+
 	return m, err
 }
 

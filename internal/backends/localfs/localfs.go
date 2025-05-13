@@ -25,7 +25,8 @@ type MetadataJSON struct {
 	OriginalName string          `json:"original_name,omitzero"`
 	DeleteKey    string          `json:"delete_key"`
 	AccessKey    string          `json:"access_key,omitzero"`
-	Sha256sum    string          `json:"sha256sum"`
+	Sha256sum    string          `json:"sha256sum,omitzero"`
+	Checksum     string          `json:"checksum"`
 	Mimetype     string          `json:"mimetype"`
 	Expiry       backends.Expiry `json:"expiry,omitzero"`
 	ArchiveFiles []string        `json:"archive_files,omitzero"`
@@ -110,7 +111,10 @@ func (b Backend) Head(_ context.Context, key string) (backends.Metadata, error) 
 	metadata.AccessKey = mjson.AccessKey
 	metadata.Mimetype = mjson.Mimetype
 	metadata.ArchiveFiles = mjson.ArchiveFiles
-	metadata.Sha256sum = mjson.Sha256sum
+	metadata.Checksum = mjson.Checksum
+	if metadata.Checksum == "" {
+		metadata.Checksum = mjson.Sha256sum
+	}
 	metadata.Expiry = time.Time(mjson.Expiry)
 
 	if stat, err := f.Stat(); err == nil {
@@ -168,7 +172,7 @@ func (b Backend) writeMetadata(key string, metadata backends.Metadata) error {
 		AccessKey:    metadata.AccessKey,
 		Mimetype:     metadata.Mimetype,
 		ArchiveFiles: metadata.ArchiveFiles,
-		Sha256sum:    metadata.Sha256sum,
+		Checksum:     metadata.Checksum,
 		Expiry:       backends.Expiry(metadata.Expiry),
 	}
 

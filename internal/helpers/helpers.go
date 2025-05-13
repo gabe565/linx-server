@@ -61,8 +61,8 @@ func GenerateMetadata(r io.Reader) (backends.Metadata, error) {
 	}
 
 	return backends.Metadata{
-		Size:      n,
-		Sha256sum: hex.EncodeToString(hasher.Sum(nil)),
-		Mimetype:  mime.String(),
+		Size:     n,
+		Checksum: hex.EncodeToString(hasher.Sum(nil)),
+		Mimetype: mime.String(),
 	}, nil
 }

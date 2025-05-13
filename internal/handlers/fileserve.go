@@ -61,7 +61,7 @@ func FileServeHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", metadata.Mimetype)
 	w.Header().Set("Content-Length", strconv.FormatInt(metadata.Size, 10))
-	w.Header().Set("ETag", strconv.Quote(metadata.Sha256sum))
+	w.Header().Set("ETag", strconv.Quote(metadata.Checksum))
 	if metadata.AccessKey != "" || config.Default.Auth.File != "" || config.Default.Auth.RemoteFile != "" {
 		w.Header().Set("Cache-Control", "private, no-cache")
 	} else {

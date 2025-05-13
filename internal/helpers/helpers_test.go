@@ -15,7 +15,7 @@ func TestGenerateMetadata(t *testing.T) {
 	m, err := GenerateMetadata(r)
 	require.NoError(t, err)
 
-	assert.Equal(t, "966152d20a77e739716a625373ee15af16e8f4aec631a329a27da41c204b0171", m.Sha256sum)
+	assert.Equal(t, "966152d20a77e739716a625373ee15af16e8f4aec631a329a27da41c204b0171", m.Checksum)
 	assert.Equal(t, "text/plain; charset=utf-8", m.Mimetype)
 	assert.Equal(t, int64(23), m.Size)
 }

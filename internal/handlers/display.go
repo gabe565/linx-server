@@ -22,7 +22,6 @@ type DisplayJSON struct {
 	Expiry       string   `json:"expiry"`
 	Size         string   `json:"size"`
 	Mimetype     string   `json:"mimetype"`
-	Sha256sum    string   `json:"sha256sum"`
 	Language     string   `json:"language,omitzero"`
 	ArchiveFiles []string `json:"archive_files,omitzero"`
 }
@@ -36,7 +35,6 @@ func FileDisplay(w http.ResponseWriter, r *http.Request, fileName string, metada
 			Expiry:       strconv.FormatInt(max(metadata.Expiry.Unix(), 0), 10),
 			Size:         strconv.FormatInt(metadata.Size, 10),
 			Mimetype:     metadata.Mimetype,
-			Sha256sum:    metadata.Sha256sum,
 			ArchiveFiles: metadata.ArchiveFiles,
 		}
 
@@ -56,7 +54,7 @@ func FileDisplay(w http.ResponseWriter, r *http.Request, fileName string, metada
 		}
 		w.Header().Set("Vary", "Accept, Linx-Delete-Key")
 		w.Header().Set("Content-Type", "application/json")
-		w.Header().Set("ETag", strconv.Quote(metadata.Sha256sum))
+		w.Header().Set("ETag", strconv.Quote(metadata.Checksum))
 		var buf bytes.Buffer
 		_ = json.NewEncoder(&buf).Encode(res)
 		http.ServeContent(w, r, fileName, metadata.ModTime, bytes.NewReader(buf.Bytes()))

@@ -9,7 +9,7 @@ type Metadata struct {
 	OriginalName string
 	DeleteKey    string
 	AccessKey    string
-	Sha256sum    string
+	Checksum     string
 	Mimetype     string
 	Size         int64
 	ModTime      time.Time
