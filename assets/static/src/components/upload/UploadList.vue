@@ -9,9 +9,29 @@
         <li v-for="(item, key) in items" :key="item.filename || key">
           <Card v-if="'progress' in item" class="relative py-4 overflow-hidden">
             <CardHeader class="px-4">
-              <CardTitle class="min-w-0 wrap-break-word">{{ item.original_name }}</CardTitle>
+              <CardTitle class="min-w-0 wrap-break-word animate-pulse">{{
+                item.original_name
+              }}</CardTitle>
               <CardDescription>
-                <Skeleton class="h-2.5 mt-2 mb-0.5 w-1/4" />
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger class="flex gap-3 items-center">
+                      <strong> {{ Math.round(item.progress.progress * 100) }}% </strong>
+                      <span v-if="item.progress.estimated" class="before:content-['·'] before:pr-3">
+                        {{ formatDuration(item.progress.estimated) }}
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent class="flex flex-col items-center">
+                      <span v-if="item.progress.loaded && item.progress.total">
+                        {{ formatBytes(item.progress.loaded, { decimals: 1, hideUnit: true }) }} /
+                        {{ formatBytes(item.progress.total, { decimals: 1 }) }}
+                      </span>
+                      <span v-if="item.progress.rate">
+                        {{ formatBitsPerSecond(item.progress.rate) }}
+                      </span>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </CardDescription>
               <CardAction>
                 <TooltipProvider>
@@ -34,8 +54,8 @@
             </CardHeader>
             <Progress
               v-if="'progress' in item"
-              v-model="item.progress"
-              class="absolute bottom-0 left-0 rounded-none"
+              :model-value="item.progress.progress * 100"
+              class="absolute bottom-0 left-0 rounded-none animate-pulse"
             />
           </Card>
 
@@ -159,7 +179,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu/index.js";
 import { Progress } from "@/components/ui/progress/index.js";
-import { Skeleton } from "@/components/ui/skeleton/index.js";
 import {
   Tooltip,
   TooltipContent,
@@ -168,6 +187,8 @@ import {
 } from "@/components/ui/tooltip/index.js";
 import UploadInfo from "@/components/upload/UploadInfo.vue";
 import { useUploadStore } from "@/stores/upload.js";
+import { formatBitsPerSecond, formatBytes } from "@/util/bytes.js";
+import { formatDuration } from "@/util/time.js";
 import { UseTimeAgo } from "@vueuse/components";
 import { breakpointsTailwind, useBreakpoints } from "@vueuse/core";
 import { computed } from "vue";
