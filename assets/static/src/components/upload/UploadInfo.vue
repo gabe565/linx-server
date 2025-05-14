@@ -16,7 +16,9 @@
       </DialogDescription>
     </DialogHeader>
 
-    <Table class="[&>tr]:flex [&>tr]:sm:table-row [&>tr]:flex-col [&_td:first-child]:font-semibold">
+    <Table
+      class="[&>tr]:flex [&>tr]:sm:table-row [&>tr]:flex-col [&_td:first-child]:font-semibold *:last:border-b-0"
+    >
       <TableRow>
         <TableCell>Path</TableCell>
         <TableCell>
