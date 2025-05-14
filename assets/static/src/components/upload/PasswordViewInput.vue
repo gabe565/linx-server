@@ -6,12 +6,12 @@
       :type="show ? 'text' : 'password'"
       v-model="model"
       readonly
-      class="cursor-pointer"
+      class="cursor-pointer h-8"
     />
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger as-child>
-          <Button variant="secondary" size="icon" @click="show = !show">
+          <Button variant="secondary" size="sm" @click="show = !show">
             <VisibilityOffIcon v-if="show" />
             <VisibilityIcon v-else />
             <span class="sr-only">{{ text }}</span>
