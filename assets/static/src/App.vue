@@ -100,8 +100,8 @@ const nextMode = computed(() => {
 });
 
 const modeIcon = computed(() => {
-  if (nextMode.value === "auto") return AutoIcon;
-  if (nextMode.value === "light") return LightIcon;
+  if (mode.value === "auto") return AutoIcon;
+  if (mode.value === "light") return LightIcon;
   return DarkIcon;
 });
 </script>
