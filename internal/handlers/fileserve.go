@@ -18,6 +18,7 @@ import (
 	"gabe565.com/linx-server/internal/csrf"
 	"gabe565.com/linx-server/internal/expiry"
 	"gabe565.com/linx-server/internal/headers"
+	"gabe565.com/linx-server/internal/util"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -73,7 +74,7 @@ func FileServeHandler(w http.ResponseWriter, r *http.Request) {
 		if metadata.OriginalName != "" {
 			dlName = metadata.OriginalName
 		}
-		w.Header().Set("Content-Disposition", "attachment; filename="+strconv.Quote(dlName))
+		w.Header().Set("Content-Disposition", util.EncodeContentDisposition("attachment", dlName))
 	}
 
 	if err := config.StorageBackend.ServeFile(fileName, w, r); err != nil {

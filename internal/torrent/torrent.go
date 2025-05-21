@@ -8,7 +8,6 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
-	"strconv"
 	"time"
 
 	"gabe565.com/linx-server/internal/backends"
@@ -16,6 +15,7 @@ import (
 	"gabe565.com/linx-server/internal/expiry"
 	"gabe565.com/linx-server/internal/handlers"
 	"gabe565.com/linx-server/internal/headers"
+	"gabe565.com/linx-server/internal/util"
 	"gabe565.com/utils/bytefmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/zeebo/bencode"
@@ -116,6 +116,6 @@ func FileTorrentHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set(`Content-Disposition`, "attachment; filename="+strconv.Quote(fileName+".torrent"))
+	w.Header().Set(`Content-Disposition`, util.EncodeContentDisposition("attachment", fileName+".torrent"))
 	http.ServeContent(w, r, "", time.Now(), bytes.NewReader(encoded))
 }
