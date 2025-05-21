@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"gabe565.com/linx-server/internal/backends"
+	"gabe565.com/linx-server/internal/util"
 	"github.com/minio/minio-go/v7"
 )
 
@@ -47,11 +48,11 @@ func unmapMetadata(info minio.ObjectInfo) (backends.Metadata, error) {
 		k = strings.ToLower(k)
 		switch k {
 		case OriginalName:
-			m.OriginalName = queryUnescape(v)
+			m.OriginalName = util.TryQueryUnescape(v)
 		case DeleteKey, "delete_key":
-			m.DeleteKey = queryUnescape(v)
+			m.DeleteKey = util.TryQueryUnescape(v)
 		case AccessKey:
-			m.AccessKey = queryUnescape(v)
+			m.AccessKey = util.TryQueryUnescape(v)
 		case Sha256sum:
 			m.Checksum = v
 		case Mimetype:
@@ -71,12 +72,4 @@ func unmapMetadata(info minio.ObjectInfo) (backends.Metadata, error) {
 		}
 	}
 	return m, nil
-}
-
-func queryUnescape(s string) string {
-	decoded, err := url.QueryUnescape(s)
-	if err != nil {
-		return s
-	}
-	return decoded
 }

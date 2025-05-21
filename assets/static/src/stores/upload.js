@@ -67,7 +67,7 @@ export const useUploadStore = defineStore(
         const res = await axios.post(ApiPath(`/upload`), form, {
           headers: {
             Accept: "application/json",
-            "Linx-Api-Key": config.apiKey,
+            "Linx-Api-Key": encodeURIComponent(config.apiKey),
           },
           signal: controller.signal,
           validateStatus: (s) => s === 200,
@@ -112,8 +112,8 @@ export const useUploadStore = defineStore(
           validateStatus: (s) => s === 200 || s === 404,
           headers: {
             Accept: "application/json",
-            "Linx-Api-Key": config.apiKey,
-            "Linx-Delete-Key": upload.delete_key,
+            "Linx-Api-Key": encodeURIComponent(config.apiKey),
+            "Linx-Delete-Key": encodeURIComponent(upload.delete_key),
           },
         });
         uploads.value = uploads.value.filter((u) => u.filename !== upload.filename);

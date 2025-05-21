@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"net/url"
 	"path"
 	"slices"
 	"strings"
@@ -13,6 +14,7 @@ import (
 	"gabe565.com/linx-server/internal/backends"
 	"gabe565.com/linx-server/internal/config"
 	"gabe565.com/linx-server/internal/headers"
+	"gabe565.com/linx-server/internal/util"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -49,13 +51,13 @@ func CheckAccessKey(r *http.Request, metadata *backends.Metadata) (AccessKeySour
 
 	cookieKey, err := r.Cookie(AccessKeyHeader)
 	if err == nil {
-		if cookieKey.Value == key {
+		if util.TryPathUnescape(cookieKey.Value) == key {
 			return AccessKeySourceCookie, nil
 		}
 		return AccessKeySourceCookie, errInvalidAccessKey
 	}
 
-	headerKey := r.Header.Get(AccessKeyHeader)
+	headerKey := util.TryPathUnescape(r.Header.Get(AccessKeyHeader))
 	if headerKey == key {
 		return AccessKeySourceHeader, nil
 	} else if headerKey != "" {
@@ -83,7 +85,7 @@ func SetAccessKeyCookies(w http.ResponseWriter, r *http.Request, fileName, value
 	u := headers.GetSiteURL(r)
 	cookie := http.Cookie{
 		Name:     AccessKeyHeader,
-		Value:    value,
+		Value:    url.PathEscape(value),
 		HttpOnly: true,
 		Domain:   u.Hostname(),
 		Expires:  expires,

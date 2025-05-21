@@ -223,6 +223,9 @@ const config = useConfigStore();
 document.title = props.filename + " · " + config.site.site_name;
 
 const accessKey = ref();
+const encAccessKey = computed(() =>
+  accessKey.value ? encodeURIComponent(accessKey.value) : undefined,
+);
 const downloadAttempts = ref(0);
 const wrap = ref(true);
 const csvRows = ref(250);
@@ -238,7 +241,7 @@ const { state, isLoading, error, execute } = useAsyncState(async () => {
     res = await axios.get(ApiPath(`/${props.filename}`), {
       headers: {
         Accept: "application/json",
-        "Linx-Access-Key": accessKey.value,
+        "Linx-Access-Key": encAccessKey.value,
       },
       validateStatus: (s) => s === 200,
       withCredentials: true,
@@ -286,7 +289,7 @@ const { state, isLoading, error, execute } = useAsyncState(async () => {
     try {
       const res = await Promise.all([
         axios.get(meta.direct_url, {
-          headers: { "Linx-Access-Key": accessKey.value },
+          headers: { "Linx-Access-Key": encAccessKey.value },
           responseType: "text",
           validateStatus: (s) => s === 200,
           withCredentials: true,

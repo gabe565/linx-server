@@ -7,11 +7,12 @@ import (
 
 	"gabe565.com/linx-server/internal/backends"
 	"gabe565.com/linx-server/internal/config"
+	"gabe565.com/linx-server/internal/util"
 	"github.com/go-chi/chi/v5"
 )
 
 func Delete(w http.ResponseWriter, r *http.Request) {
-	requestKey := r.Header.Get("Linx-Delete-Key")
+	requestKey := util.TryPathUnescape(r.Header.Get("Linx-Delete-Key"))
 
 	filename := chi.URLParam(r, "name")
 

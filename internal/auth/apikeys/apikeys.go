@@ -9,6 +9,7 @@ import (
 	"slices"
 	"strconv"
 
+	"gabe565.com/linx-server/internal/util"
 	"golang.org/x/crypto/scrypt"
 )
 
@@ -116,7 +117,7 @@ func (a Middleware) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	key := r.Header.Get("Linx-Api-Key")
+	key := util.TryPathUnescape(r.Header.Get("Linx-Api-Key"))
 	if key == "" && a.o.BasicAuth {
 		_, password, ok := r.BasicAuth()
 		if ok {

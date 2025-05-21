@@ -196,7 +196,7 @@ func PUTHandler(w http.ResponseWriter, r *http.Request) {
 
 func Remote(w http.ResponseWriter, r *http.Request) {
 	if config.Default.Auth.RemoteFile != "" {
-		key := r.FormValue("key")
+		key := util.TryPathUnescape(r.FormValue("key"))
 		if key == "" && config.Default.Auth.Basic {
 			_, password, ok := r.BasicAuth()
 			if ok {
@@ -306,8 +306,8 @@ func Remote(w http.ResponseWriter, r *http.Request) {
 func HeaderProcess(r *http.Request, upReq *Request) {
 	upReq.randomBarename = util.ParseBool(r.Header.Get("Linx-Randomize"), false)
 
-	upReq.deleteKey = r.Header.Get("Linx-Delete-Key")
-	upReq.accessKey = r.Header.Get(handlers.AccessKeyHeader)
+	upReq.deleteKey = util.TryPathUnescape(r.Header.Get("Linx-Delete-Key"))
+	upReq.accessKey = util.TryPathUnescape(r.Header.Get(handlers.AccessKeyHeader))
 
 	// Get seconds until expiry. Non-integer responses never expire.
 	expStr := r.Header.Get("Linx-Expiry")
