@@ -2,6 +2,7 @@ package s3
 
 import (
 	"encoding/json"
+	"net/url"
 	"strings"
 	"time"
 
@@ -21,13 +22,13 @@ const (
 func mapMetadata(m backends.Metadata) map[string]string {
 	mapped := make(map[string]string, 4)
 	if m.OriginalName != "" {
-		mapped[OriginalName] = m.OriginalName
+		mapped[OriginalName] = url.QueryEscape(m.OriginalName)
 	}
 	if m.DeleteKey != "" {
-		mapped[DeleteKey] = m.DeleteKey
+		mapped[DeleteKey] = url.QueryEscape(m.DeleteKey)
 	}
 	if m.AccessKey != "" {
-		mapped[AccessKey] = m.AccessKey
+		mapped[AccessKey] = url.QueryEscape(m.AccessKey)
 	}
 	if !m.Expiry.IsZero() {
 		mapped[Expiry] = m.Expiry.Format(time.RFC3339)
@@ -46,11 +47,11 @@ func unmapMetadata(info minio.ObjectInfo) (backends.Metadata, error) {
 		k = strings.ToLower(k)
 		switch k {
 		case OriginalName:
-			m.OriginalName = v
+			m.OriginalName = queryUnescape(v)
 		case DeleteKey, "delete_key":
-			m.DeleteKey = v
+			m.DeleteKey = queryUnescape(v)
 		case AccessKey:
-			m.AccessKey = v
+			m.AccessKey = queryUnescape(v)
 		case Sha256sum:
 			m.Checksum = v
 		case Mimetype:
@@ -70,4 +71,12 @@ func unmapMetadata(info minio.ObjectInfo) (backends.Metadata, error) {
 		}
 	}
 	return m, nil
+}
+
+func queryUnescape(s string) string {
+	decoded, err := url.QueryUnescape(s)
+	if err != nil {
+		return s
+	}
+	return decoded
 }
