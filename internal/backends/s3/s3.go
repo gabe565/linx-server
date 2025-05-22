@@ -13,6 +13,7 @@ import (
 
 	"gabe565.com/linx-server/internal/backends"
 	"gabe565.com/linx-server/internal/helpers"
+	"gabe565.com/linx-server/internal/util"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
 )
@@ -123,8 +124,9 @@ func (b Backend) Put(
 	}
 
 	info, err := b.client.PutObject(ctx, b.bucket, key, r, size, minio.PutObjectOptions{
-		ContentType:  m.Mimetype,
-		UserMetadata: mapMetadata(m),
+		ContentType:        m.Mimetype,
+		ContentDisposition: util.EncodeContentDisposition("attachment", m.OriginalName),
+		UserMetadata:       mapMetadata(m),
 	})
 	if err != nil {
 		var urlErr *url.Error

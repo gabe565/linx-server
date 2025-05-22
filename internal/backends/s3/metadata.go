@@ -2,6 +2,7 @@ package s3
 
 import (
 	"encoding/json"
+	"mime"
 	"net/url"
 	"strings"
 	"time"
@@ -21,10 +22,7 @@ const (
 )
 
 func mapMetadata(m backends.Metadata) map[string]string {
-	mapped := make(map[string]string, 4)
-	if m.OriginalName != "" {
-		mapped[OriginalName] = url.QueryEscape(m.OriginalName)
-	}
+	mapped := make(map[string]string)
 	if m.DeleteKey != "" {
 		mapped[DeleteKey] = url.QueryEscape(m.DeleteKey)
 	}
@@ -43,6 +41,14 @@ func unmapMetadata(info minio.ObjectInfo) (backends.Metadata, error) {
 		Mimetype: info.ContentType,
 		Size:     info.Size,
 		ModTime:  info.LastModified,
+	}
+	if v := info.Metadata.Get("Content-Disposition"); v != "" {
+		_, parsed, err := mime.ParseMediaType(v)
+		if err == nil {
+			if v, ok := parsed["filename"]; ok {
+				m.OriginalName = v
+			}
+		}
 	}
 	for k, v := range info.UserMetadata {
 		k = strings.ToLower(k)
