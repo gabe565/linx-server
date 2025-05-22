@@ -110,6 +110,10 @@ func FileTorrentHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if metadata.OriginalName != "" {
+		fileName = metadata.OriginalName
+	}
+
 	encoded, err := CreateTorrent(fileName, f, r)
 	if err != nil {
 		handlers.ErrorMsg(w, r, http.StatusInternalServerError, "Could not create torrent")
