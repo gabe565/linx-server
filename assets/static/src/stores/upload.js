@@ -6,13 +6,13 @@ import { defineStore } from "pinia";
 import { reactive, ref } from "vue";
 import { toast } from "vue-sonner";
 
-const config = useConfigStore();
-
 let uploadID = 0;
 
 export const useUploadStore = defineStore(
   "uploads",
   () => {
+    const config = useConfigStore();
+
     const uploads = ref([]);
     const inProgress = ref({});
     let timeout;
