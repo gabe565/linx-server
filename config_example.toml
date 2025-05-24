@@ -69,8 +69,6 @@ custom-pages-path = ''
   # Use X-Real-IP/X-Forwarded-For headers
   real-ip = false
   add-headers = {}
-  content-security-policy = "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; frame-ancestors 'self';"
-  file-content-security-policy = "default-src 'none'; img-src 'self'; object-src 'self'; media-src 'self'; style-src 'self' 'unsafe-inline'; frame-ancestors 'self';"
   referrer-policy = 'same-origin'
   file-referrer-policy = 'same-origin'
   x-frame-options = 'SAMEORIGIN'

@@ -22,6 +22,8 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
+const FileCSP = "default-src 'none'; img-src 'self'; object-src 'self'; media-src 'self'; style-src 'self' 'unsafe-inline'; frame-ancestors 'self';"
+
 func FileServeHandler(w http.ResponseWriter, r *http.Request) {
 	fileName := chi.URLParam(r, "name")
 
@@ -57,7 +59,7 @@ func FileServeHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	w.Header().Set("Content-Security-Policy", config.Default.Header.FileContentSecurityPolicy)
+	w.Header().Set("Content-Security-Policy", FileCSP)
 	w.Header().Set("Referrer-Policy", config.Default.Header.FileReferrerPolicy)
 
 	w.Header().Set("Content-Type", metadata.Mimetype)

@@ -70,13 +70,11 @@ type Limit struct {
 }
 
 type Header struct {
-	RealIP                    bool              `toml:"real-ip"                      comment:"Use X-Real-IP/X-Forwarded-For headers"`
-	AddHeaders                map[string]string `toml:"add-headers,inline"`
-	ContentSecurityPolicy     string            `toml:"content-security-policy"`
-	FileContentSecurityPolicy string            `toml:"file-content-security-policy"`
-	ReferrerPolicy            string            `toml:"referrer-policy"`
-	FileReferrerPolicy        string            `toml:"file-referrer-policy"`
-	XFrameOptions             string            `toml:"x-frame-options"`
+	RealIP             bool              `toml:"real-ip"              comment:"Use X-Real-IP/X-Forwarded-For headers"`
+	AddHeaders         map[string]string `toml:"add-headers,inline"`
+	ReferrerPolicy     string            `toml:"referrer-policy"`
+	FileReferrerPolicy string            `toml:"file-referrer-policy"`
+	XFrameOptions      string            `toml:"x-frame-options"`
 }
 
 func New() *Config {
@@ -99,12 +97,10 @@ func New() *Config {
 			FileInterval:      Duration{10 * time.Second},
 		},
 		Header: Header{
-			AddHeaders:                map[string]string{},
-			ContentSecurityPolicy:     "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; frame-ancestors 'self';",
-			FileContentSecurityPolicy: "default-src 'none'; img-src 'self'; object-src 'self'; media-src 'self'; style-src 'self' 'unsafe-inline'; frame-ancestors 'self';",
-			ReferrerPolicy:            "same-origin",
-			FileReferrerPolicy:        "same-origin",
-			XFrameOptions:             "SAMEORIGIN",
+			AddHeaders:         map[string]string{},
+			ReferrerPolicy:     "same-origin",
+			FileReferrerPolicy: "same-origin",
+			XFrameOptions:      "SAMEORIGIN",
 		},
 	}
 	if os.Getenv("LINX_DEFAULTS") == "container" {

@@ -14,7 +14,7 @@ import (
 
 func TestContentSecurityPolicy(t *testing.T) {
 	testCSPHeaders := map[string]string{
-		"Content-Security-Policy": "default-src 'none'; style-src 'self';",
+		"Content-Security-Policy": DefaultCSP,
 		"Referrer-Policy":         "strict-origin-when-cross-origin",
 		"X-Frame-Options":         "SAMEORIGIN",
 	}
@@ -27,7 +27,6 @@ func TestContentSecurityPolicy(t *testing.T) {
 	config.Default.NoLogs = true
 	config.Default.SiteName = "linx"
 	config.Default.SelifPath = "/selif"
-	config.Default.Header.ContentSecurityPolicy = testCSPHeaders["Content-Security-Policy"]
 	config.Default.Header.ReferrerPolicy = testCSPHeaders["Referrer-Policy"]
 	config.Default.Header.XFrameOptions = testCSPHeaders["X-Frame-Options"]
 	r, err := Setup()

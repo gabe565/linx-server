@@ -18,6 +18,8 @@ import (
 	"github.com/go-chi/httprate"
 )
 
+const DefaultCSP = "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; frame-ancestors 'self';"
+
 func Setup() (*chi.Mux, error) {
 	var err error
 
@@ -67,7 +69,7 @@ func Setup() (*chi.Mux, error) {
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.GetHead)
 	r.Use(ContentSecurityPolicy(CSPOptions{
-		Policy:         config.Default.Header.ContentSecurityPolicy,
+		Policy:         DefaultCSP,
 		ReferrerPolicy: config.Default.Header.ReferrerPolicy,
 		Frame:          config.Default.Header.XFrameOptions,
 	}))
