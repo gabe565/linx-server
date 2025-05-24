@@ -22,7 +22,7 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-const FileCSP = "default-src 'none'; img-src 'self'; object-src 'self'; media-src 'self'; style-src 'self' 'unsafe-inline'; frame-ancestors 'self';"
+const FileCSP = "default-src 'none'; img-src 'self'; object-src 'self'; media-src 'self'; style-src 'self' 'unsafe-inline';"
 
 func FileServeHandler(w http.ResponseWriter, r *http.Request) {
 	fileName := chi.URLParam(r, "name")

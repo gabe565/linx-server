@@ -18,7 +18,7 @@ import (
 	"github.com/go-chi/httprate"
 )
 
-const DefaultCSP = "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; frame-ancestors 'self';"
+const DefaultCSP = "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; frame-ancestors 'none';"
 
 func Setup() (*chi.Mux, error) {
 	var err error
