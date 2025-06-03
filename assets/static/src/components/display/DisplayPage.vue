@@ -43,7 +43,7 @@
       <CardHeader>
         <CardTitle>Error</CardTitle>
         <CardDescription>
-          An error occurred while loading the file: {{ error.message }}
+          An error occurred while loading the file: {{ error.response?.data?.error || message }}
         </CardDescription>
       </CardHeader>
     </Card>
