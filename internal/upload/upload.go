@@ -89,14 +89,12 @@ func (u Upload) JSONResponse(r *http.Request) JSONResponse {
 }
 
 func POSTHandler(w http.ResponseWriter, r *http.Request) {
-	if config.Default.FrontendURL == "" {
-		siteURL := headers.GetSiteURL(r).String()
-		if !csrf.StrictReferrerCheck(r, siteURL,
-			[]string{"Linx-Delete-Key", "Linx-Expiry", "Linx-Randomize", "X-Requested-With"},
-		) {
-			handlers.Error(w, r, http.StatusBadRequest)
-			return
-		}
+	siteURL := headers.GetSiteURL(r).String()
+	if !csrf.StrictReferrerCheck(r, siteURL,
+		[]string{"Linx-Delete-Key", "Linx-Expiry", "Linx-Randomize", "X-Requested-With"},
+	) {
+		handlers.Error(w, r, http.StatusBadRequest)
+		return
 	}
 
 	upReq := Request{

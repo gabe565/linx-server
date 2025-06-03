@@ -110,7 +110,7 @@ func FileAccessHandler(w http.ResponseWriter, r *http.Request) {
 	fileName := chi.URLParam(r, "name")
 
 	if _, err := assets.Static().Open(fileName); err == nil {
-		AssetHandler(w, r)
+		AssetHandler()(w, r)
 		return
 	}
 
@@ -122,7 +122,7 @@ func FileAccessHandler(w http.ResponseWriter, r *http.Request) {
 	metadata, err := CheckFile(r.Context(), fileName)
 	if err != nil {
 		if errors.Is(err, backends.ErrNotFound) {
-			ServeAsset(w, r, http.StatusNotFound)
+			Error(w, r, http.StatusNotFound)
 			return
 		}
 		ErrorMsg(w, r, http.StatusInternalServerError, "Corrupt metadata")
@@ -142,7 +142,7 @@ func FileAccessHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		ServeAsset(w, r, http.StatusUnauthorized)
+		Error(w, r, http.StatusUnauthorized)
 		return
 	}
 

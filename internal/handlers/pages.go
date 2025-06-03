@@ -5,6 +5,8 @@ import (
 	"io"
 	"net/http"
 	"strings"
+
+	"gabe565.com/linx-server/internal/template"
 )
 
 type RespType int
@@ -15,22 +17,6 @@ const (
 	RespJSON
 	RespPLAIN
 )
-
-// func MakeCustomPage(fileName string) func(w http.ResponseWriter, r *http.Request) {
-//	return func(w http.ResponseWriter, r *http.Request) {
-//		err := templates.Render("custom_page.html", map[string]any{
-//			"SiteURL":     headers.GetSiteURL(r).String(),
-//			"ForceRandom": config.Default.ForceRandomFilename,
-//			"Contents":    template.HTML(custompages.CustomPages[fileName]), //nolint:gosec
-//			"FileName":    fileName,
-//			"PageName":    custompages.Names[fileName],
-//		}, r, w)
-//		if err != nil {
-//			Oops(w, r, RespHTML, "")
-//			return
-//		}
-//	}
-//}
 
 func Error(w http.ResponseWriter, r *http.Request, status int) {
 	ErrorType(w, r, RespAUTO, status, "")
@@ -60,7 +46,7 @@ func ErrorType(w http.ResponseWriter, r *http.Request, rt RespType, status int, 
 			ErrorType(w, r, RespHTML, status, msg)
 		}
 	case RespHTML:
-		ServeAsset(w, r, status)
+		ServeAsset(w, r, status, template.WithTitle(http.StatusText(status)))
 	case RespJSON:
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(status)

@@ -1,41 +1,23 @@
-import { ApiPath } from "@/config/api.js";
-import axios from "axios";
 import { defineStore } from "pinia";
 import { ref } from "vue";
-import { toast } from "vue-sonner";
 
 export const useConfigStore = defineStore(
   "config",
   () => {
-    const site = ref({ site_name: "Linx", expiration_times: [] });
+    const site = ref(window.config);
     const apiKey = ref();
-    const expiry = ref("");
+    const expiry = ref(site.value.expiration_times[site.value.expiration_times.length - 1].value);
     const filename = ref("");
     const extension = ref("txt");
     const randomFilename = ref(true);
     const password = ref("");
     const content = ref("");
 
-    const loadConfig = async () => {
-      try {
-        const res = await axios.get(ApiPath("/api/config"), {
-          validateStatus: (s) => s === 200,
-        });
-        site.value = res.data;
-        const times = site.value.expiration_times;
-        expiry.value = times[times.length - 1].value;
-      } catch (err) {
-        toast.error("Failed to load config", { description: err.message });
-        throw err;
-      }
-    };
-    loadConfig();
-
     return { site, apiKey, expiry, filename, extension, randomFilename, password, content };
   },
   {
     persist: {
-      pick: ["site", "apiKey"],
+      pick: ["apiKey"],
     },
   },
 );

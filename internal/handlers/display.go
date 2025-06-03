@@ -11,6 +11,7 @@ import (
 	"gabe565.com/linx-server/internal/backends"
 	"gabe565.com/linx-server/internal/config"
 	"gabe565.com/linx-server/internal/headers"
+	"gabe565.com/linx-server/internal/template"
 	"gabe565.com/linx-server/internal/util"
 )
 
@@ -60,5 +61,13 @@ func FileDisplay(w http.ResponseWriter, r *http.Request, fileName string, metada
 		http.ServeContent(w, r, fileName, metadata.ModTime, bytes.NewReader(buf.Bytes()))
 	}
 
-	AssetHandler(w, r)
+	prettyName := fileName
+	if metadata.OriginalName != "" {
+		prettyName = metadata.OriginalName
+	}
+
+	AssetHandler(
+		template.WithTitle(prettyName),
+		template.WithDescription("Download "+prettyName+" on "+config.Default.SiteName+"."),
+	)(w, r)
 }

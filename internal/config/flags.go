@@ -4,7 +4,6 @@ import (
 	"os"
 	"strings"
 
-	"gabe565.com/utils/must"
 	"github.com/spf13/cobra"
 )
 
@@ -18,7 +17,6 @@ const (
 	FlagAllowHotlink        = "allow-hotlink"
 	FlagSiteName            = "site-name"
 	FlagSiteURL             = "site-url"
-	FlagFrontendURL         = "frontend-url"
 	FlagSelifPath           = "selif-path"
 	FlagGracefulShutdown    = "graceful-shutdown"
 	FlagMaxSize             = "max-size"
@@ -72,13 +70,6 @@ func (c *Config) RegisterServeFlags(cmd *cobra.Command) {
 	fs.BoolVar(&c.AllowHotlink, FlagAllowHotlink, c.AllowHotlink, "Allow hot-linking of files")
 	fs.StringVar(&c.SiteName, FlagSiteName, c.SiteName, "Name of the site")
 	fs.Var(&c.SiteURL, FlagSiteURL, "Site base url")
-	fs.StringVar(
-		&c.FrontendURL,
-		FlagFrontendURL,
-		c.FrontendURL,
-		"Proxy frontend requests to this url (used for development)",
-	)
-	must.Must(fs.MarkHidden(FlagFrontendURL))
 	fs.StringVar(&c.SelifPath, FlagSelifPath, c.SelifPath,
 		"Path relative to site base url where files are accessed directly",
 	)

@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -18,6 +19,7 @@ import (
 	"gabe565.com/linx-server/internal/csrf"
 	"gabe565.com/linx-server/internal/expiry"
 	"gabe565.com/linx-server/internal/headers"
+	"gabe565.com/linx-server/internal/template"
 	"gabe565.com/linx-server/internal/util"
 	"github.com/go-chi/chi/v5"
 )
@@ -50,10 +52,8 @@ func FileServeHandler(w http.ResponseWriter, r *http.Request) {
 	if !config.Default.AllowHotlink {
 		referer := r.Header.Get("Referer")
 		u, _ := url.Parse(referer)
-		frontend, _ := url.Parse(config.Default.FrontendURL)
 		p := headers.GetSiteURL(r)
-		if referer != "" && !csrf.SameOrigin(u, p) &&
-			(config.Default.FrontendURL == "" || !csrf.SameOrigin(u, frontend)) {
+		if referer != "" && !csrf.SameOrigin(u, p) {
 			http.Redirect(w, r, headers.GetFileURL(r, fileName).String(), http.StatusSeeOther)
 			return
 		}
@@ -86,14 +86,16 @@ func FileServeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func AssetHandler(w http.ResponseWriter, r *http.Request) {
-	if strings.EqualFold(r.Header.Get("Accept"), "application/json") {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusNotFound)
-		_ = json.NewEncoder(w).Encode(ErrorResponse{Error: "Not found"})
-	}
+func AssetHandler(opts ...template.OptionFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if strings.EqualFold(r.Header.Get("Accept"), "application/json") {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusNotFound)
+			_ = json.NewEncoder(w).Encode(ErrorResponse{Error: "Not found"})
+		}
 
-	ServeAsset(w, r, http.StatusOK)
+		ServeAsset(w, r, http.StatusOK, opts...)
+	}
 }
 
 type StatusResponseWriter struct {
@@ -105,18 +107,32 @@ func (m StatusResponseWriter) WriteHeader(int) {
 	m.ResponseWriter.WriteHeader(m.code)
 }
 
-func ServeAsset(w http.ResponseWriter, r *http.Request, status int) {
+func ServeAsset(w http.ResponseWriter, r *http.Request, status int, opts ...template.OptionFunc) {
 	path := strings.TrimPrefix(r.URL.Path, "/")
 
-	file, err := assets.Static().Open(path)
-	if err != nil {
-		path = "index.html"
-		file, err = assets.Static().Open(path)
-		if err != nil {
-			slog.Error("Failed to open index.html", "error", err)
+	if strings.HasPrefix(path, ".vite") {
+		path = "/"
+		status = http.StatusNotFound
+	}
+
+	var file io.ReadSeeker
+	if asset, err := assets.Static().Open(path); err == nil {
+		var ok bool
+		file, ok = asset.(io.ReadSeeker)
+		if !ok {
+			slog.Error("Static asset is not a ReadSeeker", "path", path)
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
+	} else {
+		path = "index.html"
+		var buf bytes.Buffer
+		if err := template.Index(r, opts...).Render(&buf); err != nil {
+			slog.Error("Failed to render index.html", "error", err)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		}
+		file = bytes.NewReader(buf.Bytes())
 	}
 
 	if status == http.StatusOK {
@@ -126,7 +142,7 @@ func ServeAsset(w http.ResponseWriter, r *http.Request, status int) {
 	}
 
 	w.Header().Set("Vary", "Accept")
-	http.ServeContent(w, r, path, config.TimeStarted, file.(io.ReadSeeker)) //nolint:errcheck
+	http.ServeContent(w, r, path, config.TimeStarted, file)
 }
 
 func CheckFile(ctx context.Context, filename string) (backends.Metadata, error) {

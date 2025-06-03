@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strings"
 	"testing"
 
 	"gabe565.com/linx-server/internal/config"
@@ -13,11 +14,10 @@ import (
 )
 
 func TestContentSecurityPolicy(t *testing.T) {
-	testCSPHeaders := map[string]string{
-		"Content-Security-Policy": DefaultCSP,
-		"Referrer-Policy":         "strict-origin-when-cross-origin",
-		"X-Frame-Options":         "SAMEORIGIN",
-	}
+	const (
+		wantReferrerPolicy = "strict-origin-when-cross-origin"
+		wantXFrameOptions  = "SAMEORIGIN"
+	)
 
 	// config.Default.SiteURL = "http://linx.example.org/"
 	config.Default.SiteURL.URL = url.URL{Scheme: "http", Host: "linx.example.org"}
@@ -27,8 +27,8 @@ func TestContentSecurityPolicy(t *testing.T) {
 	config.Default.NoLogs = true
 	config.Default.SiteName = "linx"
 	config.Default.SelifPath = "/selif"
-	config.Default.Header.ReferrerPolicy = testCSPHeaders["Referrer-Policy"]
-	config.Default.Header.XFrameOptions = testCSPHeaders["X-Frame-Options"]
+	config.Default.Header.ReferrerPolicy = wantReferrerPolicy
+	config.Default.Header.XFrameOptions = wantXFrameOptions
 	r, err := Setup()
 	require.NoError(t, err)
 
@@ -38,6 +38,12 @@ func TestContentSecurityPolicy(t *testing.T) {
 	require.NoError(t, err)
 
 	r.ServeHTTP(w, req)
+
+	testCSPHeaders := map[string]string{
+		"Content-Security-Policy": strings.Replace(DefaultCSP, configHashKey, "'"+config.ComputedHash+"'", 1),
+		"Referrer-Policy":         wantReferrerPolicy,
+		"X-Frame-Options":         wantXFrameOptions,
+	}
 
 	for k, v := range testCSPHeaders {
 		assert.Equal(t, v, w.Header().Get(k))

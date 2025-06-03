@@ -7,7 +7,7 @@ import (
 	"gabe565.com/utils/must"
 )
 
-//go:embed static/dist
+//go:embed static/dist static/dist/.vite
 var static embed.FS
 
 func Static() fs.FS {

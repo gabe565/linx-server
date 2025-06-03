@@ -10,15 +10,18 @@ import (
 	"gabe565.com/linx-server/internal/config"
 	"gabe565.com/linx-server/internal/handlers"
 	"gabe565.com/linx-server/internal/headers"
+	"gabe565.com/linx-server/internal/template"
 	"gabe565.com/linx-server/internal/torrent"
 	"gabe565.com/linx-server/internal/upload"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/go-chi/cors"
 	"github.com/go-chi/httprate"
 )
 
-const DefaultCSP = "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; frame-ancestors 'none';"
+const (
+	configHashKey = "CONFIG_HASH"
+	DefaultCSP    = "default-src 'self' " + configHashKey + "; img-src 'self' data:; style-src 'self' 'unsafe-inline'; frame-ancestors 'none';"
+)
 
 func Setup() (*chi.Mux, error) {
 	var err error
@@ -63,7 +66,7 @@ func Setup() (*chi.Mux, error) {
 	r.Use(middleware.Heartbeat("/ping"))
 
 	if !config.Default.NoLogs {
-		r.Use(middleware.Logger, RemoveMultipartForm)
+		r.Use(middleware.Logger)
 	}
 
 	r.Use(middleware.Recoverer)
@@ -75,24 +78,7 @@ func Setup() (*chi.Mux, error) {
 	}))
 	r.Use(headers.AddHeaders(config.Default.Header.AddHeaders))
 
-	if v := config.Default.FrontendURL; v != "" {
-		r.Use(cors.Handler(cors.Options{
-			AllowedOrigins: []string{v},
-			AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-			AllowedHeaders: []string{
-				"Accept",
-				"Authorization",
-				"Content-Type",
-				"Linx-Expiry",
-				"Linx-Randomize",
-				"Linx-Delete-Key",
-				"Linx-Access-Key",
-				"Linx-Api-Key",
-			},
-			AllowCredentials: true,
-			MaxAge:           300,
-		}))
-	}
+	r.Use(RemoveMultipartForm)
 
 	if config.Default.Auth.File != "" {
 		r.Use(apikeys.NewAPIKeysMiddleware(apikeys.AuthOptions{
@@ -110,6 +96,8 @@ func Setup() (*chi.Mux, error) {
 		if err != nil {
 			return nil, err
 		}
+
+		config.CustomPages = customPages
 
 		r.Get("/api/custom_page/{name}", handlers.CustomPage(config.Default.CustomPagesPath))
 	}
@@ -157,11 +145,17 @@ func Setup() (*chi.Mux, error) {
 		}
 	})
 
-	for _, p := range append(customPages, "paste", "api") {
-		r.Get("/"+p, handlers.AssetHandler)
+	if config.Default.ViteURL == "" {
+		if err := template.LoadManifest(); err != nil {
+			return nil, err
+		}
 	}
 
-	r.NotFound(handlers.AssetHandler)
+	for _, p := range append(customPages, "Paste", "API") {
+		r.Get("/"+strings.ToLower(p), handlers.AssetHandler(template.WithTitle(p)))
+	}
+
+	r.NotFound(handlers.AssetHandler())
 
 	return r, nil
 }

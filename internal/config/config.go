@@ -12,13 +12,13 @@ import (
 
 type Config struct {
 	Bind             string   `toml:"bind"`
-	FilesPath        string   `toml:"files-path"             comment:"Path to files directory"`
-	MetaPath         string   `toml:"meta-path"              comment:"Path to metadata directory"`
+	FilesPath        string   `toml:"files-path"         comment:"Path to files directory"`
+	MetaPath         string   `toml:"meta-path"          comment:"Path to metadata directory"`
 	SiteName         string   `toml:"site-name"`
 	SiteURL          URL      `toml:"site-url"`
-	FrontendURL      string   `toml:"frontend-url,omitempty"`
-	SelifPath        string   `toml:"selif-path"             comment:"Path relative to site base url where files are accessed directly"`
-	GracefulShutdown Duration `toml:"graceful-shutdown"      comment:"Maximum time to wait for requests to finish during shutdown"`
+	ViteURL          string   `toml:"vite-url,omitempty"`
+	SelifPath        string   `toml:"selif-path"         comment:"Path relative to site base url where files are accessed directly"`
+	GracefulShutdown Duration `toml:"graceful-shutdown"  comment:"Maximum time to wait for requests to finish during shutdown"`
 
 	MaxSize              Bytes    `toml:"max-size"               comment:"Maximum upload file size"`
 	MaxExpiry            Duration `toml:"max-expiry"             comment:"Maximum expiration time (a value of 0s means no expiry)"`
@@ -117,6 +117,8 @@ var (
 	StorageBackend backends.StorageBackend
 	TimeStarted    time.Time
 	RemoteAuthKeys []string
+	ComputedHash   string
+	CustomPages    []string
 )
 
 func getDefaultFile() (string, error) {
