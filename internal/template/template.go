@@ -35,7 +35,7 @@ func Index(r *http.Request, opts ...OptionFunc) Node {
 				Meta(Name("viewport"), Content("width=device-width, initial-scale=1.0")),
 				options.Components(),
 				Script(Attr("integrity", ConfigHash()), Raw(ConfigString())),
-				ImportAssets(),
+				ImportAssets(r),
 			),
 			Body(
 				Div(ID("app")),
