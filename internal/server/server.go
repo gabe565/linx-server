@@ -102,8 +102,6 @@ func Setup() (*chi.Mux, error) {
 		r.Get("/api/custom_page/{name}", handlers.CustomPage(config.Default.CustomPagesPath))
 	}
 
-	r.Get("/api/config", handlers.Config(customPages))
-
 	r.Group(func(r chi.Router) {
 		r.Use(
 			rateLimit(config.Default.Limit.UploadMaxRequests, config.Default.Limit.UploadInterval.Duration),

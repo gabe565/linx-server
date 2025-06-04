@@ -9,6 +9,7 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"path"
+	"regexp"
 	"strconv"
 	"strings"
 	"testing"
@@ -16,6 +17,7 @@ import (
 
 	"gabe565.com/linx-server/internal/config"
 	"gabe565.com/linx-server/internal/server"
+	"gabe565.com/linx-server/internal/template"
 	"gabe565.com/linx-server/internal/upload"
 	"gabe565.com/utils/bytefmt"
 	"github.com/go-chi/chi/v5"
@@ -67,6 +69,19 @@ func assertResponse(t *testing.T, w *httptest.ResponseRecorder, wantStatus int, 
 	assert.Equal(t, wantContentType, w.Header().Get("Content-Type"))
 }
 
+var indexConfigRe = regexp.MustCompile(`>window\.config=(.+?)</script>`)
+
+func extractConfig(t *testing.T, w *httptest.ResponseRecorder) template.Config {
+	require.Regexp(t, indexConfigRe, w.Body.String())
+	raw := indexConfigRe.FindSubmatch(w.Body.Bytes())
+	require.Len(t, raw, 2)
+
+	var conf template.Config
+	require.NoError(t, json.Unmarshal(raw[1], &conf))
+
+	return conf
+}
+
 func TestIndex(t *testing.T) {
 	r, w := setup(t, nil)
 
@@ -76,6 +91,8 @@ func TestIndex(t *testing.T) {
 	r.ServeHTTP(w, req)
 	assertResponse(t, w, http.StatusOK, "text/html; charset=utf-8")
 	assert.Contains(t, w.Body.String(), `<div id="app">`)
+
+	extractConfig(t, w)
 }
 
 func TestConfigStandardMaxExpiry(t *testing.T) {
@@ -83,12 +100,16 @@ func TestConfigStandardMaxExpiry(t *testing.T) {
 		config.Default.MaxExpiry.Duration = 60 * time.Second
 	})
 
-	req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, "/api/config", nil)
+	req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, "/", nil)
 	require.NoError(t, err)
 
 	r.ServeHTTP(w, req)
-	assertResponse(t, w, http.StatusOK, "application/json")
-	assert.NotContains(t, w.Body.String(), "1 hour")
+	assertResponse(t, w, http.StatusOK, "text/html; charset=utf-8")
+
+	conf := extractConfig(t, w)
+	for _, v := range conf.ExpirationTimes {
+		assert.NotContains(t, "1 hour", v.Name)
+	}
 }
 
 func TestConfigWeirdMaxExpiry(t *testing.T) {
@@ -100,8 +121,12 @@ func TestConfigWeirdMaxExpiry(t *testing.T) {
 	require.NoError(t, err)
 
 	r.ServeHTTP(w, req)
-	assertResponse(t, w, http.StatusOK, "application/json")
-	assert.NotContains(t, w.Body.String(), "never")
+	assertResponse(t, w, http.StatusOK, "text/html; charset=utf-8")
+
+	conf := extractConfig(t, w)
+	for _, v := range conf.ExpirationTimes {
+		assert.NotContains(t, "never", v.Name)
+	}
 }
 
 func TestAddHeader(t *testing.T) {
