@@ -68,6 +68,6 @@ func FileDisplay(w http.ResponseWriter, r *http.Request, fileName string, metada
 
 	AssetHandler(
 		template.WithTitle(prettyName),
-		template.WithDescription("Download "+prettyName+" on "+config.Default.SiteName+"."),
+		template.WithDescription("Download "+prettyName+" from "+config.Default.SiteName+"."),
 	)(w, r)
 }
