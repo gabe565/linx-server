@@ -16,6 +16,7 @@ import (
 	"gabe565.com/linx-server/internal/backends"
 	"gabe565.com/linx-server/internal/config"
 	"gabe565.com/linx-server/internal/headers"
+	"gabe565.com/linx-server/internal/template"
 	"gabe565.com/linx-server/internal/util"
 	"github.com/go-chi/chi/v5"
 )
@@ -124,7 +125,7 @@ func FileAccessHandler(w http.ResponseWriter, r *http.Request) {
 	metadata, err := CheckFile(r.Context(), fileName)
 	if err != nil {
 		if errors.Is(err, backends.ErrNotFound) {
-			Error(w, r, http.StatusNotFound)
+			Error(w, r, http.StatusNotFound, template.WithDescription("This file has expired or does not exist."))
 			return
 		}
 		ErrorMsg(w, r, http.StatusInternalServerError, "Corrupt metadata")
