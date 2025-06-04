@@ -22,9 +22,9 @@ type ManifestMap map[string]ManifestEntry
 func (m ManifestMap) Import(name string) Node {
 	if entry, ok := m[name]; ok {
 		g := make(Group, 0, len(entry.CSS)+1)
-		g = append(g, Script(Type("module"), CrossOrigin(""), Src(entry.File)))
-		for _, e := range entry.CSS {
-			g = append(g, Link(Rel("stylesheet"), CrossOrigin(""), Href(e)))
+		g = append(g, Script(Type("module"), CrossOrigin(""), Src("/"+entry.File)))
+		for _, entry := range entry.CSS {
+			g = append(g, Link(Rel("stylesheet"), CrossOrigin(""), Href("/"+entry)))
 		}
 		return g
 	}
@@ -34,10 +34,10 @@ func (m ManifestMap) Import(name string) Node {
 func (m ManifestMap) Preload(name string) Node {
 	if entry, ok := m[name]; ok {
 		g := make(Group, 0, len(entry.Imports)+1)
-		g = append(g, Link(Rel("modulepreload"), CrossOrigin(""), Href(entry.File)))
+		g = append(g, Link(Rel("modulepreload"), CrossOrigin(""), Href("/"+entry.File)))
 		for _, srcPath := range entry.Imports {
 			if entry, ok := m[srcPath]; ok {
-				g = append(g, Link(Rel("modulepreload"), CrossOrigin(""), Href(entry.File)))
+				g = append(g, Link(Rel("modulepreload"), CrossOrigin(""), Href("/"+entry.File)))
 			}
 		}
 		return g
