@@ -124,6 +124,8 @@ func ServeAsset(w http.ResponseWriter, r *http.Request, status int, opts ...temp
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
+
+		w.Header().Set("Cache-Control", "public, max-age=86400")
 	} else {
 		path = "index.html"
 		var buf bytes.Buffer
@@ -133,11 +135,11 @@ func ServeAsset(w http.ResponseWriter, r *http.Request, status int, opts ...temp
 			return
 		}
 		file = bytes.NewReader(buf.Bytes())
+
+		w.Header().Set("Cache-Control", "public, no-cache")
 	}
 
-	if status == http.StatusOK {
-		w.Header().Set("Cache-Control", "public, max-age=86400")
-	} else {
+	if status != http.StatusOK {
 		w = StatusResponseWriter{w, status}
 	}
 
