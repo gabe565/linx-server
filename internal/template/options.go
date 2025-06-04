@@ -1,6 +1,8 @@
 package template
 
 import (
+	"slices"
+
 	"gabe565.com/linx-server/internal/config"
 	. "maragu.dev/gomponents"      //nolint:revive,staticcheck
 	. "maragu.dev/gomponents/html" //nolint:revive,staticcheck
@@ -41,10 +43,16 @@ func (o Options) Components() Group {
 type OpenGraph map[string]string
 
 func (o OpenGraph) Components() Group {
+	fields := make([]string, 0, len(o))
+	for field := range o {
+		fields = append(fields, field)
+	}
+	slices.Sort(fields)
+
 	components := make(Group, 0, len(o))
-	for k, v := range o {
+	for _, field := range fields {
 		components = append(components,
-			Meta(Attr("property", k), Content(v)),
+			Meta(Attr("property", field), Content(o[field])),
 		)
 	}
 	return components
