@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"io/fs"
 	"log/slog"
 	"mime"
 	"net/http"
@@ -404,7 +405,7 @@ func Process(ctx context.Context, upReq Request) (Upload, error) {
 	if slices.Contains(fileDenylist, upload.Filename) {
 		return upload, ErrProhibitedFilename
 	}
-	if _, err := assets.Static().Open(strings.TrimPrefix(upload.Filename, "/")); err == nil || !os.IsNotExist(err) {
+	if _, err := fs.Stat(assets.Static(), strings.TrimPrefix(upload.Filename, "/")); err == nil || !os.IsNotExist(err) {
 		return upload, ErrProhibitedFilename
 	}
 

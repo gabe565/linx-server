@@ -117,6 +117,10 @@ func ServeAsset(w http.ResponseWriter, r *http.Request, status int, opts ...temp
 
 	var file io.ReadSeeker
 	if asset, err := assets.Static().Open(path); err == nil {
+		defer func() {
+			_ = asset.Close()
+		}()
+
 		var ok bool
 		file, ok = asset.(io.ReadSeeker)
 		if !ok {
