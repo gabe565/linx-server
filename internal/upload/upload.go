@@ -418,7 +418,7 @@ func Process(ctx context.Context, upReq Request) (Upload, error) {
 	}
 
 	if upReq.deleteKey == "" {
-		upReq.deleteKey = uniuri.NewLen(30)
+		upReq.deleteKey = uniuri.NewLen(config.Default.RandomDeleteKeyLength)
 	}
 
 	upload.Metadata, err = config.StorageBackend.Put(ctx, upReq.src, upload.Filename, upReq.size, backends.PutOptions{
@@ -456,7 +456,7 @@ func HandleProcessError(w http.ResponseWriter, r *http.Request, err error) {
 }
 
 func GenerateBarename() string {
-	return uniuri.NewLenChars(8, []byte("abcdefghijklmnopqrstuvwxyz0123456789"))
+	return uniuri.NewLenChars(config.Default.RandomFilenameLength, []byte("abcdefghijklmnopqrstuvwxyz0123456789"))
 }
 
 //nolint:gochecknoglobals
