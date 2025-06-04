@@ -23,7 +23,13 @@ type Options struct {
 func (o Options) Components() Group {
 	group := make(Group, 0, 3)
 	if o.Title != "" {
-		group = append(group, TitleEl(Text(o.Title)))
+		fullTitle := o.Title
+		if config.Default.SiteName != "" {
+			fullTitle += " · "
+		}
+		fullTitle += config.Default.SiteName
+
+		group = append(group, TitleEl(Text(fullTitle)))
 		if _, ok := o.OpenGraph[OpenGraphTitle]; !ok {
 			o.OpenGraph[OpenGraphTitle] = o.Title
 		}
@@ -54,11 +60,6 @@ type OptionFunc func(o *Options)
 
 func WithTitle(title string) OptionFunc {
 	return func(o *Options) {
-		if title != "" && config.Default.SiteName != "" {
-			title += " · "
-		}
-		title += config.Default.SiteName
-
 		o.Title = title
 	}
 }
