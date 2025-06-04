@@ -18,15 +18,22 @@ const (
 	RespPLAIN
 )
 
-func Error(w http.ResponseWriter, r *http.Request, status int) {
-	ErrorType(w, r, RespAUTO, status, "")
+func Error(w http.ResponseWriter, r *http.Request, status int, opts ...template.OptionFunc) {
+	ErrorType(w, r, RespAUTO, status, "", opts...)
 }
 
-func ErrorMsg(w http.ResponseWriter, r *http.Request, status int, msg string) {
-	ErrorType(w, r, RespAUTO, status, msg)
+func ErrorMsg(w http.ResponseWriter, r *http.Request, status int, msg string, opts ...template.OptionFunc) {
+	ErrorType(w, r, RespAUTO, status, msg, opts...)
 }
 
-func ErrorType(w http.ResponseWriter, r *http.Request, rt RespType, status int, msg string) {
+func ErrorType(
+	w http.ResponseWriter,
+	r *http.Request,
+	rt RespType,
+	status int,
+	msg string,
+	opts ...template.OptionFunc,
+) {
 	if msg == "" {
 		msg = http.StatusText(status)
 	}
@@ -37,16 +44,20 @@ func ErrorType(w http.ResponseWriter, r *http.Request, rt RespType, status int, 
 	case RespAUTO:
 		switch {
 		case strings.EqualFold("application/json", r.Header.Get("Accept")):
-			ErrorType(w, r, RespJSON, status, msg)
+			ErrorType(w, r, RespJSON, status, msg, opts...)
 			return
 		case IsDirectUA(r):
-			ErrorType(w, r, RespPLAIN, status, msg)
+			ErrorType(w, r, RespPLAIN, status, msg, opts...)
 			return
 		default:
-			ErrorType(w, r, RespHTML, status, msg)
+			ErrorType(w, r, RespHTML, status, msg, opts...)
 		}
 	case RespHTML:
-		ServeAsset(w, r, status, template.WithTitle(http.StatusText(status)))
+		opts = append([]template.OptionFunc{
+			template.WithTitle(http.StatusText(status)),
+			template.WithDescription("Error: " + msg),
+		}, opts...)
+		ServeAsset(w, r, status, opts...)
 	case RespJSON:
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(status)
