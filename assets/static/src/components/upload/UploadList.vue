@@ -15,13 +15,13 @@
               <CardDescription>
                 <TooltipProvider>
                   <Tooltip>
-                    <TooltipTrigger class="flex gap-3 items-center">
-                      <strong> {{ Math.round(item.progress.progress * 100) }}% </strong>
+                    <TooltipTrigger class="flex gap-3 items-center tabular-nums">
+                      <strong>{{ Math.round(item.progress.progress * 100) }}%</strong>
                       <span v-if="item.progress.estimated" class="before:content-['·'] before:pr-3">
                         {{ formatDuration(item.progress.estimated) }}
                       </span>
                     </TooltipTrigger>
-                    <TooltipContent class="flex flex-col items-center">
+                    <TooltipContent class="flex flex-col items-center tabular-nums">
                       <span v-if="item.progress.loaded && item.progress.total">
                         {{ formatBytes(item.progress.loaded, 1) }} /
                         {{ formatBytes(item.progress.total, 1) }}
@@ -67,7 +67,7 @@
                 </RouterLink>
               </CardTitle>
 
-              <CardDescription v-if="item.expiry">
+              <CardDescription v-if="item.expiry" class="tabular-nums">
                 <UseTimeAgo
                   v-if="item.expiry > 0"
                   v-slot="{ timeAgo }"

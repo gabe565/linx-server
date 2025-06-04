@@ -4,7 +4,7 @@
       <DialogTitle class="wrap-break-word pr-4">{{
         item.original_name || item.filename
       }}</DialogTitle>
-      <DialogDescription v-if="item.expiry > 0">
+      <DialogDescription v-if="item.expiry > 0" class="tabular-nums">
         <UseTimeAgo
           v-slot="{ timeAgo }"
           :time="new Date(item.expiry * 1000)"

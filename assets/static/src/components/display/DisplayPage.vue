@@ -62,7 +62,7 @@
             :show-second="true"
             update-interval="1000"
           >
-            <CardDescription class="text-xs">
+            <CardDescription class="text-xs tabular-nums">
               {{ expired ? "expired" : "expires" }} {{ timeAgo }}
             </CardDescription>
           </UseTimeAgo>
