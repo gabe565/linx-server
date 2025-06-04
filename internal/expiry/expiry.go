@@ -2,6 +2,7 @@ package expiry
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"gabe565.com/linx-server/internal/config"
@@ -48,7 +49,7 @@ func ListExpirationTimes() []ExpirationTime {
 
 			expiryList = append(expiryList, ExpirationTime{
 				Duration: expiryEntry,
-				Human:    humanize.RelTime(epoch, epoch.Add(expiryEntry), "", ""),
+				Human:    strings.TrimSpace(humanize.RelTime(epoch, epoch.Add(expiryEntry), "", "")),
 			})
 		}
 	}
