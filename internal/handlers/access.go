@@ -3,8 +3,10 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
+	"io/fs"
 	"net/http"
 	"net/url"
+	"os"
 	"path"
 	"slices"
 	"strings"
@@ -109,7 +111,7 @@ func IsDirectUA(r *http.Request) bool {
 func FileAccessHandler(w http.ResponseWriter, r *http.Request) {
 	fileName := chi.URLParam(r, "name")
 
-	if _, err := assets.Static().Open(fileName); err == nil {
+	if _, err := fs.Stat(assets.Static(), fileName); err == nil || !os.IsNotExist(err) {
 		AssetHandler()(w, r)
 		return
 	}
