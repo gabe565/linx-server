@@ -11,7 +11,7 @@ RUN npm run build
 
 FROM --platform=$BUILDPLATFORM tonistiigi/xx:1.6.1 AS xx
 
-FROM --platform=$BUILDPLATFORM golang:1.24.2-alpine AS backend
+FROM --platform=$BUILDPLATFORM golang:1.24.4-alpine AS backend
 WORKDIR /app
 
 COPY --from=xx / /
