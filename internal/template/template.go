@@ -1,6 +1,7 @@
 package template
 
 import (
+	"io"
 	"net/http"
 
 	"gabe565.com/linx-server/internal/config"
@@ -34,7 +35,18 @@ func Index(r *http.Request, opts ...OptionFunc) Node {
 				Link(Rel("icon"), Href("/favicon.ico")),
 				Meta(Name("viewport"), Content("width=device-width, initial-scale=1.0")),
 				options.Components(),
-				Script(Attr("integrity", ConfigHash()), Raw(ConfigString())),
+				func() Node {
+					conf, err := ConfigBytes()
+					if err != nil {
+						return NodeFunc(func(io.Writer) error {
+							return err
+						})
+					}
+					return Script(NodeFunc(func(w io.Writer) error {
+						_, err := w.Write(conf)
+						return err
+					}))
+				}(),
 				ImportAssets(r),
 			),
 			Body(

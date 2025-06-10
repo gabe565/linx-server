@@ -2,12 +2,11 @@ package template
 
 import (
 	"bytes"
-	"encoding/base64"
 	"encoding/json"
 
+	"gabe565.com/linx-server/assets"
 	"gabe565.com/linx-server/internal/config"
 	"gabe565.com/linx-server/internal/expiry"
-	"github.com/minio/sha256-simd"
 )
 
 type Config struct {
@@ -43,15 +42,24 @@ func NewConfig() Config {
 	return conf
 }
 
-func ConfigString() string {
-	conf, _ := json.Marshal(NewConfig())
-	return "window.config=" + string(bytes.TrimSpace(conf))
-}
-
-func ConfigHash() string {
-	if config.ComputedHash == "" {
-		hash := sha256.Sum256([]byte(ConfigString()))
-		config.ComputedHash = "'sha256-" + base64.StdEncoding.EncodeToString(hash[:]) + "'"
+func ConfigBytes() ([]byte, error) {
+	f, err := assets.Static().Open(manifest["src/fouc.js"].File)
+	if err != nil {
+		return nil, err
 	}
-	return config.ComputedHash
+	defer func() {
+		_ = f.Close()
+	}()
+
+	var buf bytes.Buffer
+	if _, err := buf.ReadFrom(f); err != nil {
+		return nil, err
+	}
+
+	buf.WriteString("window.config=")
+	if err := json.NewEncoder(&buf).Encode(NewConfig()); err != nil {
+		return nil, err
+	}
+	buf.WriteByte(';')
+	return buf.Bytes(), nil
 }

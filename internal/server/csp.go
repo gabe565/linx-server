@@ -6,6 +6,7 @@ import (
 
 	"gabe565.com/linx-server/internal/config"
 	"gabe565.com/linx-server/internal/template"
+	"gabe565.com/linx-server/internal/util"
 )
 
 const (
@@ -52,9 +53,16 @@ func NewCSPMiddleware(o Options) func(http.Handler) http.Handler {
 }
 
 func GenerateCSP() string {
-	defaultSrc := template.ConfigHash()
+	conf, err := template.ConfigBytes()
+	if err != nil {
+		panic(err)
+	}
+
+	defaultSrc := util.SubresourceIntegrity(conf)
+
 	if u := config.Default.ViteURL; u != "" {
 		defaultSrc += " " + u + " ws:"
 	}
+
 	return strings.Replace(DefaultCSP, defaultSrcKey, defaultSrc, 1)
 }

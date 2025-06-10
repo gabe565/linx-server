@@ -8,6 +8,8 @@ import (
 	"testing"
 
 	"gabe565.com/linx-server/internal/config"
+	"gabe565.com/linx-server/internal/template"
+	"gabe565.com/linx-server/internal/util"
 	"gabe565.com/utils/bytefmt"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -39,8 +41,11 @@ func TestContentSecurityPolicy(t *testing.T) {
 
 	r.ServeHTTP(w, req)
 
+	conf, err := template.ConfigBytes()
+	require.NoError(t, err)
+
 	testCSPHeaders := map[string]string{
-		"Content-Security-Policy": strings.Replace(DefaultCSP, defaultSrcKey, "'"+config.ComputedHash+"'", 1),
+		"Content-Security-Policy": strings.Replace(DefaultCSP, defaultSrcKey, util.SubresourceIntegrity(conf), 1),
 		"Referrer-Policy":         wantReferrerPolicy,
 		"X-Frame-Options":         wantXFrameOptions,
 	}

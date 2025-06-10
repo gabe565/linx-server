@@ -69,7 +69,7 @@ func assertResponse(t *testing.T, w *httptest.ResponseRecorder, wantStatus int, 
 	assert.Equal(t, wantContentType, w.Header().Get("Content-Type"))
 }
 
-var indexConfigRe = regexp.MustCompile(`>window\.config=(.+?)</script>`)
+var indexConfigRe = regexp.MustCompile(`window\.config=(.+?)\s+;`)
 
 func extractConfig(t *testing.T, w *httptest.ResponseRecorder) template.Config {
 	require.Regexp(t, indexConfigRe, w.Body.String())

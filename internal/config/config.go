@@ -121,7 +121,6 @@ var (
 	StorageBackend backends.StorageBackend
 	TimeStarted    time.Time
 	RemoteAuthKeys []string
-	ComputedHash   string
 	CustomPages    []string
 )
 

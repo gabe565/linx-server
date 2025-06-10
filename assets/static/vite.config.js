@@ -8,7 +8,10 @@ export default defineConfig({
   build: {
     manifest: true,
     rollupOptions: {
-      input: "src/main.js",
+      input: {
+        main: "src/main.js",
+        fouc: "src/fouc.js",
+      },
     },
   },
   plugins: [vue(), tailwindcss(), Icons()],
