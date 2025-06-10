@@ -18,13 +18,14 @@ import (
 	"github.com/go-chi/httprate"
 )
 
-const (
-	configHashKey = "CONFIG_HASH"
-	DefaultCSP    = "default-src 'self' " + configHashKey + "; img-src 'self' data:; style-src 'self' 'unsafe-inline'; frame-ancestors 'none';"
-)
-
 func Setup() (*chi.Mux, error) {
 	var err error
+
+	if config.Default.ViteURL == "" {
+		if err := template.LoadManifest(); err != nil {
+			return nil, err
+		}
+	}
 
 	switch config.Default.SiteURL.Path {
 	case "", "/":
@@ -71,8 +72,8 @@ func Setup() (*chi.Mux, error) {
 
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.GetHead)
-	r.Use(ContentSecurityPolicy(CSPOptions{
-		Policy:         DefaultCSP,
+	r.Use(NewCSPMiddleware(Options{
+		Policy:         GenerateCSP(),
 		ReferrerPolicy: config.Default.Header.ReferrerPolicy,
 		Frame:          config.Default.Header.XFrameOptions,
 	}))
@@ -142,12 +143,6 @@ func Setup() (*chi.Mux, error) {
 			})
 		}
 	})
-
-	if config.Default.ViteURL == "" {
-		if err := template.LoadManifest(); err != nil {
-			return nil, err
-		}
-	}
 
 	for _, p := range append(customPages, "Paste", "API") {
 		r.Get("/"+strings.ToLower(p), handlers.AssetHandler(template.WithTitle(p)))

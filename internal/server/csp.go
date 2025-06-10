@@ -9,33 +9,29 @@ import (
 )
 
 const (
+	DefaultCSP    = "default-src 'self' " + defaultSrcKey + "; img-src 'self' data:; style-src 'self' 'unsafe-inline'; frame-ancestors 'none';"
+	defaultSrcKey = "$DEFAULT_SRC"
+
 	cspHeader          = "Content-Security-Policy"
 	rpHeader           = "Referrer-Policy"
 	frameOptionsHeader = "X-Frame-Options"
 )
 
-type CSP struct {
+type CSPMiddleware struct {
 	h    http.Handler
-	opts CSPOptions
+	opts Options
 }
 
-type CSPOptions struct {
+type Options struct {
 	Policy         string
 	ReferrerPolicy string
 	Frame          string
 }
 
-func (c CSP) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (c CSPMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// only add a CSP if one is not already set
 	if existing := w.Header().Get(cspHeader); existing == "" {
-		replace := "'" + template.ConfigHash() + "'"
-
-		if u := config.Default.ViteURL; u != "" {
-			replace += " " + u + " ws:"
-		}
-
-		csp := strings.Replace(c.opts.Policy, configHashKey, replace, 1)
-		w.Header().Add(cspHeader, csp)
+		w.Header().Add(cspHeader, c.opts.Policy)
 	}
 
 	// only add a Referrer Policy if one is not already set
@@ -48,9 +44,17 @@ func (c CSP) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	c.h.ServeHTTP(w, r)
 }
 
-func ContentSecurityPolicy(o CSPOptions) func(http.Handler) http.Handler {
+func NewCSPMiddleware(o Options) func(http.Handler) http.Handler {
 	fn := func(h http.Handler) http.Handler {
-		return CSP{h, o}
+		return CSPMiddleware{h, o}
 	}
 	return fn
+}
+
+func GenerateCSP() string {
+	defaultSrc := template.ConfigHash()
+	if u := config.Default.ViteURL; u != "" {
+		defaultSrc += " " + u + " ws:"
+	}
+	return strings.Replace(DefaultCSP, defaultSrcKey, defaultSrc, 1)
 }

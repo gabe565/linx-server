@@ -51,7 +51,7 @@ func ConfigString() string {
 func ConfigHash() string {
 	if config.ComputedHash == "" {
 		hash := sha256.Sum256([]byte(ConfigString()))
-		config.ComputedHash = "sha256-" + base64.StdEncoding.EncodeToString(hash[:])
+		config.ComputedHash = "'sha256-" + base64.StdEncoding.EncodeToString(hash[:]) + "'"
 	}
 	return config.ComputedHash
 }

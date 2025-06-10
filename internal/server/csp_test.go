@@ -40,7 +40,7 @@ func TestContentSecurityPolicy(t *testing.T) {
 	r.ServeHTTP(w, req)
 
 	testCSPHeaders := map[string]string{
-		"Content-Security-Policy": strings.Replace(DefaultCSP, configHashKey, "'"+config.ComputedHash+"'", 1),
+		"Content-Security-Policy": strings.Replace(DefaultCSP, defaultSrcKey, "'"+config.ComputedHash+"'", 1),
 		"Referrer-Policy":         wantReferrerPolicy,
 		"X-Frame-Options":         wantXFrameOptions,
 	}
