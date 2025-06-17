@@ -30,7 +30,7 @@
     "dompurify": "^3.2.5",
     "highlight.js": "^11.11.1",
     "highlightjs-vue": "^1.0.0",
-    "lucide-vue-next": "^0.503.0",
+    "lucide-vue-next": "^0.516.0",
     "marked": "^15.0.9",
     "papaparse": "^5.5.2",
     "pinia": "^3.0.2",
