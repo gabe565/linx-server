@@ -507,16 +507,21 @@ func ParseExpiry(expStr string) time.Duration {
 	if t, err := time.ParseDuration(expStr); err == nil {
 		fileExpiry = t
 	} else {
-		seconds, err := strconv.ParseUint(expStr, 10, 64)
+		seconds, err := strconv.ParseInt(expStr, 10, 64)
 		if err != nil {
 			return config.Default.MaxExpiry.Duration
 		}
 
-		fileExpiry = time.Duration(seconds) * time.Second //nolint:gosec
+		fileExpiry = time.Duration(seconds) * time.Second
 	}
 
-	if config.Default.MaxExpiry.Duration > 0 && (fileExpiry > config.Default.MaxExpiry.Duration || fileExpiry == 0) {
-		fileExpiry = config.Default.MaxExpiry.Duration
+	fileExpiry = max(fileExpiry, 0)
+
+	if config.Default.MaxExpiry.Duration == 0 {
+		return fileExpiry
+	} else if fileExpiry == 0 {
+		return config.Default.MaxExpiry.Duration
 	}
-	return fileExpiry
+
+	return min(fileExpiry, config.Default.MaxExpiry.Duration)
 }
