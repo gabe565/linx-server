@@ -117,7 +117,7 @@ export const useUploadStore = defineStore(
           },
         });
         uploads.value = uploads.value.filter((u) => u.filename !== upload.filename);
-        toast.success("File deleted", { description: upload.filename });
+        toast.success("File deleted", { description: upload.original_name || upload.filename });
       } catch (err) {
         toast.error("Delete failed", { description: err.response?.data?.error || err.message });
         throw err;
