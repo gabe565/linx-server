@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "./hljs.css";
+@import "vue-sonner/style.css";
 @plugin "@tailwindcss/typography";
 @config "@/css/tailwind.config.js";
 
@@ -162,4 +163,8 @@ button,
 
 @utility link {
   @apply text-blue-600 dark:text-blue-400 hover:underline;
+}
+
+[data-sonner-toast][data-styled="true"] [data-description] {
+  color: inherit;
 }
