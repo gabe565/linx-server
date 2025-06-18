@@ -60,13 +60,13 @@ import { AlphaNum, randomString } from "@/util/random.js";
             <pre
               class="overflow-x-auto p-3 rounded text-sm font-mono"
             ><code>$ curl {{ ApiPath('/upload/') }} -s -H 'Linx-Expiry: 20m' -T myphoto.jpg
-{{ ApiPath(`${randomString(8, AlphaNum)}.jpg`) }}</code></pre>
+{{ ApiPath(`/${randomString(8, AlphaNum)}.jpg`) }}</code></pre>
 
             <h5 class="font-medium">Upload from pipe</h5>
             <pre
               class="overflow-x-auto p-3 rounded text-sm font-mono"
             ><code>$ echo hello | curl {{ ApiPath('/upload/hello.txt') }} -s -T -
-{{ ApiPath(`${randomString(8, AlphaNum)}.txt`) }}</code></pre>
+{{ ApiPath(`/${randomString(8, AlphaNum)}.txt`) }}</code></pre>
           </AccordionContent>
         </AccordionItem>
 

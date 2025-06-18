@@ -1,8 +1,7 @@
-import { useConfigStore } from "@/stores/config.js";
 import { createRouter, createWebHistory } from "vue-router";
 
 const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
+  history: createWebHistory(window.config?.site_path),
   routes: [
     {
       path: "/",
@@ -39,7 +38,7 @@ const router = createRouter({
 
 router.beforeEach((to) => {
   if (to.name !== "File") {
-    document.title = to.name + " · " + useConfigStore().site.site_name;
+    document.title = to.name + " · " + window.config.site_name;
   }
 });
 

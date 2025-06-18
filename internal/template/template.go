@@ -3,6 +3,7 @@ package template
 import (
 	"io"
 	"net/http"
+	"path"
 
 	"gabe565.com/linx-server/internal/config"
 	"gabe565.com/linx-server/internal/headers"
@@ -12,7 +13,7 @@ import (
 
 func Index(r *http.Request, opts ...OptionFunc) Node {
 	u := headers.GetSiteURL(r)
-	u.Path = r.URL.Path
+	u.Path = path.Join(u.Path, r.URL.Path)
 
 	options := Options{
 		Title:       config.Default.SiteName,
@@ -32,7 +33,7 @@ func Index(r *http.Request, opts ...OptionFunc) Node {
 		HTML(
 			Head(
 				Meta(Charset("UTF-8")),
-				Link(Rel("icon"), Href("/favicon.ico")),
+				Link(Rel("icon"), Href(SitePath("favicon.ico"))),
 				Meta(Name("viewport"), Content("width=device-width, initial-scale=1.0")),
 				options.Components(),
 				func() Node {

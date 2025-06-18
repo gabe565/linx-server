@@ -11,6 +11,7 @@ import (
 
 type Config struct {
 	SiteName        string           `json:"site_name"`
+	SitePath        string           `json:"site_path"`
 	MaxSize         int64            `json:"max_size"`
 	ForceRandom     bool             `json:"force_random"`
 	Auth            bool             `json:"auth"`
@@ -27,6 +28,7 @@ func NewConfig() Config {
 	expirationTimes := expiry.ListExpirationTimes()
 	conf := Config{
 		SiteName:        config.Default.SiteName,
+		SitePath:        config.Default.SiteURL.Path,
 		ForceRandom:     config.Default.ForceRandomFilename,
 		MaxSize:         int64(config.Default.MaxSize),
 		Auth:            config.Default.Auth.Basic || config.Default.Auth.File != "",

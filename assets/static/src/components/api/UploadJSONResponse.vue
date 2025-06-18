@@ -25,7 +25,7 @@ let code = "{";
 if (props.full) {
   code += `
   // Public file page
-  "url": "${ApiPath(file.value)}",`;
+  "url": "${ApiPath(`/${file.value}`)}",`;
 }
 code += `
   // URL to access the file directly
