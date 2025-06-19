@@ -157,17 +157,6 @@
           :language="state.meta.language"
           :code="state.content"
         />
-
-        <div v-else class="text-center">
-          You are requesting {{ state.meta.original_name || state.meta.filename }},
-          <a
-            :href="`${state.meta.direct_url}?download`"
-            :download="state.meta.filename"
-            class="link"
-            >click here</a
-          >
-          to download.
-        </div>
       </CardContent>
     </Card>
   </div>
