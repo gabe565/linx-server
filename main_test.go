@@ -441,20 +441,36 @@ func TestPostEmptyJSONUpload(t *testing.T) {
 }
 
 func TestPutUpload(t *testing.T) {
-	r, w := setup(t, nil)
+	tests := []struct {
+		name string
+		path string
+	}{
+		{"with filename", "/upload/" + upload.GenerateBarename() + ".txt"},
+		{"bare", "/upload"},
+		{"trailing slash", "/upload/"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r, w := setup(t, nil)
 
-	filename := upload.GenerateBarename() + ".file"
-	req, err := http.NewRequestWithContext(t.Context(),
-		http.MethodPut, path.Join("/upload", filename), strings.NewReader("File content"),
-	)
-	require.NoError(t, err)
+			req, err := http.NewRequestWithContext(t.Context(),
+				http.MethodPut, tt.path, strings.NewReader("File content"),
+			)
+			require.NoError(t, err)
 
-	r.ServeHTTP(w, req)
-	assertResponse(t, w, http.StatusOK, "text/plain; charset=utf-8")
+			r.ServeHTTP(w, req)
+			assertResponse(t, w, http.StatusOK, "text/plain; charset=utf-8")
 
-	expect, err := config.Default.SiteURL.Parse(filename)
-	require.NoError(t, err)
-	assert.Equal(t, expect.String()+"\n", w.Body.String())
+			filename := strings.TrimPrefix(strings.TrimPrefix(tt.path, "/upload"), "/")
+			if filename == "" {
+				assert.NotEmpty(t, w.Body.String())
+			} else {
+				expect, err := config.Default.SiteURL.Parse(filename)
+				require.NoError(t, err)
+				assert.Equal(t, expect.String()+"\n", w.Body.String())
+			}
+		})
+	}
 }
 
 func TestPutRandomizedUpload(t *testing.T) {

@@ -41,11 +41,12 @@ func Setup() (*chi.Mux, error) {
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
 	r.Use(func(next http.Handler) http.Handler {
-		if config.Default.SiteURL.Path == "/" {
-			return middleware.RedirectSlashes(next)
-		}
 		redirectSlashes := middleware.RedirectSlashes(next)
 		fn := func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.Path == path.Join(config.Default.SiteURL.Path, "upload")+"/" {
+				r.URL.Path = strings.TrimSuffix(r.URL.Path, "/")
+			}
+
 			switch {
 			case r.URL.Path == config.Default.SiteURL.Path:
 				next.ServeHTTP(w, r)
