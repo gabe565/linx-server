@@ -126,25 +126,25 @@
         </div>
 
         <div
-          v-else-if="!!state.content && state.mode === Modes.MARKDOWN"
+          v-else-if="!!state.formatted && state.mode === Modes.MARKDOWN"
           class="prose max-w-none"
-          v-html="state.content"
+          v-html="state.formatted"
         />
 
         <pre v-else-if="state.mode === Modes.ARCHIVE" class="overflow-x-scroll max-h-[600px]">{{
           state.meta.archive_files.join("\n")
         }}</pre>
 
-        <div v-else-if="!!state.content && state.mode === Modes.CSV" class="space-y-4">
+        <div v-else-if="!!state.formatted && state.mode === Modes.CSV" class="space-y-4">
           <Table>
-            <TableRow v-for="(row, key) in state.content?.data?.slice(0, csvRows)" :key="key">
+            <TableRow v-for="(row, key) in state.formatted?.data?.slice(0, csvRows)" :key="key">
               <TableCell v-for="(cell, key) in row" :key="key">{{ cell }}</TableCell>
             </TableRow>
           </Table>
           <div class="flex justify-between">
-            Showing {{ Math.min(csvRows, state.content?.data?.length) }} of
-            {{ state.content?.data?.length }} rows
-            <Button v-if="csvRows < state.content?.data?.length" @click="csvRows += 250"
+            Showing {{ Math.min(csvRows, state.formatted?.data?.length) }} of
+            {{ state.formatted?.data?.length }} rows
+            <Button v-if="csvRows < state.formatted?.data?.length" @click="csvRows += 250"
               >Show more</Button
             >
           </div>
@@ -270,7 +270,7 @@ const { state, isLoading, error, execute } = useAsyncState(async () => {
     mode = Modes.TEXT;
   }
 
-  let content;
+  let content, formatted;
   if (
     meta.size < 512 * 1024 &&
     (mode === Modes.TEXT || mode === Modes.MARKDOWN || mode === Modes.CSV)
@@ -297,7 +297,7 @@ const { state, isLoading, error, execute } = useAsyncState(async () => {
     if (mode === Modes.MARKDOWN) {
       try {
         const markdown = (await import("@/util/markdown.js")).default;
-        content = markdown(content);
+        formatted = markdown(content);
       } catch (err) {
         console.error(err);
         toast.error("Failed to format markdown", {
@@ -307,7 +307,7 @@ const { state, isLoading, error, execute } = useAsyncState(async () => {
     } else if (mode === Modes.CSV) {
       try {
         const papaparse = (await import("papaparse")).default;
-        content = papaparse.parse(content);
+        formatted = papaparse.parse(content);
       } catch (err) {
         console.error(err);
         toast.error("Failed to format CSV", {
@@ -331,6 +331,7 @@ const { state, isLoading, error, execute } = useAsyncState(async () => {
     meta,
     mode,
     content,
+    formatted,
   };
 }, {});
 
