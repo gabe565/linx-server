@@ -339,7 +339,9 @@ const showWrapSwitch = computed(() => !!state.value.content && state.value.mode 
 const showEditButton = computed(
   () =>
     !!state.value.content &&
-    (state.value.mode === Modes.TEXT || state.value.mode === Modes.MARKDOWN),
+    (state.value.mode === Modes.TEXT ||
+      state.value.mode === Modes.MARKDOWN ||
+      state.value.mode === Modes.CSV),
 );
 const expiry = computed(() =>
   state.value.meta?.expiry > 0 ? new Date(state.value?.meta?.expiry * 1000) : false,
