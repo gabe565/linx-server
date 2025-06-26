@@ -1,3 +1,6 @@
+import FileView from "@/views/FileView.vue";
+import PasteView from "@/views/PasteView.vue";
+import UploadView from "@/views/UploadView.vue";
 import { createRouter, createWebHistory } from "vue-router";
 
 const router = createRouter({
@@ -6,7 +9,7 @@ const router = createRouter({
     {
       path: "/",
       name: "Upload",
-      component: () => import("../views/UploadView.vue"),
+      component: UploadView,
       meta: {
         navigation: true,
       },
@@ -14,7 +17,7 @@ const router = createRouter({
     {
       path: "/paste",
       name: "Paste",
-      component: () => import("../views/PasteView.vue"),
+      component: PasteView,
       meta: {
         navigation: true,
       },
@@ -30,7 +33,7 @@ const router = createRouter({
     {
       path: "/:filename(.*)",
       name: "File",
-      component: () => import("../views/FileView.vue"),
+      component: FileView,
       props: true,
     },
   ],

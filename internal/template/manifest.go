@@ -73,15 +73,8 @@ func ImportAssets(r *http.Request) Node {
 	}
 
 	var preload Node
-	switch r.URL.Path {
-	case "/":
-		preload = manifest.Preload("src/views/UploadView.vue")
-	case "/paste":
-		preload = manifest.Preload("src/views/PasteView.vue")
-	case "/api":
+	if r.URL.Path == "/api" {
 		preload = manifest.Preload("src/views/APIView.vue")
-	default:
-		preload = manifest.Preload("src/views/FileView.vue")
 	}
 
 	return Group{preload, manifest.Import("src/main.js")}
