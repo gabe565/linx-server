@@ -1,7 +1,7 @@
 <script setup>
-import { cn } from "@/lib/utils";
 import { NavigationMenuList, useForwardProps } from "reka-ui";
 import { computed } from "vue";
+import { cn } from "@/lib/utils";
 
 const props = defineProps({
   asChild: { type: Boolean, required: false },

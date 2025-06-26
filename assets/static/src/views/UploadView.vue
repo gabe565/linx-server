@@ -29,6 +29,7 @@
 </template>
 
 <script setup>
+import { ref } from "vue";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card/index.js";
 import { Label } from "@/components/ui/label/index.js";
 import { Switch } from "@/components/ui/switch/index.js";
@@ -39,7 +40,6 @@ import PasswordInput from "@/components/upload/PasswordInput.vue";
 import UploadList from "@/components/upload/UploadList.vue";
 import { useConfigStore } from "@/stores/config";
 import { useUploadStore } from "@/stores/upload";
-import { ref } from "vue";
 
 const config = useConfigStore();
 const uploads = useUploadStore();

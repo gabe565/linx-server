@@ -1,7 +1,7 @@
 <script setup>
-import { cn } from "@/lib/utils";
 import { reactiveOmit } from "@vueuse/core";
 import { NavigationMenuLink, useForwardPropsEmits } from "reka-ui";
+import { cn } from "@/lib/utils";
 
 const props = defineProps({
   active: { type: Boolean, required: false },

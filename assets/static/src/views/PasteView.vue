@@ -54,6 +54,9 @@
 </template>
 
 <script setup>
+import { useDropZone, useEventListener, useMagicKeys } from "@vueuse/core";
+import { onMounted, ref, watch } from "vue";
+import { useRouter } from "vue-router";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { CardTitle } from "@/components/ui/card/index.js";
@@ -64,9 +67,6 @@ import ExpirySelect from "@/components/upload/ExpirySelect.vue";
 import PasswordInput from "@/components/upload/PasswordInput.vue";
 import { useConfigStore } from "@/stores/config.js";
 import { useUploadStore } from "@/stores/upload.js";
-import { useDropZone, useEventListener, useMagicKeys } from "@vueuse/core";
-import { onMounted, ref, watch } from "vue";
-import { useRouter } from "vue-router";
 
 const config = useConfigStore();
 const upload = useUploadStore();

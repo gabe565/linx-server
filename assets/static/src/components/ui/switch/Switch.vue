@@ -1,7 +1,7 @@
 <script setup>
-import { cn } from "@/lib/utils";
 import { SwitchRoot, SwitchThumb, useForwardPropsEmits } from "reka-ui";
 import { computed } from "vue";
+import { cn } from "@/lib/utils";
 
 const props = defineProps({
   defaultValue: { type: Boolean, required: false },

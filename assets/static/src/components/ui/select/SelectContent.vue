@@ -1,8 +1,8 @@
 <script setup>
-import { cn } from "@/lib/utils";
+import { SelectScrollDownButton, SelectScrollUpButton } from ".";
 import { SelectContent, SelectPortal, SelectViewport, useForwardPropsEmits } from "reka-ui";
 import { computed } from "vue";
-import { SelectScrollDownButton, SelectScrollUpButton } from ".";
+import { cn } from "@/lib/utils";
 
 defineOptions({
   inheritAttrs: false,

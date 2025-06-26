@@ -11,11 +11,11 @@
 </template>
 
 <script setup>
-import { Card, CardContent } from "@/components/ui/card/index.js";
-import { ApiPath } from "@/config/api.js";
 import { useAsyncState } from "@vueuse/core";
 import axios from "axios";
 import { toast } from "vue-sonner";
+import { Card, CardContent } from "@/components/ui/card/index.js";
+import { ApiPath } from "@/config/api.js";
 import SpinnerIcon from "~icons/svg-spinners/ring-resize";
 
 const props = defineProps({

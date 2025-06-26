@@ -27,10 +27,10 @@
 </template>
 
 <script setup>
-import { Label } from "@/components/ui/label/index.js";
-import { formatBytes } from "@/util/bytes.js";
 import { useDropZone, useEventListener } from "@vueuse/core";
 import { ref } from "vue";
+import { Label } from "@/components/ui/label/index.js";
+import { formatBytes } from "@/util/bytes.js";
 import UploadIcon from "~icons/material-symbols/upload-rounded";
 
 defineProps({

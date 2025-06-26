@@ -1,10 +1,10 @@
-import { ApiPath } from "@/config/api.js";
-import { useConfigStore } from "@/stores/config.js";
 import { useEventListener, useWakeLock } from "@vueuse/core";
 import axios from "axios";
 import { defineStore } from "pinia";
 import { reactive, ref } from "vue";
 import { toast } from "vue-sonner";
+import { ApiPath } from "@/config/api.js";
+import { useConfigStore } from "@/stores/config.js";
 
 let uploadID = 0;
 

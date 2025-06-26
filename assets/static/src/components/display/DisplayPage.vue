@@ -176,6 +176,11 @@ const Modes = Object.freeze({
 </script>
 
 <script setup>
+import { UseTimeAgo } from "@vueuse/components";
+import { useAsyncState, useTimeoutFn } from "@vueuse/core";
+import axios from "axios";
+import { computed, ref } from "vue";
+import { toast } from "vue-sonner";
 import DeadLink from "@/assets/dead-link.svg";
 import HighlightJS from "@/components/HighlightJS.js";
 import DownloadButton from "@/components/display/DownloadButton.vue";
@@ -196,11 +201,6 @@ import { Table, TableCell, TableRow } from "@/components/ui/table/index.js";
 import { ApiPath } from "@/config/api.js";
 import { useConfigStore } from "@/stores/config.js";
 import { getExtension, loadLanguage } from "@/util/extensions.js";
-import { UseTimeAgo } from "@vueuse/components";
-import { useAsyncState, useTimeoutFn } from "@vueuse/core";
-import axios from "axios";
-import { computed, ref } from "vue";
-import { toast } from "vue-sonner";
 import SpinnerIcon from "~icons/svg-spinners/ring-resize";
 
 const props = defineProps({

@@ -1,5 +1,4 @@
 <script setup>
-import { cn } from "@/lib/utils";
 import { X } from "lucide-vue-next";
 import {
   DialogClose,
@@ -9,6 +8,7 @@ import {
   useForwardPropsEmits,
 } from "reka-ui";
 import { computed } from "vue";
+import { cn } from "@/lib/utils";
 
 const props = defineProps({
   forceMount: { type: Boolean, required: false },

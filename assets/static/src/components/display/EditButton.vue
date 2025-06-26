@@ -6,10 +6,10 @@
 </template>
 
 <script setup>
+import { useRouter } from "vue-router";
 import { Button } from "@/components/ui/button/index.js";
 import { useConfigStore } from "@/stores/config.js";
 import { getExtension } from "@/util/extensions.js";
-import { useRouter } from "vue-router";
 import EditIcon from "~icons/material-symbols/edit-rounded";
 
 const props = defineProps({

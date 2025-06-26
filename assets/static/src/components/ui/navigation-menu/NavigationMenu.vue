@@ -1,8 +1,8 @@
 <script setup>
-import { cn } from "@/lib/utils";
+import NavigationMenuViewport from "./NavigationMenuViewport.vue";
 import { reactiveOmit } from "@vueuse/core";
 import { NavigationMenuRoot, useForwardPropsEmits } from "reka-ui";
-import NavigationMenuViewport from "./NavigationMenuViewport.vue";
+import { cn } from "@/lib/utils";
 
 const props = defineProps({
   modelValue: { type: String, required: false },

@@ -1,9 +1,9 @@
 <script setup>
-import { cn } from "@/lib/utils";
+import DialogOverlay from "./DialogOverlay.vue";
 import { X } from "lucide-vue-next";
 import { DialogClose, DialogContent, DialogPortal, useForwardPropsEmits } from "reka-ui";
 import { computed } from "vue";
-import DialogOverlay from "./DialogOverlay.vue";
+import { cn } from "@/lib/utils";
 
 const props = defineProps({
   forceMount: { type: Boolean, required: false },

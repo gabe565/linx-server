@@ -58,6 +58,9 @@
 </template>
 
 <script setup>
+import { useColorMode } from "@vueuse/core";
+import { computed } from "vue";
+import { useRouter } from "vue-router";
 import { Button } from "@/components/ui/button";
 import {
   NavigationMenu,
@@ -73,9 +76,6 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip/index.js";
 import { useConfigStore } from "@/stores/config";
-import { useColorMode } from "@vueuse/core";
-import { computed } from "vue";
-import { useRouter } from "vue-router";
 import DarkIcon from "~icons/material-symbols/brightness-2-rounded";
 import LightIcon from "~icons/material-symbols/brightness-5-rounded";
 import AutoIcon from "~icons/material-symbols/brightness-auto-rounded";

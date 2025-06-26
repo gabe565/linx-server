@@ -1,7 +1,7 @@
 <script setup>
-import { cn } from "@/lib/utils";
 import { reactiveOmit } from "@vueuse/core";
 import { TooltipArrow, TooltipContent, TooltipPortal, useForwardPropsEmits } from "reka-ui";
+import { cn } from "@/lib/utils";
 
 defineOptions({
   inheritAttrs: false,

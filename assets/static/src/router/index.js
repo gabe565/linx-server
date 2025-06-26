@@ -1,7 +1,7 @@
+import { createRouter, createWebHistory } from "vue-router";
 import FileView from "@/views/FileView.vue";
 import PasteView from "@/views/PasteView.vue";
 import UploadView from "@/views/UploadView.vue";
-import { createRouter, createWebHistory } from "vue-router";
 
 const router = createRouter({
   history: createWebHistory(window.config?.site_path),

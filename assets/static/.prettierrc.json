@@ -7,5 +7,5 @@
   "printWidth": 100,
   "trailingComma": "all",
   "importOrderSortSpecifiers": true,
-  "importOrder": ["<THIRD_PARTY_MODULES>", "^\\.\\.?", "^~icons"]
+  "importOrder": ["<THIRD_PARTY_MODULES>", "^\\@/\\.?", "^~icons"]
 }

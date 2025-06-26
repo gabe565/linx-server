@@ -60,6 +60,7 @@
 </template>
 
 <script setup>
+import { UseTimeAgo } from "@vueuse/components";
 import {
   DialogContent,
   DialogDescription,
@@ -69,7 +70,6 @@ import {
 import { Table, TableCell, TableRow } from "@/components/ui/table/index.js";
 import PasswordViewInput from "@/components/upload/PasswordViewInput.vue";
 import { formatBytes } from "@/util/bytes.js";
-import { UseTimeAgo } from "@vueuse/components";
 
 defineProps({
   item: { type: Object, required: true },

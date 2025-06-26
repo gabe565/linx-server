@@ -24,6 +24,7 @@
 </template>
 
 <script setup>
+import { computed, ref } from "vue";
 import { Button } from "@/components/ui/button/index.js";
 import { Input } from "@/components/ui/input/index.js";
 import {
@@ -32,7 +33,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip/index.js";
-import { computed, ref } from "vue";
 import VisibilityOffIcon from "~icons/material-symbols/visibility-off-rounded";
 import VisibilityIcon from "~icons/material-symbols/visibility-rounded";
 

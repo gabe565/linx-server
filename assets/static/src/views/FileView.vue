@@ -4,10 +4,10 @@
 </template>
 
 <script setup>
+import { computed } from "vue";
 import CustomPage from "@/components/display/CustomPage.vue";
 import DisplayPage from "@/components/display/DisplayPage.vue";
 import { useConfigStore } from "@/stores/config.js";
-import { computed } from "vue";
 
 const props = defineProps({
   filename: { type: String, required: true },

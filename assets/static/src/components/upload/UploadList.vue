@@ -162,6 +162,9 @@
 </template>
 
 <script setup>
+import { UseTimeAgo } from "@vueuse/components";
+import { breakpointsTailwind, useBreakpoints } from "@vueuse/core";
+import { computed } from "vue";
 import { Button } from "@/components/ui/button/index.js";
 import {
   Card,
@@ -189,9 +192,6 @@ import UploadInfo from "@/components/upload/UploadInfo.vue";
 import { useUploadStore } from "@/stores/upload.js";
 import { formatBitsPerSecond, formatBytes } from "@/util/bytes.js";
 import { formatDuration } from "@/util/time.js";
-import { UseTimeAgo } from "@vueuse/components";
-import { breakpointsTailwind, useBreakpoints } from "@vueuse/core";
-import { computed } from "vue";
 import MoreIcon from "~icons/ic/round-more-horiz";
 import CloseIcon from "~icons/material-symbols/close-rounded";
 import CopyIcon from "~icons/material-symbols/content-copy-rounded";

@@ -1,10 +1,10 @@
 <script setup>
-import HighlightJS from "@/components/HighlightJS.js";
-import { ApiPath } from "@/config/api.js";
-import { AlphaNum, Hex, randomString } from "@/util/random.js";
 import hljs from "highlight.js/lib/core";
 import langJSON from "highlight.js/lib/languages/json";
 import { computed } from "vue";
+import HighlightJS from "@/components/HighlightJS.js";
+import { ApiPath } from "@/config/api.js";
+import { AlphaNum, Hex, randomString } from "@/util/random.js";
 
 hljs.registerLanguage("json", langJSON);
 
