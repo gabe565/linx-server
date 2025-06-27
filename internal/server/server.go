@@ -37,6 +37,16 @@ func Setup() (*chi.Mux, error) {
 
 	config.TimeStarted = time.Now()
 
+	var customPages []string
+	if config.Default.CustomPagesPath != "" {
+		customPages, err = handlers.ListCustomPages(config.Default.CustomPagesPath)
+		if err != nil {
+			return nil, err
+		}
+
+		config.CustomPages = customPages
+	}
+
 	// Routing setup
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
@@ -92,15 +102,7 @@ func Setup() (*chi.Mux, error) {
 		}))
 	}
 
-	var customPages []string
-	if config.Default.CustomPagesPath != "" {
-		customPages, err = handlers.ListCustomPages(config.Default.CustomPagesPath)
-		if err != nil {
-			return nil, err
-		}
-
-		config.CustomPages = customPages
-
+	if len(customPages) != 0 {
 		r.Get("/api/custom_page/{name}", handlers.CustomPage(config.Default.CustomPagesPath))
 	}
 
