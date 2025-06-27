@@ -45,17 +45,20 @@ func NewConfig() Config {
 }
 
 func ConfigBytes() ([]byte, error) {
-	f, err := assets.Static().Open(manifest["src/fouc.js"].File)
-	if err != nil {
-		return nil, err
-	}
-	defer func() {
-		_ = f.Close()
-	}()
-
 	var buf bytes.Buffer
-	if _, err := buf.ReadFrom(f); err != nil {
-		return nil, err
+
+	if config.Default.ViteURL == "" {
+		f, err := assets.Static().Open(manifest["src/fouc.js"].File)
+		if err != nil {
+			return nil, err
+		}
+		defer func() {
+			_ = f.Close()
+		}()
+
+		if _, err := buf.ReadFrom(f); err != nil {
+			return nil, err
+		}
 	}
 
 	buf.WriteString("window.config=")
