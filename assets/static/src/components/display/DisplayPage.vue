@@ -142,7 +142,7 @@ const { state, isLoading, error, execute } = useAsyncState(async () => {
     mode = Modes.TEXT;
   }
 
-  let content, formatted;
+  let content;
   if (
     meta.size < 512 * 1024 &&
     (mode === Modes.TEXT || mode === Modes.MARKDOWN || mode === Modes.CSV)
@@ -165,35 +165,12 @@ const { state, isLoading, error, execute } = useAsyncState(async () => {
       });
       throw err;
     }
-
-    if (mode === Modes.MARKDOWN) {
-      try {
-        const markdown = (await import("@/util/markdown.js")).default;
-        formatted = markdown(content);
-      } catch (err) {
-        console.error(err);
-        toast.error("Failed to format markdown", {
-          description: err.message,
-        });
-      }
-    } else if (mode === Modes.CSV) {
-      try {
-        const papaparse = (await import("papaparse")).default;
-        formatted = papaparse.parse(content);
-      } catch (err) {
-        console.error(err);
-        toast.error("Failed to format CSV", {
-          description: err.message,
-        });
-      }
-    }
   }
 
   return {
     meta,
     mode,
     content,
-    formatted,
   };
 }, {});
 </script>

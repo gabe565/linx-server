@@ -5,7 +5,7 @@
 
   <Card v-else class="container max-w-3xl mx-auto">
     <CardContent>
-      <div v-html="state" class="prose max-w-none" />
+      <MarkdownViewer :content="state" />
     </CardContent>
   </Card>
 </template>
@@ -13,10 +13,13 @@
 <script setup>
 import { useAsyncState } from "@vueuse/core";
 import axios from "axios";
+import { defineAsyncComponent } from "vue";
 import { toast } from "vue-sonner";
 import { Card, CardContent } from "@/components/ui/card/index.js";
 import { ApiPath } from "@/config/api.js";
 import SpinnerIcon from "~icons/svg-spinners/ring-resize";
+
+const MarkdownViewer = defineAsyncComponent(() => import("@/components/MarkdownViewer.vue"));
 
 const props = defineProps({
   filename: { type: String, required: true },
@@ -28,9 +31,7 @@ const { state, isLoading } = useAsyncState(async () => {
       validateStatus: (s) => s === 200,
     });
 
-    const markdown = (await import("@/util/markdown.js")).default;
-    const content = markdown(res.data);
-    return content;
+    return res.data;
   } catch (err) {
     console.error(err);
     toast.error("Failed to load page", {

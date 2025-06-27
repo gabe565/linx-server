@@ -32,30 +32,21 @@
       </object>
     </div>
 
-    <div
-      v-else-if="!!state.formatted && state.mode === Modes.MARKDOWN"
-      class="prose max-w-none"
-      v-html="state.formatted"
+    <MarkdownViewer
+      v-else-if="!!state.content && state.mode === Modes.MARKDOWN"
+      class="max-w-none"
+      :content="state.content"
     />
 
     <pre v-else-if="state.mode === Modes.ARCHIVE" class="overflow-x-scroll max-h-[600px]">{{
       state.meta.archive_files.join("\n")
     }}</pre>
 
-    <div v-else-if="!!state.formatted && state.mode === Modes.CSV" class="space-y-4">
-      <Table>
-        <TableRow v-for="(row, key) in state.formatted?.data?.slice(0, csvRows)" :key="key">
-          <TableCell v-for="(cell, ckey) in row" :key="ckey">{{ cell }}</TableCell>
-        </TableRow>
-      </Table>
-      <div class="flex justify-between">
-        Showing {{ Math.min(csvRows, state.formatted?.data?.length) }} of
-        {{ state.formatted?.data?.length }} rows
-        <Button v-if="csvRows < state.formatted?.data?.length" @click="csvRows += 250"
-          >Show more</Button
-        >
-      </div>
-    </div>
+    <CSVViewer
+      v-else-if="!!state.content && state.mode === Modes.CSV"
+      class="space-y-4"
+      :content="state.content"
+    />
 
     <HighlightJS
       v-else-if="!!state.content && state.mode === Modes.TEXT"
@@ -68,17 +59,17 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { defineAsyncComponent } from "vue";
 import HighlightJS from "@/components/HighlightJS.js";
 import Modes from "@/components/display/fileModes.js";
-import { Button } from "@/components/ui/button/index.js";
 import { CardContent } from "@/components/ui/card/index.js";
-import { Table, TableCell, TableRow } from "@/components/ui/table/index.js";
+
+const MarkdownViewer = defineAsyncComponent(() => import("@/components/MarkdownViewer.vue"));
+
+const CSVViewer = defineAsyncComponent(() => import("@/components/CSVViewer.vue"));
 
 defineProps({
   state: { type: Object, required: true },
   wrap: { type: Boolean, default: false },
 });
-
-const csvRows = ref(250);
 </script>
