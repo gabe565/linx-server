@@ -12,16 +12,29 @@
         <CardContent class="flex flex-col gap-6">
           <p>{{ filename }} is protected with a password:</p>
 
-          <Label class="w-full flex flex-wrap">
-            Password
+          <div class="flex flex-col gap-1.5">
+            <Label
+              for="password"
+              class="pb-1.5"
+              :class="{ 'text-destructive': downloadAttempts > 1 }"
+              >Password</Label
+            >
             <Input
+              id="password"
               type="password"
               v-model="accessKey"
               placeholder="Enter password"
               class="flex-1 min-w-50"
               autofocus
             />
-          </Label>
+            <span
+              v-if="downloadAttempts > 1"
+              class="font-medium text-destructive text-sm"
+              role="alert"
+            >
+              Invalid password
+            </span>
+          </div>
         </CardContent>
         <CardFooter class="flex flex-col items-end">
           <Button type="submit" class="w-full sm:w-auto">Unlock</Button>
