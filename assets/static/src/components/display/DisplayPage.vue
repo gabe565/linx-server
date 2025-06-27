@@ -49,142 +49,21 @@
     </Card>
 
     <Card v-else-if="state.meta">
-      <CardHeader class="flex flex-wrap justify-between items-center gap-4">
-        <div class="flex flex-col gap-1 max-w-full">
-          <CardTitle class="wrap-break-word">{{
-            state.meta.original_name || state.meta.filename
-          }}</CardTitle>
-
-          <UseTimeAgo
-            v-if="expiry"
-            v-slot="{ timeAgo }"
-            :time="expiry"
-            :show-second="true"
-            update-interval="1000"
-          >
-            <CardDescription class="text-xs tabular-nums">
-              {{ expired ? "expired" : "expires" }} {{ timeAgo }}
-            </CardDescription>
-          </UseTimeAgo>
-        </div>
-
-        <div v-if="showWrapSwitch" class="flex items-center space-x-2">
-          <Switch id="opt-wrap" v-model="wrap" />
-          <Label for="opt-wrap">Wrap</Label>
-        </div>
-
-        <div
-          class="flex flex-col sm:flex-row gap-4 sm:gap-0 flex-wrap mx-auto sm:mx-0 w-full sm:w-auto"
-        >
-          <EditButton
-            v-if="showEditButton"
-            :meta="state.meta"
-            :content="state.content"
-            class="sm:rounded-r-none"
-          />
-          <DownloadButton
-            v-if="state.meta"
-            :meta="state.meta"
-            :class="{
-              'sm:border-l-0 sm:rounded-l-none': showEditButton,
-            }"
-            :disabled="expired"
-          />
-        </div>
-      </CardHeader>
-      <CardContent class="flex flex-col justify-center">
-        <div
-          v-if="state.mode === Modes.IMAGE"
-          class="mx-auto"
-          :class="{ 'w-full h-full flex flex-col': state.meta.mimetype === 'image/svg+xml' }"
-        >
-          <img :src="state.meta.direct_url" alt="" class="max-w-full h-auto rounded-md" />
-        </div>
-
-        <div v-else-if="state.mode === Modes.AUDIO">
-          <audio controls preload="metadata" class="w-full rounded-md">
-            <source :src="state.meta.direct_url" :type="state.meta.mimetype" />
-            Your browser doesn’t support playing {{ state.meta.mimetype }}.
-          </audio>
-        </div>
-
-        <div v-else-if="state.mode === Modes.VIDEO">
-          <video controls preload="metadata" class="w-full rounded-md">
-            <source :src="state.meta.direct_url" :type="state.meta.mimetype" />
-            Your browser doesn’t support playing {{ state.meta.mimetype }}.
-          </video>
-        </div>
-
-        <div v-else-if="state.mode === Modes.PDF">
-          <object
-            class="w-full h-[800px] rounded-md"
-            :data="state.meta.direct_url"
-            :type="state.meta.mimetype"
-          >
-            Your web browser does not support displaying PDF files.
-          </object>
-        </div>
-
-        <div
-          v-else-if="!!state.formatted && state.mode === Modes.MARKDOWN"
-          class="prose max-w-none"
-          v-html="state.formatted"
-        />
-
-        <pre v-else-if="state.mode === Modes.ARCHIVE" class="overflow-x-scroll max-h-[600px]">{{
-          state.meta.archive_files.join("\n")
-        }}</pre>
-
-        <div v-else-if="!!state.formatted && state.mode === Modes.CSV" class="space-y-4">
-          <Table>
-            <TableRow v-for="(row, key) in state.formatted?.data?.slice(0, csvRows)" :key="key">
-              <TableCell v-for="(cell, key) in row" :key="key">{{ cell }}</TableCell>
-            </TableRow>
-          </Table>
-          <div class="flex justify-between">
-            Showing {{ Math.min(csvRows, state.formatted?.data?.length) }} of
-            {{ state.formatted?.data?.length }} rows
-            <Button v-if="csvRows < state.formatted?.data?.length" @click="csvRows += 250"
-              >Show more</Button
-            >
-          </div>
-        </div>
-
-        <HighlightJS
-          v-else-if="!!state.content && state.mode === Modes.TEXT"
-          class="p-4"
-          :class="[wrap ? 'whitespace-pre-wrap wrap-break-word' : 'overflow-x-scroll']"
-          :language="state.meta.language"
-          :code="state.content"
-        />
-      </CardContent>
+      <FileHeader v-model:wrap="wrap" :state="state" />
+      <FileViewer :state="state" :wrap="wrap" />
     </Card>
   </div>
 </template>
 
-<script>
-const Modes = Object.freeze({
-  IMAGE: Symbol("image"),
-  AUDIO: Symbol("audio"),
-  VIDEO: Symbol("video"),
-  PDF: Symbol("pdf"),
-  MARKDOWN: Symbol("markdown"),
-  CSV: Symbol("csv"),
-  ARCHIVE: Symbol("archive"),
-  TEXT: Symbol("text"),
-});
-</script>
-
 <script setup>
-import { UseTimeAgo } from "@vueuse/components";
-import { useAsyncState, useTimeoutFn } from "@vueuse/core";
+import Modes from "./fileModes.js";
+import { useAsyncState } from "@vueuse/core";
 import axios from "axios";
 import { computed, ref } from "vue";
 import { toast } from "vue-sonner";
 import DeadLink from "@/assets/dead-link.svg";
-import HighlightJS from "@/components/HighlightJS.js";
-import DownloadButton from "@/components/display/DownloadButton.vue";
-import EditButton from "@/components/display/EditButton.vue";
+import FileHeader from "@/components/display/FileHeader.vue";
+import FileViewer from "@/components/display/FileViewer.vue";
 import { Button } from "@/components/ui/button/index.js";
 import {
   Card,
@@ -196,8 +75,6 @@ import {
 } from "@/components/ui/card/index.js";
 import { Input } from "@/components/ui/input/index.js";
 import { Label } from "@/components/ui/label/index.js";
-import { Switch } from "@/components/ui/switch/index.js";
-import { Table, TableCell, TableRow } from "@/components/ui/table/index.js";
 import { ApiPath } from "@/config/api.js";
 import { useConfigStore } from "@/stores/config.js";
 import { getExtension, loadLanguage } from "@/util/extensions.js";
@@ -217,11 +94,6 @@ const encAccessKey = computed(() =>
 );
 const downloadAttempts = ref(0);
 const wrap = ref(true);
-const csvRows = ref(250);
-
-const expiryMs = ref();
-const expired = ref(false);
-const expiryTimeout = useTimeoutFn(() => (expired.value = true), expiryMs, { immediate: false });
 
 const { state, isLoading, error, execute } = useAsyncState(async () => {
   downloadAttempts.value += 1;
@@ -317,16 +189,6 @@ const { state, isLoading, error, execute } = useAsyncState(async () => {
     }
   }
 
-  expiryTimeout.stop();
-  expired.value = false;
-  if (meta.expiry > 0) {
-    expiryMs.value = new Date(meta.expiry * 1000).getTime() - Date.now();
-    // https://developer.mozilla.org/docs/Web/API/Window/setTimeout#maximum_delay_value
-    if (expiryMs.value < 2 ** 31) {
-      expiryTimeout.start();
-    }
-  }
-
   return {
     meta,
     mode,
@@ -334,16 +196,4 @@ const { state, isLoading, error, execute } = useAsyncState(async () => {
     formatted,
   };
 }, {});
-
-const showWrapSwitch = computed(() => !!state.value.content && state.value.mode === Modes.TEXT);
-const showEditButton = computed(
-  () =>
-    !!state.value.content &&
-    (state.value.mode === Modes.TEXT ||
-      state.value.mode === Modes.MARKDOWN ||
-      state.value.mode === Modes.CSV),
-);
-const expiry = computed(() =>
-  state.value.meta?.expiry > 0 ? new Date(state.value?.meta?.expiry * 1000) : false,
-);
 </script>
