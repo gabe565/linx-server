@@ -103,7 +103,7 @@ importers:
         version: 4.5.1(vue@3.5.16)
       vue-sonner:
         specifier: ^2.0.0
-        version: 2.0.0
+        version: 2.0.1
     devDependencies:
       '@eslint/js':
         specifier: ^9.22.0
@@ -2186,8 +2186,8 @@ packages:
     peerDependencies:
       vue: ^3.2.0
 
-  vue-sonner@2.0.0:
-    resolution: {integrity: sha512-nvlqGGWvxEv9UnKcZxsGdKpHrODEdv3CXAJF3er+1pLC03caJt2+v9HuWtRqlBQwUr1SFttsYuwVbpbEl05n4A==}
+  vue-sonner@2.0.1:
+    resolution: {integrity: sha512-sn4vjCRzRcnMaxaLa9aNSyZQi6S+gshiea5Lc3eqpkj0ES9LH8ljg+WJCkxefr28V4PZ9xkUXBIWpxGfQxstIg==}
 
   vue@3.5.16:
     resolution: {integrity: sha512-rjOV2ecxMd5SiAmof2xzh2WxntRcigkX/He4YFJ6WdRvVUrbt6DxC1Iujh10XLl8xCDRDtGKMeO3D+pRQ1PP9w==}
@@ -4223,7 +4223,7 @@ snapshots:
       '@vue/devtools-api': 6.6.4
       vue: 3.5.16
 
-  vue-sonner@2.0.0: {}
+  vue-sonner@2.0.1: {}
 
   vue@3.5.16:
     dependencies:
