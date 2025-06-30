@@ -15,12 +15,15 @@ jobs:
         uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
         with:
           go-version-file: go.mod
+      - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4.1.0
+        with:
+          package_json_file: assets/static/package.json
       - name: Set up Node
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version-file: assets/static/.nvmrc
-          cache: npm
-          cache-dependency-path: assets/static/package-lock.json
+          cache: pnpm
+          cache-dependency-path: assets/static/pnpm-lock.yaml
       - name: Go generate
         run: go generate -x
       - name: Test
@@ -51,12 +54,15 @@ jobs:
         uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
         with:
           go-version-file: go.mod
+      - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4.1.0
+        with:
+          package_json_file: assets/static/package.json
       - name: Set up Node
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version-file: assets/static/.nvmrc
-          cache: npm
-          cache-dependency-path: assets/static/package-lock.json
+          cache: pnpm
+          cache-dependency-path: assets/static/pnpm-lock.yaml
       - name: Set build variables
         id: vars
         run: |

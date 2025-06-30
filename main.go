@@ -7,8 +7,8 @@ import (
 	"gabe565.com/utils/cobrax"
 )
 
-//go:generate npm --prefix assets/static install
-//go:generate npm --prefix assets/static run build
+//go:generate sh -c "cd assets/static && pnpm install --frozen-lockfile"
+//go:generate sh -c "cd assets/static && pnpm run build"
 
 var version = "beta"
 

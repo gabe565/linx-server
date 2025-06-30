@@ -3,11 +3,15 @@
 FROM --platform=$BUILDPLATFORM node:22-alpine AS frontend
 WORKDIR /app
 
-COPY assets/static/package*.json .
-RUN npm ci
+RUN corepack enable
+
+COPY assets/static/package.json assets/static/pnpm-*.yaml .
+RUN --mount=type=cache,target=/root/.cache \
+  pnpm install --prod --frozen-lockfile
 
 COPY assets/static .
-RUN npm run build
+RUN --mount=type=cache,target=/root/.cache \
+  pnpm run build
 
 FROM --platform=$BUILDPLATFORM tonistiigi/xx:1.6.1 AS xx
 
