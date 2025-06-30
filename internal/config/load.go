@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"gabe565.com/utils/must"
-	"github.com/knadh/koanf/providers/env"
+	"github.com/knadh/koanf/providers/env/v2"
 	"github.com/knadh/koanf/providers/posflag"
 	"github.com/knadh/koanf/providers/rawbytes"
 	"github.com/knadh/koanf/providers/structs"
