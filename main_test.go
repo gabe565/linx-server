@@ -117,7 +117,7 @@ func TestConfigWeirdMaxExpiry(t *testing.T) {
 		config.Default.MaxExpiry.Duration = 25 * time.Minute
 	})
 
-	req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, "/api/config", nil)
+	req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, "/", nil)
 	require.NoError(t, err)
 
 	r.ServeHTTP(w, req)

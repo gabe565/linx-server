@@ -1,6 +1,8 @@
 package server
 
 import (
+	"bytes"
+	"encoding/json"
 	"net/http"
 	"path"
 	"strings"
@@ -145,6 +147,11 @@ func Setup() (*chi.Mux, error) {
 				http.Redirect(w, r, "/torrent/"+chi.URLParam(r, "name"), http.StatusMovedPermanently)
 			})
 		}
+	})
+
+	r.Get("/api/config", func(w http.ResponseWriter, r *http.Request) {
+		b, _ := json.Marshal(template.NewConfig())
+		http.ServeContent(w, r, "config.json", config.TimeStarted, bytes.NewReader(b))
 	})
 
 	for _, p := range append(customPages, "Paste", "API") {
