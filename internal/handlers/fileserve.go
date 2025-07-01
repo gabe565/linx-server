@@ -51,9 +51,29 @@ func FileServeHandler(w http.ResponseWriter, r *http.Request) {
 
 	if !config.Default.AllowHotlink {
 		referer := r.Header.Get("Referer")
-		u, _ := url.Parse(referer)
-		p := headers.GetSiteURL(r)
-		if referer != "" && !csrf.SameOrigin(u, p) {
+		ok := referer == ""
+
+		if !ok {
+			got, _ := url.Parse(referer)
+			want := headers.GetSiteURL(r)
+
+			if ok = csrf.SameOrigin(got, want); !ok {
+				for _, allowed := range config.Default.AllowReferrers {
+					want, err := url.Parse(allowed)
+					if err != nil {
+						slog.Error("Failed to parse allowed referrer", "referrer", allowed, "error", err)
+						continue
+					}
+
+					if csrf.SameOrigin(got, want) {
+						ok = true
+						break
+					}
+				}
+			}
+		}
+
+		if !ok {
 			http.Redirect(w, r, headers.GetFileURL(r, fileName).String(), http.StatusSeeOther)
 			return
 		}

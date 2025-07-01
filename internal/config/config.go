@@ -24,6 +24,7 @@ type Config struct {
 	MaxExpiry             Duration `toml:"max-expiry"               comment:"Maximum expiration time (a value of 0s means no expiry)"`
 	UploadMaxMemory       Bytes    `toml:"upload-max-memory"        comment:"Maximum memory to buffer multipart uploads; excess is written to temp files"`
 	AllowHotlink          bool     `toml:"allow-hotlink"            comment:"Allow hot-linking of files"`
+	AllowReferrers        []string `toml:"allow-referrers"          comment:"Allow some referrers even if hot-linking is disabled."`
 	RemoteUploads         bool     `toml:"remote-uploads"           comment:"Enable remote uploads (/upload?url=https://...)"`
 	NoDirectAgents        bool     `toml:"no-direct-agents"         comment:"Disable serving files directly for wget/curl user agents"`
 	ForceRandomFilename   bool     `toml:"force-random-filename"    comment:"Force all uploads to use a random filename"`

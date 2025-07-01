@@ -17,6 +17,8 @@ max-expiry = '0s'
 upload-max-memory = '32 MiB'
 # Allow hot-linking of files
 allow-hotlink = false
+# Allow some referrers even if hot-linking is disabled.
+allow-referrers = []
 # Enable remote uploads (/upload?url=https://...)
 remote-uploads = false
 # Disable serving files directly for wget/curl user agents
