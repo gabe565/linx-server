@@ -57,9 +57,9 @@ func FileDisplay(w http.ResponseWriter, r *http.Request, fileName string, metada
 		w.Header().Set("Vary", "Accept, Linx-Delete-Key")
 		w.Header().Set("Content-Type", "application/json")
 		w.Header().Set("ETag", strconv.Quote(metadata.Checksum))
-		var buf bytes.Buffer
-		_ = json.NewEncoder(&buf).Encode(res)
-		http.ServeContent(w, r, fileName, metadata.ModTime, bytes.NewReader(buf.Bytes()))
+
+		b, _ := json.Marshal(res)
+		http.ServeContent(w, r, fileName, metadata.ModTime, bytes.NewReader(b))
 	}
 
 	prettyName := fileName
