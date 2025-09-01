@@ -53,7 +53,7 @@
     "@vue/eslint-config-prettier": "^10.2.0",
     "eslint": "^9.34.0",
     "eslint-plugin-oxlint": "^1.14.0",
-    "eslint-plugin-vue": "~10.2.0",
+    "eslint-plugin-vue": "~10.4.0",
     "globals": "^16.3.0",
     "npm-run-all2": "^8.0.4",
     "oxlint": "^1.14.0",
