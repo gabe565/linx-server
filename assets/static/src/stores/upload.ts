@@ -26,6 +26,8 @@ export type UploadedItem = {
   mimetype?: string;
 };
 
+const MaxDelay = 2 ** 31 - 1;
+
 export const useUploadStore = defineStore(
   "uploads",
   () => {
@@ -158,15 +160,17 @@ export const useUploadStore = defineStore(
     };
 
     const removeExpired = () => {
-      const now = Math.floor(Date.now() / 1000);
-      uploads.value = uploads.value.filter((upload) => upload.expiry === 0 || upload.expiry > now);
-      const closest = Math.min(
-        ...uploads.value.map((upload) => upload.expiry).filter((e) => e > 0),
-      );
-
-      const nextRun = (closest - now) * 1000;
-      if (!Number.isFinite(nextRun)) return;
       clearTimeout(timeout);
+      const now = Math.floor(Date.now() / 1000);
+      let closest = Infinity;
+      uploads.value = uploads.value.filter((u) => {
+        if (u.expiry === 0) return true;
+        if (u.expiry <= now) return false;
+        if (u.expiry < closest) closest = u.expiry;
+        return true;
+      });
+      if (!Number.isFinite(closest)) return;
+      const nextRun = Math.min(MaxDelay, Math.max(500, (closest - now) * 1000));
       timeout = setTimeout(removeExpired, nextRun);
     };
 
