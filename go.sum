@@ -75,8 +75,9 @@ github.com/russross/blackfriday/v2 v2.1.0 h1:JIOH55/0cWyOuilr9/qlrm0BSXldqnqwMsf
 github.com/russross/blackfriday/v2 v2.1.0/go.mod h1:+Rmxgy9KzJVeS9/2gXHxylqXiyQDYRxCVz55jmeOWTM=
 github.com/spf13/cobra v1.9.2-0.20250831231508-51d675196729 h1:w1V8WrGuuPFNsCtyTNLki5XUTOuiMpq5SfvI9eAq9QY=
 github.com/spf13/cobra v1.9.2-0.20250831231508-51d675196729/go.mod h1:9dhySC7dnTtEiqzmqfkLj47BslqLCUPMXjG2lj/NgoE=
-github.com/spf13/pflag v1.0.8 h1:/v546uKZ4gFGHpyXvV6CNKDeJBu4l5PRvxwQvdWrc0I=
 github.com/spf13/pflag v1.0.8/go.mod h1:McXfInJRrz4CZXVZOBLb0bTZqETkiAhM9Iw0y3An2Bg=
+github.com/spf13/pflag v1.0.9 h1:9exaQaMOCwffKiiiYk6/BndUBv+iRViNW+4lEMi0PvY=
+github.com/spf13/pflag v1.0.9/go.mod h1:McXfInJRrz4CZXVZOBLb0bTZqETkiAhM9Iw0y3An2Bg=
 github.com/stretchr/testify v1.11.1 h1:7s2iGBzp5EwR7/aIZr8ao5+dra3wiQyKjjFuvgVKu7U=
 github.com/stretchr/testify v1.11.1/go.mod h1:wZwfW3scLgRK+23gO65QZefKpKQRnfz6sD981Nm4B6U=
 github.com/tinylib/msgp v1.3.0 h1:ULuf7GPooDaIlbyvgAxBV/FI7ynli6LZ1/nVUNu+0ww=
