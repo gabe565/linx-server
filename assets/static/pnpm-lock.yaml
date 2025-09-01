@@ -66,8 +66,8 @@ importers:
         specifier: ^0.516.0
         version: 0.516.0(vue@3.5.20(typescript@5.9.2))
       marked:
-        specifier: ^15.0.12
-        version: 15.0.12
+        specifier: ^16.0.0
+        version: 16.2.1
       papaparse:
         specifier: ^5.5.3
         version: 5.5.3
@@ -3318,9 +3318,9 @@ packages:
   magicast@0.3.5:
     resolution: {integrity: sha512-L0WhttDl+2BOsybvEOLK7fW3UA0OQ0IQ2d6Zl2x/a6vVRs3bAY0ECOSHHeL5jD+SbOpOCUEi0y1DgHEn9Qn1AQ==}
 
-  marked@15.0.12:
-    resolution: {integrity: sha512-8dD6FusOQSrpv9Z1rdNMdlSgQOIP880DHqnohobOmYLElGEqAL/JvxvuxZO16r4HtjTlfPRDC1hbvxC9dPN2nA==}
-    engines: {node: '>= 18'}
+  marked@16.2.1:
+    resolution: {integrity: sha512-r3UrXED9lMlHF97jJByry90cwrZBBvZmjG1L68oYfuPMW+uDTnuMbyJDymCWwbTE+f+3LhpNDKfpR3a3saFyjA==}
+    engines: {node: '>= 20'}
     hasBin: true
 
   math-intrinsics@1.1.0:
@@ -8217,7 +8217,7 @@ snapshots:
       '@babel/types': 7.28.2
       source-map-js: 1.2.1
 
-  marked@15.0.12: {}
+  marked@16.2.1: {}
 
   math-intrinsics@1.1.0: {}
 
