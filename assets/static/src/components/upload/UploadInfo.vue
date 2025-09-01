@@ -9,7 +9,7 @@
           v-slot="{ timeAgo }"
           :time="new Date(item.expiry * 1000)"
           :show-second="true"
-          update-interval="1000"
+          :update-interval="1000"
         >
           expires {{ timeAgo }}
         </UseTimeAgo>
@@ -59,7 +59,7 @@
   </DialogContent>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { UseTimeAgo } from "@vueuse/components";
 import {
   DialogContent,
@@ -69,7 +69,7 @@ import {
 } from "@/components/ui/dialog/index.js";
 import { Table, TableCell, TableRow } from "@/components/ui/table/index.js";
 import PasswordViewInput from "@/components/upload/PasswordViewInput.vue";
-import { formatBytes } from "@/util/bytes.js";
+import { formatBytes } from "@/util/bytes.ts";
 
 defineProps({
   item: { type: Object, required: true },

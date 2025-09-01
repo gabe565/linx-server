@@ -10,7 +10,7 @@
         v-slot="{ timeAgo }"
         :time="expiry"
         :show-second="true"
-        update-interval="1000"
+        :update-interval="1000"
       >
         <CardDescription class="text-xs tabular-nums">
           {{ expired ? "expired" : "expires" }} {{ timeAgo }}
@@ -42,7 +42,7 @@
   </CardHeader>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import Modes from "./fileModes.js";
 import { UseTimeAgo } from "@vueuse/components";
 import { useTimeoutFn } from "@vueuse/core";
@@ -57,11 +57,12 @@ const props = defineProps({
   state: { type: Object, required: true },
 });
 
-const wrap = defineModel("wrap");
+const wrap = defineModel<boolean>("wrap");
 
-const expiry = computed(() =>
-  props.state?.meta?.expiry > 0 ? new Date(props.state.meta.expiry * 1000) : false,
-);
+const expiry = computed(() => {
+  const exp = props.state?.meta?.expiry;
+  return exp && exp > 0 ? new Date(exp * 1000) : false;
+});
 const expiryMs = ref();
 const expired = ref(false);
 const expiryTimeout = useTimeoutFn(() => (expired.value = true), expiryMs, { immediate: false });

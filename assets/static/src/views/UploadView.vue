@@ -28,7 +28,8 @@
   <AuthDialog v-if="config.site?.auth" v-model="showAuth" @submit="doUpload(retryFile)" />
 </template>
 
-<script setup>
+<script setup lang="ts">
+import { isAxiosError } from "axios";
 import { ref } from "vue";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card/index.js";
 import { Label } from "@/components/ui/label/index.js";
@@ -38,17 +39,17 @@ import DropZone from "@/components/upload/DropZone.vue";
 import ExpirySelect from "@/components/upload/ExpirySelect.vue";
 import PasswordInput from "@/components/upload/PasswordInput.vue";
 import UploadList from "@/components/upload/UploadList.vue";
-import { useConfigStore } from "@/stores/config";
-import { useUploadStore } from "@/stores/upload";
+import { useConfigStore } from "@/stores/config.ts";
+import { useUploadStore } from "@/stores/upload.ts";
 
 const config = useConfigStore();
 const uploads = useUploadStore();
 const showAuth = ref(false);
-let retryFile;
+let retryFile: File | undefined;
 
-const doUpload = async (file) => {
+const doUpload = async (file: File | undefined) => {
   if (!file) return;
-  retryFile = null;
+  retryFile = undefined;
   try {
     await uploads.uploadFile({
       file,
@@ -58,7 +59,7 @@ const doUpload = async (file) => {
     });
   } catch (err) {
     console.error(err);
-    if (err.response?.status === 401) {
+    if (isAxiosError(err) && err.response?.status === 401) {
       retryFile = file;
       showAuth.value = true;
     }

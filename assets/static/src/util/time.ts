@@ -1,4 +1,4 @@
-export const formatDuration = (seconds) => {
+export const formatDuration = (seconds: number) => {
   seconds = Math.ceil(seconds);
 
   const h = Math.floor(seconds / 3600);

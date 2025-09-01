@@ -1,4 +1,4 @@
-export const formatBytes = (bytes, decimals = 0) => {
+export const formatBytes = (bytes: number, decimals = 0) => {
   if (!+bytes) return "0 B";
 
   const k = 1024;
@@ -7,10 +7,10 @@ export const formatBytes = (bytes, decimals = 0) => {
 
   const i = Math.floor(Math.log(bytes) / Math.log(k));
 
-  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
+  return `${Number((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
 };
 
-export const formatBitsPerSecond = (bytes, decimals = 1) => {
+export const formatBitsPerSecond = (bytes: number, decimals = 1) => {
   if (!+bytes) return "0 bps";
 
   const k = 1000;
@@ -20,5 +20,5 @@ export const formatBitsPerSecond = (bytes, decimals = 1) => {
   const bits = bytes * 8;
   const i = Math.floor(Math.log(bits) / Math.log(k));
 
-  return `${parseFloat((bits / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
+  return `${Number((bits / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
 };

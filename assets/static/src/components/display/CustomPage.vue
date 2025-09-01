@@ -10,13 +10,13 @@
   </Card>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { useAsyncState } from "@vueuse/core";
 import axios from "axios";
 import { defineAsyncComponent } from "vue";
 import { toast } from "vue-sonner";
 import { Card, CardContent } from "@/components/ui/card/index.js";
-import { ApiPath } from "@/config/api.js";
+import { ApiPath } from "@/config/api.ts";
 import SpinnerIcon from "~icons/svg-spinners/ring-resize";
 
 const MarkdownViewer = defineAsyncComponent(() => import("@/components/MarkdownViewer.vue"));
@@ -25,7 +25,7 @@ const props = defineProps({
   filename: { type: String, required: true },
 });
 
-const { state, isLoading } = useAsyncState(async () => {
+const { state, isLoading } = useAsyncState<string>(async () => {
   try {
     const res = await axios.get(ApiPath(`/api/custom_page/${props.filename}`), {
       validateStatus: (s) => s === 200,
@@ -34,9 +34,8 @@ const { state, isLoading } = useAsyncState(async () => {
     return res.data;
   } catch (err) {
     console.error(err);
-    toast.error("Failed to load page", {
-      description: err.message,
-    });
+    const msg = err instanceof Error ? err.message : String(err);
+    toast.error("Failed to load page", { description: msg });
   }
-});
+}, "");
 </script>

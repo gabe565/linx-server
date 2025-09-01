@@ -1,23 +1,42 @@
 import { useEventListener, useWakeLock } from "@vueuse/core";
-import axios from "axios";
+import axios, { type AxiosProgressEvent, isAxiosError } from "axios";
 import { defineStore } from "pinia";
 import { reactive, ref } from "vue";
 import { toast } from "vue-sonner";
-import { ApiPath } from "@/config/api.js";
-import { useConfigStore } from "@/stores/config.js";
+import { ApiPath } from "@/config/api.ts";
+import { useConfigStore } from "@/stores/config.ts";
 
 let uploadID = 0;
+
+export type InProgressItem = {
+  original_name: string;
+  progress: AxiosProgressEvent;
+  controller: AbortController;
+};
+
+export type UploadedItem = {
+  url: string;
+  filename: string;
+  original_name?: string;
+  delete_key: string;
+  access_key?: string;
+  expiry: number;
+  uploaded?: Date;
+  size: number;
+  mimetype?: string;
+};
 
 export const useUploadStore = defineStore(
   "uploads",
   () => {
     const config = useConfigStore();
 
-    const uploads = ref([]);
-    const inProgress = ref({});
-    let timeout;
+    const version = ref(0);
+    const uploads = ref<UploadedItem[]>([]);
+    const inProgress = reactive<Record<number, InProgressItem>>({});
+    let timeout: ReturnType<typeof setTimeout> | undefined;
 
-    const copy = async (item) => {
+    const copy = async (item: UploadedItem) => {
       try {
         const url = document.location.origin + "/" + item.filename;
         await navigator.clipboard.writeText(url);
@@ -27,15 +46,16 @@ export const useUploadStore = defineStore(
       } catch (err) {
         console.error(err);
         toast.error("Failed to copy.", {
-          description: err,
+          description: err instanceof Error ? err.message : String(err),
         });
+        throw err;
       }
     };
 
     const wakelock = reactive(useWakeLock());
 
     useEventListener(window, "beforeunload", (e) => {
-      if (Object.keys(inProgress.value).length !== 0) {
+      if (Object.keys(inProgress).length !== 0) {
         e.preventDefault();
       }
     });
@@ -46,20 +66,30 @@ export const useUploadStore = defineStore(
       randomFilename = false,
       password,
       saveOriginalName = true,
+    }: {
+      file: File;
+      expiry: number | string;
+      randomFilename?: boolean;
+      password?: string;
+      saveOriginalName?: boolean;
     }) => {
       const controller = new AbortController();
-      const upload = ref({ original_name: file.name, progress: { progress: 0 }, controller });
+      const upload: InProgressItem = {
+        original_name: file.name,
+        progress: { progress: 0 } as AxiosProgressEvent,
+        controller,
+      };
       const id = uploadID++;
-      if (Object.keys(inProgress.value).length === 0) {
+      if (Object.keys(inProgress).length === 0) {
         wakelock.request("screen");
       }
-      inProgress.value[id] = upload;
+      inProgress[id] = upload;
 
       const form = new FormData();
-      form.append("size", file.size);
-      form.append("expires", expiry);
+      form.append("size", String(file.size));
+      form.append("expires", String(expiry));
       if (password) form.append("access_key", password);
-      form.append("randomize", randomFilename);
+      form.append("randomize", randomFilename.toString());
       // This field must be last since it is streamed
       form.append("file", file);
 
@@ -72,7 +102,7 @@ export const useUploadStore = defineStore(
           signal: controller.signal,
           validateStatus: (s) => s === 200,
           onUploadProgress(state) {
-            upload.value.progress = state;
+            if (inProgress[id]) inProgress[id].progress = state;
           },
         });
 
@@ -80,6 +110,8 @@ export const useUploadStore = defineStore(
           res.data.original_name = file.name;
         }
         res.data.uploaded = new Date();
+        res.data.expiry = Number(res.data.expiry ?? 0);
+        res.data.size = Number(res.data.size ?? 0);
 
         toast.success("File uploaded", {
           description: res.data.original_name || res.data.filename,
@@ -92,58 +124,67 @@ export const useUploadStore = defineStore(
         removeExpired();
         return res.data;
       } catch (err) {
-        let description = err.response?.data?.error || err.message;
-        if (description === "canceled") {
-          description = "Canceled by user";
-        }
+        let description = err instanceof Error ? err.message : String(err);
+        if (isAxiosError(err) && err.response?.data?.error) description = err.response.data.error;
+        if (description === "canceled") description = "Canceled by user";
         toast.error("Upload failed", { description });
         throw err;
       } finally {
-        delete inProgress.value[id];
-        if (Object.keys(inProgress.value).length === 0) {
+        delete inProgress[id];
+        if (Object.keys(inProgress).length === 0) {
           wakelock.release();
         }
       }
     };
 
-    const deleteItem = async (upload) => {
+    const deleteItem = async (upload: UploadedItem) => {
       try {
         await axios.delete(ApiPath(`/${upload.filename}`), {
           validateStatus: (s) => s === 200 || s === 404,
           headers: {
             Accept: "application/json",
             "Linx-Api-Key": encodeURIComponent(config.apiKey),
-            "Linx-Delete-Key": encodeURIComponent(upload.delete_key),
+            "Linx-Delete-Key": encodeURIComponent(upload.delete_key ?? ""),
           },
         });
         uploads.value = uploads.value.filter((u) => u.filename !== upload.filename);
         toast.success("File deleted", { description: upload.original_name || upload.filename });
       } catch (err) {
-        toast.error("Delete failed", { description: err.response?.data?.error || err.message });
+        let description = err instanceof Error ? err.message : String(err);
+        if (isAxiosError(err) && err.response?.data?.error) description = err.response.data.error;
+        toast.error("Delete failed", { description });
         throw err;
       }
     };
 
     const removeExpired = () => {
       const now = Math.floor(Date.now() / 1000);
-      uploads.value = uploads.value.filter(
-        (upload) => upload.expiry === "0" || upload.expiry > now,
-      );
+      uploads.value = uploads.value.filter((upload) => upload.expiry === 0 || upload.expiry > now);
       const closest = Math.min(
         ...uploads.value.map((upload) => upload.expiry).filter((e) => e > 0),
       );
+
       const nextRun = (closest - now) * 1000;
       if (!Number.isFinite(nextRun)) return;
       clearTimeout(timeout);
       timeout = setTimeout(removeExpired, nextRun);
     };
 
-    return { uploads, inProgress, uploadFile, deleteItem, removeExpired, copy };
+    return { version, uploads, inProgress, uploadFile, deleteItem, removeExpired, copy };
   },
   {
     persist: {
-      pick: ["uploads"],
+      pick: ["version", "uploads"],
       afterHydrate(ctx) {
+        if (ctx.store.$state.version === 0 && ctx.store.$state.uploads?.length) {
+          ctx.store.$state.uploads = ctx.store.$state.uploads.map((u: any) => ({
+            ...u,
+            expiry: Number(u.expiry),
+            size: Number(u.size),
+          }));
+          ctx.store.version = 1;
+        }
+
         ctx.store.removeExpired();
       },
     },

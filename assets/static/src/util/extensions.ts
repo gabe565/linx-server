@@ -1,8 +1,11 @@
 import hljs from "highlight.js/lib/core";
 
-export const getExtension = (filename) => filename.split(".").pop();
+export const getExtension = (filename: string): string => {
+  const parts = filename.split(".");
+  return parts.length > 1 ? (parts.pop() as string) : "";
+};
 
-export const loadLanguage = async (language) => {
+export const loadLanguage = async (language: string) => {
   let lang;
   switch (language) {
     case "apache":
@@ -142,6 +145,7 @@ export const loadLanguage = async (language) => {
       break;
     case "vue": {
       const loadVue = async () => {
+        // @ts-ignore
         const lang = await import("highlightjs-vue/dist/highlightjs-vue.esm.js");
         lang.default(hljs);
       };

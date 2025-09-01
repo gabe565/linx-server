@@ -10,8 +10,8 @@ export default defineConfig({
     manifest: true,
     rollupOptions: {
       input: {
-        main: "src/main.js",
-        fouc: "src/fouc.js",
+        main: "src/main.ts",
+        fouc: "src/fouc.ts",
       },
     },
   },

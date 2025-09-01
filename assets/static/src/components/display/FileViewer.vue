@@ -58,9 +58,9 @@
   </CardContent>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { defineAsyncComponent } from "vue";
-import HighlightJS from "@/components/HighlightJS.js";
+import HighlightJS from "@/components/HighlightJS.ts";
 import Modes from "@/components/display/fileModes.js";
 import { CardContent } from "@/components/ui/card/index.js";
 

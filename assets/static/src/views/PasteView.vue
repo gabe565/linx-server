@@ -53,8 +53,9 @@
   <AuthDialog v-if="config.site?.auth" v-model="showAuth" @submit="doUpload" />
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { useDropZone, useEventListener, useMagicKeys } from "@vueuse/core";
+import { isAxiosError } from "axios";
 import { onMounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import { Button } from "@/components/ui/button";
@@ -65,8 +66,8 @@ import { Textarea } from "@/components/ui/textarea";
 import AuthDialog from "@/components/upload/AuthDialog.vue";
 import ExpirySelect from "@/components/upload/ExpirySelect.vue";
 import PasswordInput from "@/components/upload/PasswordInput.vue";
-import { useConfigStore } from "@/stores/config.js";
-import { useUploadStore } from "@/stores/upload.js";
+import { useConfigStore } from "@/stores/config.ts";
+import { useUploadStore } from "@/stores/upload.ts";
 
 const config = useConfigStore();
 const upload = useUploadStore();
@@ -87,7 +88,7 @@ const doUpload = async () => {
     await router.push(`/${res.filename}`);
   } catch (err) {
     console.error(err);
-    if (err.response?.status === 401) {
+    if (isAxiosError(err) && err.response?.status === 401) {
       showAuth.value = true;
     }
   }
@@ -95,33 +96,37 @@ const doUpload = async () => {
 
 const { Ctrl_Enter, Meta_Enter } = useMagicKeys();
 
-watch(Ctrl_Enter, doUpload);
-watch(Meta_Enter, doUpload);
+const ctrlEnter = Ctrl_Enter ?? ref(false);
+const metaEnter = Meta_Enter ?? ref(false);
+
+watch(ctrlEnter, (pressed) => pressed && doUpload());
+watch(metaEnter, (pressed) => pressed && doUpload());
 
 const textarea = ref();
 onMounted(() => textarea.value.$el.focus());
 
-const loadFile = async (file) => {
+const loadFile = async (file: File) => {
   if (file.size > 1024 * 1024) return;
   config.filename = file.name?.split(".").slice(0, -1).join(".") || "";
   config.extension = file.name?.split(".").pop() || "txt";
   config.content = await file.text();
 };
 
-useDropZone(window, {
+useDropZone(document, {
   dataTypes(t) {
-    t = t[0];
-    return t.startsWith("text/") || t === "application/json" || t.endsWith("yaml");
+    const type = t[0];
+    if (!type) return false;
+    return type.startsWith("text/") || type === "application/json" || type.endsWith("yaml");
   },
   async onDrop(files) {
     if (!files?.length) return;
-    await loadFile(files[0]);
+    await loadFile(files[0] as File);
   },
   preventDefaultForUnhandled: true,
 });
 
-useEventListener(window, "paste", async (e) => {
+useEventListener(window, "paste", async (e: ClipboardEvent) => {
   if (!e.clipboardData?.files?.length) return;
-  await loadFile(e.clipboardData.files[0]);
+  await loadFile(e.clipboardData.files[0] as File);
 });
 </script>

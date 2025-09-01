@@ -68,7 +68,7 @@ func ImportAssets(r *http.Request) Node {
 	if u := config.Default.ViteURL; u != "" {
 		return Group{
 			Script(Type("module"), Src(u+"/@vite/client")),
-			Script(Type("module"), Src(u+"/src/main.js")),
+			Script(Type("module"), Src(u+"/src/main.ts")),
 		}
 	}
 
@@ -77,5 +77,5 @@ func ImportAssets(r *http.Request) Node {
 		preload = manifest.Preload("src/views/APIView.vue")
 	}
 
-	return Group{preload, manifest.Import("src/main.js")}
+	return Group{preload, manifest.Import("src/main.ts")}
 }

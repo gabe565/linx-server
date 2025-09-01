@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import UploadHeaders from "@/components/api/UploadHeaders.vue";
 import UploadJSONResponse from "@/components/api/UploadJSONResponse.vue";
 import {
@@ -16,8 +16,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ApiPath } from "@/config/api";
-import { AlphaNum, randomString } from "@/util/random.js";
+import { ApiPath } from "@/config/api.js";
+import { AlphaNum, randomString } from "@/util/random.ts";
 </script>
 
 <template>
