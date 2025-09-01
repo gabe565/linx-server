@@ -20,7 +20,7 @@ require (
 	github.com/pelletier/go-toml/v2 v2.2.4
 	github.com/spf13/cobra v1.9.2-0.20250831231508-51d675196729
 	github.com/spf13/pflag v1.0.8
-	github.com/stretchr/testify v1.10.0
+	github.com/stretchr/testify v1.11.1
 	github.com/zeebo/bencode v1.0.0
 	golang.org/x/crypto v0.41.0
 	golang.org/x/sync v0.16.0
