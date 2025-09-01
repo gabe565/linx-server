@@ -12,9 +12,11 @@
       <NavigationMenu class="justify-self-center">
         <NavigationMenuList>
           <NavigationMenuItem v-for="route in routes" :key="route.name">
-            <NavigationMenuLink as-child>
-              <RouterLink :to="route.path">{{ route.name }}</RouterLink>
-            </NavigationMenuLink>
+            <RouterLink :to="route.path" custom v-slot="{ isActive, href, navigate }">
+              <NavigationMenuLink :href="href" @click="navigate" :active="isActive">
+                {{ route.name }}
+              </NavigationMenuLink>
+            </RouterLink>
           </NavigationMenuItem>
         </NavigationMenuList>
       </NavigationMenu>

@@ -1,32 +1,16 @@
-<script setup>
+<script setup lang="ts">
 import DialogOverlay from "./DialogOverlay.vue";
+import { reactiveOmit } from "@vueuse/core";
 import { X } from "lucide-vue-next";
+import type { DialogContentEmits, DialogContentProps } from "reka-ui";
 import { DialogClose, DialogContent, DialogPortal, useForwardPropsEmits } from "reka-ui";
-import { computed } from "vue";
+import type { HTMLAttributes } from "vue";
 import { cn } from "@/lib/utils";
 
-const props = defineProps({
-  forceMount: { type: Boolean, required: false },
-  trapFocus: { type: Boolean, required: false },
-  disableOutsidePointerEvents: { type: Boolean, required: false },
-  asChild: { type: Boolean, required: false },
-  as: { type: null, required: false },
-  class: { type: null, required: false },
-});
-const emits = defineEmits([
-  "escapeKeyDown",
-  "pointerDownOutside",
-  "focusOutside",
-  "interactOutside",
-  "openAutoFocus",
-  "closeAutoFocus",
-]);
+const props = defineProps<DialogContentProps & { class?: HTMLAttributes["class"] }>();
+const emits = defineEmits<DialogContentEmits>();
 
-const delegatedProps = computed(() => {
-  const { class: _, ...delegated } = props;
-
-  return delegated;
-});
+const delegatedProps = reactiveOmit(props, "class");
 
 const forwarded = useForwardPropsEmits(delegatedProps, emits);
 </script>

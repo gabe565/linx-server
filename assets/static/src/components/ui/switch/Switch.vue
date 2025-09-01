@@ -1,28 +1,15 @@
-<script setup>
+<script setup lang="ts">
+import { reactiveOmit } from "@vueuse/core";
+import type { SwitchRootEmits, SwitchRootProps } from "reka-ui";
 import { SwitchRoot, SwitchThumb, useForwardPropsEmits } from "reka-ui";
-import { computed } from "vue";
+import type { HTMLAttributes } from "vue";
 import { cn } from "@/lib/utils";
 
-const props = defineProps({
-  defaultValue: { type: Boolean, required: false },
-  modelValue: { type: [Boolean, null], required: false },
-  disabled: { type: Boolean, required: false },
-  id: { type: String, required: false },
-  value: { type: String, required: false },
-  asChild: { type: Boolean, required: false },
-  as: { type: null, required: false },
-  name: { type: String, required: false },
-  required: { type: Boolean, required: false },
-  class: { type: null, required: false },
-});
+const props = defineProps<SwitchRootProps & { class?: HTMLAttributes["class"] }>();
 
-const emits = defineEmits(["update:modelValue"]);
+const emits = defineEmits<SwitchRootEmits>();
 
-const delegatedProps = computed(() => {
-  const { class: _, ...delegated } = props;
-
-  return delegated;
-});
+const delegatedProps = reactiveOmit(props, "class");
 
 const forwarded = useForwardPropsEmits(delegatedProps, emits);
 </script>
