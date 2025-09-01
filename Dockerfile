@@ -15,7 +15,7 @@ RUN --mount=type=cache,target=/root/.cache \
 
 FROM --platform=$BUILDPLATFORM tonistiigi/xx:1.6.1 AS xx
 
-FROM --platform=$BUILDPLATFORM golang:1.24.4-alpine AS backend
+FROM --platform=$BUILDPLATFORM golang:1.25.0-alpine AS backend
 WORKDIR /app
 
 COPY --from=xx / /
