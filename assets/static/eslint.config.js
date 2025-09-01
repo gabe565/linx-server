@@ -1,9 +1,12 @@
 import js from "@eslint/js";
+import tsPlugin from "@typescript-eslint/eslint-plugin";
+import tsParser from "@typescript-eslint/parser";
 import skipFormatting from "@vue/eslint-config-prettier/skip-formatting";
 import pluginOxlint from "eslint-plugin-oxlint";
 import pluginVue from "eslint-plugin-vue";
 import { defineConfig, globalIgnores } from "eslint/config";
 import globals from "globals";
+import vueParser from "vue-eslint-parser";
 
 export default defineConfig([
   {
@@ -29,6 +32,31 @@ export default defineConfig([
   {
     rules: {
       "no-unused-vars": ["error", { varsIgnorePattern: "^_", argsIgnorePattern: "^_" }],
+    },
+  },
+  {
+    // Ensure TS inside <script setup lang="ts"> parses correctly
+    files: ["**/*.{ts,tsx,vue}"],
+    languageOptions: {
+      parser: vueParser,
+      parserOptions: {
+        parser: tsParser,
+        ecmaVersion: "latest",
+        sourceType: "module",
+        extraFileExtensions: [".vue"],
+      },
+    },
+  },
+  {
+    // Prefer TS-aware unused-vars on TS/Vue files
+    files: ["**/*.{ts,tsx,vue}"],
+    plugins: { "@typescript-eslint": tsPlugin },
+    rules: {
+      "no-unused-vars": "off",
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        { varsIgnorePattern: "^_", argsIgnorePattern: "^_" },
+      ],
     },
   },
   {

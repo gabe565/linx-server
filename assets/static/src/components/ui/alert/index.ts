@@ -1,3 +1,4 @@
+import type { VariantProps } from "class-variance-authority";
 import { cva } from "class-variance-authority";
 
 export { default as Alert } from "./Alert.vue";
@@ -19,3 +20,5 @@ export const alertVariants = cva(
     },
   },
 );
+
+export type AlertVariants = VariantProps<typeof alertVariants>;

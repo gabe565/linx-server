@@ -1,14 +1,17 @@
-<script setup>
+<script setup lang="ts">
 import { useVModel } from "@vueuse/core";
+import type { HTMLAttributes } from "vue";
 import { cn } from "@/lib/utils";
 
-const props = defineProps({
-  defaultValue: { type: [String, Number], required: false },
-  modelValue: { type: [String, Number], required: false },
-  class: { type: null, required: false },
-});
+const props = defineProps<{
+  defaultValue?: string | number;
+  modelValue?: string | number;
+  class?: HTMLAttributes["class"];
+}>();
 
-const emits = defineEmits(["update:modelValue"]);
+const emits = defineEmits<{
+  (e: "update:modelValue", payload: string | number): void;
+}>();
 
 const modelValue = useVModel(props, "modelValue", emits, {
   passive: true,
