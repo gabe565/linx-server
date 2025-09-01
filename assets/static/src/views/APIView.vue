@@ -21,7 +21,7 @@ import { AlphaNum, randomString } from "@/util/random.js";
 </script>
 
 <template>
-  <Card class="container max-w-3xl mx-auto">
+  <Card class="container max-w-4xl mx-auto">
     <CardHeader>
       <CardTitle>API Reference</CardTitle>
     </CardHeader>
