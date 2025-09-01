@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"gabe565.com/utils/must"
-	"github.com/knadh/koanf/providers/env"
+	"github.com/knadh/koanf/providers/env/v2"
 	"github.com/knadh/koanf/providers/posflag"
 	"github.com/knadh/koanf/providers/rawbytes"
 	"github.com/knadh/koanf/providers/structs"
@@ -54,17 +54,20 @@ func (c *Config) Load(cmd *cobra.Command) error {
 	// Load envs
 	const envPrefix = "LINX_"
 	nested := []string{"tls", "auth", "s3", "limit", "header"}
-	if err := k.Load(env.Provider(envPrefix, ".", func(s string) string {
-		s = strings.TrimPrefix(s, envPrefix)
-		s = strings.ToLower(s)
-		s = strings.ReplaceAll(s, "_", "-")
-		for _, name := range nested {
-			if strings.HasPrefix(s, name) {
-				s = strings.Replace(s, name+"-", name+".", 1)
-				break
+	if err := k.Load(env.Provider(".", env.Opt{
+		Prefix: envPrefix,
+		TransformFunc: func(k, v string) (string, any) {
+			k = strings.TrimPrefix(k, envPrefix)
+			k = strings.ToLower(k)
+			k = strings.ReplaceAll(k, "_", "-")
+			for _, name := range nested {
+				if strings.HasPrefix(k, name) {
+					k = strings.Replace(k, name+"-", name+".", 1)
+					break
+				}
 			}
-		}
-		return s
+			return k, v
+		},
 	}), nil); err != nil {
 		return err
 	}

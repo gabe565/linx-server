@@ -15,7 +15,7 @@ RUN --mount=type=cache,target=/root/.cache \
 
 FROM --platform=$BUILDPLATFORM tonistiigi/xx:1.6.1 AS xx
 
-FROM --platform=$BUILDPLATFORM golang:1.24.4-alpine AS backend
+FROM --platform=$BUILDPLATFORM golang:1.25.0-alpine AS backend
 WORKDIR /app
 
 COPY --from=xx / /
@@ -31,7 +31,7 @@ ARG TARGETPLATFORM
 RUN --mount=type=cache,target=/root/.cache \
   CGO_ENABLED=0 xx-go build -ldflags='-w -s' -trimpath
 
-FROM alpine:3.22.0
+FROM alpine:3.22.1
 WORKDIR /data
 
 COPY --from=backend /app/linx-server /usr/bin
