@@ -1,7 +1,7 @@
-<script setup>
+<script setup lang="ts">
 import { Input } from "@/components/ui/input/index.js";
 
-const model = defineModel();
+const model = defineModel<string>();
 </script>
 
 <template>

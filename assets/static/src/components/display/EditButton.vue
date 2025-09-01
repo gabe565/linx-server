@@ -5,11 +5,11 @@
   </Button>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { useRouter } from "vue-router";
 import { Button } from "@/components/ui/button/index.js";
-import { useConfigStore } from "@/stores/config.js";
-import { getExtension } from "@/util/extensions.js";
+import { useConfigStore } from "@/stores/config.ts";
+import { getExtension } from "@/util/extensions.ts";
 import EditIcon from "~icons/material-symbols/edit-rounded";
 
 const props = defineProps({

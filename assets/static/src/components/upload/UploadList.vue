@@ -6,7 +6,7 @@
 
     <CardContent>
       <ul class="flex flex-col gap-3 justify-center justify-items-center">
-        <li v-for="(item, key) in items" :key="item.filename || key">
+        <li v-for="(item, key) in items" :key="key">
           <Card v-if="'progress' in item" class="relative py-4 overflow-hidden">
             <CardHeader class="px-4">
               <CardTitle class="min-w-0 wrap-break-word animate-pulse">{{
@@ -16,7 +16,7 @@
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger class="flex gap-3 items-center tabular-nums">
-                      <strong>{{ Math.round(item.progress.progress * 100) }}%</strong>
+                      <strong>{{ Math.round((item.progress.progress ?? 0) * 100) }}%</strong>
                       <span v-if="item.progress.estimated" class="before:content-['·'] before:pr-3">
                         {{ formatDuration(item.progress.estimated) }}
                       </span>
@@ -54,7 +54,7 @@
             </CardHeader>
             <Progress
               v-if="'progress' in item"
-              :model-value="item.progress.progress * 100"
+              :model-value="(item.progress.progress ?? 0) * 100"
               class="absolute bottom-0 left-0 rounded-none animate-pulse"
             />
           </Card>
@@ -73,7 +73,7 @@
                   v-slot="{ timeAgo }"
                   :time="new Date(item.expiry * 1000)"
                   :show-second="true"
-                  update-interval="1000"
+                  :update-interval="1000"
                 >
                   expires {{ timeAgo }}
                 </UseTimeAgo>
@@ -161,9 +161,10 @@
   </Card>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { UseTimeAgo } from "@vueuse/components";
 import { breakpointsTailwind, useBreakpoints } from "@vueuse/core";
+import { isAxiosError } from "axios";
 import { computed } from "vue";
 import { Button } from "@/components/ui/button/index.js";
 import {
@@ -189,30 +190,35 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip/index.js";
 import UploadInfo from "@/components/upload/UploadInfo.vue";
-import { useUploadStore } from "@/stores/upload.js";
-import { formatBitsPerSecond, formatBytes } from "@/util/bytes.js";
-import { formatDuration } from "@/util/time.js";
+import { type InProgressItem, type UploadedItem, useUploadStore } from "@/stores/upload.ts";
+import { formatBitsPerSecond, formatBytes } from "@/util/bytes.ts";
+import { formatDuration } from "@/util/time.ts";
 import MoreIcon from "~icons/ic/round-more-horiz";
 import CloseIcon from "~icons/material-symbols/close-rounded";
 import CopyIcon from "~icons/material-symbols/content-copy-rounded";
 import DeleteIcon from "~icons/material-symbols/delete-rounded";
 import InfoIcon from "~icons/material-symbols/info-rounded";
 
-const showAuth = defineModel("showAuth");
+const showAuth = defineModel<boolean>("showAuth");
 const breakpoints = useBreakpoints(breakpointsTailwind);
 const smAndLarger = breakpoints.greaterOrEqual("sm");
 const upload = useUploadStore();
-const items = computed(() => {
-  return Object.values(upload.inProgress).concat(upload.uploads);
+
+type Item = InProgressItem | UploadedItem;
+const items = computed<Item[]>(() => {
+  const inProg = Object.values(upload.inProgress) as InProgressItem[];
+  return (inProg as Item[]).concat(upload.uploads as Item[]);
 });
 
-const deleteItem = async (item) => {
+const deleteItem = async (item: UploadedItem) => {
   try {
     await upload.deleteItem(item);
   } catch (err) {
     console.error(err);
-    if (err.response?.status === 401) {
+    if (isAxiosError(err) && err.response?.status === 401) {
       showAuth.value = true;
+    } else {
+      throw err;
     }
   }
 };

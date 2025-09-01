@@ -26,39 +26,44 @@
   />
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { useDropZone, useEventListener } from "@vueuse/core";
-import { ref } from "vue";
+import { useTemplateRef } from "vue";
 import { Label } from "@/components/ui/label/index.js";
-import { formatBytes } from "@/util/bytes.js";
+import { formatBytes } from "@/util/bytes.ts";
 import UploadIcon from "~icons/material-symbols/upload-rounded";
 
 defineProps({
   maxFileSize: { type: Number, required: false },
 });
 
-const fileInput = ref();
+const fileInput = useTemplateRef("fileInput");
 const emit = defineEmits(["upload"]);
 
 const triggerFileInput = () => {
   fileInput.value?.click();
 };
 
-useEventListener(window, "paste", (e) => {
+useEventListener(window, "paste", (e: ClipboardEvent) => {
+  if (!e.clipboardData) return;
   for (const file of e.clipboardData.files) {
     emit("upload", file);
   }
 });
 
-const onFileChange = (e) => {
-  for (const file of e.target.files) {
+const onFileChange = (e: Event) => {
+  const target = e.target as HTMLInputElement | null;
+  const files = target?.files;
+  if (!files) return;
+  for (const file of files) {
     emit("upload", file);
   }
-  fileInput.value.value = null;
+  if (fileInput.value) fileInput.value.value = "";
 };
 
-const { isOverDropZone } = useDropZone(window, {
+const { isOverDropZone } = useDropZone(document, {
   onDrop(files) {
+    if (!files) return;
     for (const file of files) {
       emit("upload", file);
     }

@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import {
   Table,
   TableBody,
@@ -7,7 +7,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table/index.js";
-import { useConfigStore } from "@/stores/config.js";
+import { useConfigStore } from "@/stores/config.ts";
 
 const config = useConfigStore();
 </script>

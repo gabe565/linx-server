@@ -34,7 +34,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { Button } from "@/components/ui/button/index.js";
 import {
   DropdownMenu,
@@ -42,7 +42,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { formatBytes } from "@/util/bytes.js";
+import { formatBytes } from "@/util/bytes.ts";
 import DownloadIcon from "~icons/material-symbols/download-rounded";
 import DownIcon from "~icons/material-symbols/keyboard-arrow-down-rounded";
 

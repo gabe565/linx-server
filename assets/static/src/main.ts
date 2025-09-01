@@ -3,7 +3,7 @@ import piniaPluginPersistedstate from "pinia-plugin-persistedstate";
 import { createApp } from "vue";
 import App from "@/App.vue";
 import "@/css/main.css";
-import router from "@/router";
+import router from "@/router/index.js";
 
 const pinia = createPinia();
 pinia.use(piniaPluginPersistedstate);

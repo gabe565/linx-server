@@ -48,7 +48,7 @@ func ConfigBytes() ([]byte, error) {
 	var buf bytes.Buffer
 
 	if config.Default.ViteURL == "" {
-		f, err := assets.Static().Open(manifest["src/fouc.js"].File)
+		f, err := assets.Static().Open(manifest["src/fouc.ts"].File)
 		if err != nil {
 			return nil, err
 		}

@@ -11,7 +11,8 @@
   </Select>
 </template>
 
-<script setup>
+<script setup lang="ts">
+import type { PropType } from "vue";
 import {
   Select,
   SelectContent,
@@ -21,6 +22,9 @@ import {
 } from "@/components/ui/select/index.js";
 
 defineProps({
-  options: { type: Array, required: true },
+  options: {
+    type: Array as PropType<Array<{ value: string; name: string }>>,
+    required: true,
+  },
 });
 </script>

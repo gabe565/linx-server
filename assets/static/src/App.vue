@@ -59,7 +59,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { useColorMode } from "@vueuse/core";
 import { computed } from "vue";
 import { useRouter } from "vue-router";
@@ -77,7 +77,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip/index.js";
-import { useConfigStore } from "@/stores/config";
+import { useConfigStore } from "@/stores/config.js";
 import DarkIcon from "~icons/material-symbols/brightness-2-rounded";
 import LightIcon from "~icons/material-symbols/brightness-5-rounded";
 import AutoIcon from "~icons/material-symbols/brightness-auto-rounded";
@@ -86,12 +86,18 @@ import GitHubIcon from "~icons/simple-icons/github";
 const config = useConfigStore();
 
 const router = useRouter();
-const routes = computed(() =>
-  router
+type NavRoute = { name: string; path: string };
+const routes = computed<NavRoute[]>(() => {
+  const builtins = router
     .getRoutes()
     .filter((route) => route.meta?.navigation)
-    .concat(config.site?.custom_pages?.map((v) => ({ name: v, path: `/${v}` })) || []),
-);
+    .map((route) => ({ name: String(route.name ?? route.path), path: route.path }));
+  const customs = (config.site?.custom_pages || []).map((v: string) => ({
+    name: v,
+    path: `/${v}`,
+  }));
+  return [...builtins, ...customs];
+});
 
 const mode = useColorMode({ disableTransition: false, emitAuto: true });
 

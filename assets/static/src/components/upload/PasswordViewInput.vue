@@ -23,7 +23,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed, ref } from "vue";
 import { Button } from "@/components/ui/button/index.js";
 import { Input } from "@/components/ui/input/index.js";
@@ -36,7 +36,7 @@ import {
 import VisibilityOffIcon from "~icons/material-symbols/visibility-off-rounded";
 import VisibilityIcon from "~icons/material-symbols/visibility-rounded";
 
-const model = defineModel();
+const model = defineModel<string>();
 
 const show = ref(false);
 const text = computed(() => (show.value ? "Hide" : "Show"));

@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { Button } from "@/components/ui/button/index.js";
 import {
   Dialog,
@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dialog/index.js";
 import { Input } from "@/components/ui/input/index.js";
 import { Label } from "@/components/ui/label/index.js";
-import { useConfigStore } from "@/stores/config.js";
+import { useConfigStore } from "@/stores/config.ts";
 
 const model = defineModel({ type: Boolean });
 const config = useConfigStore();
