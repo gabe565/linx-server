@@ -2,7 +2,6 @@ package genkey
 
 import (
 	"encoding/base64"
-	"io"
 
 	"github.com/spf13/cobra"
 	"golang.org/x/crypto/scrypt"
@@ -36,6 +35,10 @@ func run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	_, err = io.WriteString(cmd.OutOrStdout(), base64.StdEncoding.EncodeToString(checkKey))
+	buf := make([]byte, 0, base64.StdEncoding.EncodedLen(len(checkKey))+1)
+	buf = base64.StdEncoding.AppendEncode(buf, checkKey)
+	buf = append(buf, '\n')
+
+	_, err = cmd.OutOrStdout().Write(buf)
 	return err
 }
