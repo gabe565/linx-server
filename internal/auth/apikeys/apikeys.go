@@ -8,6 +8,7 @@ import (
 	"os"
 	"slices"
 	"strconv"
+	"strings"
 
 	"gabe565.com/linx-server/internal/util"
 	"golang.org/x/crypto/scrypt"
@@ -49,11 +50,21 @@ func ReadAuthKeys(authFile string) []string {
 
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
-		authKeys = append(authKeys, scanner.Text())
+		if len(scanner.Bytes()) == 0 || scanner.Bytes()[0] == '#' {
+			continue
+		}
+
+		key := scanner.Text()
+		if i := strings.Index(key, "#"); i != -1 {
+			key = key[:i]
+		}
+		key = strings.TrimSpace(key)
+		if key != "" {
+			authKeys = append(authKeys, key)
+		}
 	}
 
-	err = scanner.Err()
-	if err != nil {
+	if err := scanner.Err(); err != nil {
 		slog.Error("Scanner error while reading authfile", "error", err)
 		os.Exit(1) //nolint:gocritic
 	}
