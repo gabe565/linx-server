@@ -8,33 +8,27 @@
       <Card>
         <CardHeader>
           <CardTitle>Authentication Required</CardTitle>
+          <CardDescription>This file is password-protected.</CardDescription>
         </CardHeader>
-        <CardContent class="flex flex-col gap-6">
-          <p>{{ filename }} is protected with a password:</p>
-
-          <div class="flex flex-col gap-1.5">
-            <Label
-              for="password"
-              class="pb-1.5"
-              :class="{ 'text-destructive': downloadAttempts > 1 }"
-              >Password</Label
-            >
-            <Input
-              id="password"
-              type="password"
-              v-model="accessKey"
-              placeholder="Enter password"
-              class="flex-1 min-w-50"
-              autofocus
-            />
-            <span
-              v-if="downloadAttempts > 1"
-              class="font-medium text-destructive text-sm"
-              role="alert"
-            >
-              Invalid password
-            </span>
-          </div>
+        <CardContent class="space-y-2">
+          <Label for="password" :class="{ 'text-destructive': downloadAttempts > 1 }">
+            Password
+          </Label>
+          <Input
+            id="password"
+            type="password"
+            v-model="accessKey"
+            placeholder="Enter password"
+            class="flex-1 min-w-50"
+            autofocus
+          />
+          <span
+            v-if="downloadAttempts > 1"
+            class="font-medium text-destructive text-sm"
+            role="alert"
+          >
+            Invalid password
+          </span>
         </CardContent>
         <CardFooter class="flex flex-col items-end">
           <Button type="submit" class="w-full sm:w-auto">Unlock</Button>
