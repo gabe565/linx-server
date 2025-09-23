@@ -26,18 +26,25 @@ const submit = () => {
 <template>
   <Dialog :open="model" @update:open="model = $event">
     <DialogContent>
-      <DialogHeader>
+      <DialogHeader class="pb-2">
         <DialogTitle>Authentication Required</DialogTitle>
-        <DialogDescription>Please enter an API key.</DialogDescription>
+        <DialogDescription>This server does not allow public uploads.</DialogDescription>
       </DialogHeader>
 
-      <Label>
-        API key
-        <Input type="password" v-model="config.apiKey" class="flex-1 min-w-50" />
-      </Label>
+      <form @submit.prevent="submit" id="auth" class="space-y-2">
+        <Label for="password">API key</Label>
+        <Input
+          id="password"
+          type="password"
+          v-model="config.apiKey"
+          placeholder="Enter API key"
+          class="flex-1 min-w-50"
+          autofocus
+        />
+      </form>
 
-      <DialogFooter @click="submit" class="flex justify-end">
-        <Button>Login</Button>
+      <DialogFooter class="flex justify-end">
+        <Button type="submit" form="auth">Login</Button>
       </DialogFooter>
     </DialogContent>
   </Dialog>
