@@ -96,6 +96,15 @@ export const useUploadStore = defineStore(
       form.append("file", file);
 
       try {
+        if (config.site.auth) {
+          await axios.post(ApiPath("/api/auth"), null, {
+            headers: {
+              "Linx-Api-Key": encodeURIComponent(config.apiKey),
+            },
+            validateStatus: (s) => s === 200,
+          });
+        }
+
         const res = await axios.post(ApiPath(`/upload`), form, {
           headers: {
             Accept: "application/json",

@@ -114,6 +114,9 @@ func Setup() (*chi.Mux, error) {
 			LimitBodySize(int64(config.Default.MaxSize)),
 		)
 
+		r.Post("/api/auth", func(w http.ResponseWriter, _ *http.Request) {
+			_, _ = w.Write([]byte("Authorized"))
+		})
 		r.Post("/upload", upload.POSTHandler)
 		r.Put("/upload", upload.PUTHandler)
 		r.Put("/upload/{name}", upload.PUTHandler)
