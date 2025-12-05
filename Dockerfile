@@ -13,7 +13,7 @@ COPY assets/static .
 RUN --mount=type=cache,target=/root/.cache \
   pnpm run build
 
-FROM --platform=$BUILDPLATFORM tonistiigi/xx:1.6.1 AS xx
+FROM --platform=$BUILDPLATFORM tonistiigi/xx:1.9.0 AS xx
 
 FROM --platform=$BUILDPLATFORM golang:1.25.0-alpine AS backend
 WORKDIR /app
