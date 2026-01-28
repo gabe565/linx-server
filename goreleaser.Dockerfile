@@ -1,4 +1,4 @@
-FROM alpine:3.22.1
+FROM alpine:3.23.3
 WORKDIR /data
 LABEL org.opencontainers.image.source="https://github.com/gabe565/linx-server"
 
