@@ -30,7 +30,7 @@
     "@vue/tsconfig": "^0.8.1",
     "@vueuse/components": "^13.8.0",
     "@vueuse/core": "^13.8.0",
-    "axios": "^1.11.0",
+    "axios": "^1.13.5",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "dompurify": "^3.2.6",
