@@ -77,45 +77,37 @@
 
               <Dialog>
                 <CardAction v-if="smAndLarger">
-                  <Tooltip>
-                    <DialogTrigger>
+                  <ButtonGroup>
+                    <Tooltip>
+                      <DialogTrigger as-child>
+                        <TooltipTrigger as-child>
+                          <Button variant="secondary" size="icon">
+                            <span class="sr-only">Info</span>
+                            <InfoIcon />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Info</TooltipContent>
+                      </DialogTrigger>
+                    </Tooltip>
+                    <Tooltip>
                       <TooltipTrigger as-child>
-                        <Button variant="secondary" size="icon" class="rounded-r-none">
-                          <span class="sr-only">Info</span>
-                          <InfoIcon />
+                        <Button variant="secondary" size="icon" @click.prevent="upload.copy(item)">
+                          <span class="sr-only">Copy</span>
+                          <CopyIcon />
                         </Button>
                       </TooltipTrigger>
-                      <TooltipContent>Info</TooltipContent>
-                    </DialogTrigger>
-                  </Tooltip>
-                  <Tooltip>
-                    <TooltipTrigger as-child>
-                      <Button
-                        variant="secondary"
-                        size="icon"
-                        @click.prevent="upload.copy(item)"
-                        class="rounded-none"
-                      >
-                        <span class="sr-only">Copy</span>
-                        <CopyIcon />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Copy Link</TooltipContent>
-                  </Tooltip>
-                  <Tooltip>
-                    <TooltipTrigger as-child>
-                      <Button
-                        variant="destructive"
-                        size="icon"
-                        @click.prevent="deleteItem(item)"
-                        class="rounded-l-none"
-                      >
-                        <span class="sr-only">Delete</span>
-                        <DeleteIcon />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Delete</TooltipContent>
-                  </Tooltip>
+                      <TooltipContent>Copy Link</TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger as-child>
+                        <Button variant="destructive" size="icon" @click.prevent="deleteItem(item)">
+                          <span class="sr-only">Delete</span>
+                          <DeleteIcon />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Delete</TooltipContent>
+                    </Tooltip>
+                  </ButtonGroup>
                 </CardAction>
 
                 <CardAction v-else>
@@ -160,6 +152,7 @@ import { UseTimeAgo } from "@vueuse/components";
 import { breakpointsTailwind, useBreakpoints } from "@vueuse/core";
 import { isAxiosError } from "axios";
 import { computed } from "vue";
+import { ButtonGroup } from "@/components/ui/button-group";
 import { Button } from "@/components/ui/button/index.js";
 import {
   Card,

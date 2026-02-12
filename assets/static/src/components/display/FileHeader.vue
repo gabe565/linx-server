@@ -19,10 +19,10 @@
         </UseTimeAgo>
       </div>
 
-      <div class="flex shrink-0 max-w-full ml-auto" v-if="isPlainText">
-        <EditButton :meta="state.meta" :content="state.content" class="rounded-r-none" />
-        <CopyButton :content="state.content" class="rounded-l-none border-l-0" />
-      </div>
+      <ButtonGroup class="shrink-0 max-w-full ml-auto" v-if="isPlainText">
+        <EditButton :meta="state.meta" :content="state.content" />
+        <CopyButton :content="state.content" />
+      </ButtonGroup>
     </div>
 
     <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-end w-full sm:w-auto">
@@ -49,6 +49,7 @@ import { computed, ref, watch } from "vue";
 import CopyButton from "@/components/display/CopyButton.vue";
 import DownloadButton from "@/components/display/DownloadButton.vue";
 import EditButton from "@/components/display/EditButton.vue";
+import { ButtonGroup } from "@/components/ui/button-group";
 import { CardDescription, CardHeader, CardTitle } from "@/components/ui/card/index.js";
 import { Label } from "@/components/ui/label/index.js";
 import { Switch } from "@/components/ui/switch/index.js";

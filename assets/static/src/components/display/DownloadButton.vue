@@ -1,12 +1,11 @@
 <template>
-  <div class="flex items-center">
+  <ButtonGroup>
     <Button
       :as="disabled ? 'button' : 'a'"
       variant="outline"
       :href="`${meta.direct_url}?download`"
       :download="meta.original_name || meta.filename"
       class="flex-1"
-      :class="{ 'rounded-r-none': meta.torrent_url }"
       v-bind="$attrs"
       :disabled="disabled"
     >
@@ -14,7 +13,7 @@
       Download <span class="text-xs text-gray-500">({{ formatBytes(meta.size) }})</span>
     </Button>
     <DropdownMenu v-if="meta.torrent_url">
-      <DropdownMenuTrigger as-child class="rounded-l-none border-l-0 !px-2">
+      <DropdownMenuTrigger as-child class="!px-2">
         <Button variant="outline" :disabled="disabled">
           <DownIcon />
         </Button>
@@ -30,10 +29,11 @@
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
-  </div>
+  </ButtonGroup>
 </template>
 
 <script setup lang="ts">
+import { ButtonGroup } from "@/components/ui/button-group";
 import { Button } from "@/components/ui/button/index.js";
 import {
   DropdownMenu,
