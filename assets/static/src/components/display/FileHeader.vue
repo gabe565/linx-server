@@ -26,16 +26,14 @@
     <div
       class="flex flex-col sm:flex-row gap-4 sm:gap-0 flex-wrap mx-auto sm:mx-0 w-full sm:w-auto"
     >
-      <EditButton
-        v-if="showEditButton"
-        :meta="state.meta"
-        :content="state.content"
-        class="sm:rounded-r-none"
-      />
+      <template v-if="isPlainText">
+        <EditButton :meta="state.meta" :content="state.content" class="sm:rounded-r-none" />
+        <CopyButton :content="state.content" class="sm:rounded-none sm:border-l-0" />
+      </template>
       <DownloadButton
         v-if="state.meta"
         :meta="state.meta"
-        :class="{ 'sm:border-l-0 sm:rounded-l-none': showEditButton }"
+        :class="{ 'sm:border-l-0 sm:rounded-l-none': isPlainText }"
         :disabled="expired"
       />
     </div>
@@ -47,6 +45,7 @@ import Modes from "./fileModes.js";
 import { UseTimeAgo } from "@vueuse/components";
 import { useTimeoutFn } from "@vueuse/core";
 import { computed, ref, watch } from "vue";
+import CopyButton from "@/components/display/CopyButton.vue";
 import DownloadButton from "@/components/display/DownloadButton.vue";
 import EditButton from "@/components/display/EditButton.vue";
 import { CardDescription, CardHeader, CardTitle } from "@/components/ui/card/index.js";
@@ -83,7 +82,7 @@ watch(
 );
 
 const showWrapSwitch = computed(() => !!props.state?.content && props.state?.mode === Modes.TEXT);
-const showEditButton = computed(
+const isPlainText = computed(
   () =>
     !!props.state?.content &&
     (props.state?.mode === Modes.TEXT ||
