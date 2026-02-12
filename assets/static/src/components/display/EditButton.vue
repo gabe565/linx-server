@@ -1,5 +1,5 @@
 <template>
-  <Button variant="outline" size="lg" @click="edit">
+  <Button variant="outline" @click="edit">
     <EditIcon class="text-2xl" />
     Edit
   </Button>

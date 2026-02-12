@@ -3,7 +3,6 @@
     <Button
       :as="disabled ? 'button' : 'a'"
       variant="outline"
-      size="lg"
       :href="`${meta.direct_url}?download`"
       :download="meta.original_name || meta.filename"
       class="flex-1"
@@ -16,7 +15,7 @@
     </Button>
     <DropdownMenu v-if="meta.torrent_url">
       <DropdownMenuTrigger as-child class="rounded-l-none border-l-0 !px-2">
-        <Button variant="outline" size="lg" :disabled="disabled">
+        <Button variant="outline" :disabled="disabled">
           <DownIcon />
         </Button>
       </DropdownMenuTrigger>

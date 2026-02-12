@@ -1,5 +1,5 @@
 <template>
-  <Button variant="outline" size="lg" @click="copy">
+  <Button variant="outline" @click="copy">
     <CopyIcon class="text-2xl" />
     Copy
   </Button>
