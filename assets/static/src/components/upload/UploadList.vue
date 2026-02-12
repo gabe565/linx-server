@@ -13,43 +13,39 @@
                 item.original_name
               }}</CardTitle>
               <CardDescription>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger class="flex gap-3 items-center tabular-nums">
-                      <strong>{{ Math.round((item.progress.progress ?? 0) * 100) }}%</strong>
-                      <span v-if="item.progress.estimated" class="before:content-['·'] before:pr-3">
-                        {{ formatDuration(item.progress.estimated) }}
-                      </span>
-                    </TooltipTrigger>
-                    <TooltipContent class="flex flex-col items-center tabular-nums">
-                      <span v-if="item.progress.loaded && item.progress.total">
-                        {{ formatBytes(item.progress.loaded, 1) }} /
-                        {{ formatBytes(item.progress.total, 1) }}
-                      </span>
-                      <span v-if="item.progress.rate">
-                        {{ formatBitsPerSecond(item.progress.rate) }}
-                      </span>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger class="flex gap-3 items-center tabular-nums">
+                    <strong>{{ Math.round((item.progress.progress ?? 0) * 100) }}%</strong>
+                    <span v-if="item.progress.estimated" class="before:content-['·'] before:pr-3">
+                      {{ formatDuration(item.progress.estimated) }}
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent class="flex flex-col items-center tabular-nums">
+                    <span v-if="item.progress.loaded && item.progress.total">
+                      {{ formatBytes(item.progress.loaded, 1) }} /
+                      {{ formatBytes(item.progress.total, 1) }}
+                    </span>
+                    <span v-if="item.progress.rate">
+                      {{ formatBitsPerSecond(item.progress.rate) }}
+                    </span>
+                  </TooltipContent>
+                </Tooltip>
               </CardDescription>
               <CardAction>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger as-child>
-                      <Button
-                        variant="secondary"
-                        size="icon"
-                        @click.prevent="item.controller.abort()"
-                        class="w-18"
-                      >
-                        <span class="sr-only">Cancel</span>
-                        <CloseIcon />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Cancel</TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger as-child>
+                    <Button
+                      variant="secondary"
+                      size="icon"
+                      @click.prevent="item.controller.abort()"
+                      class="w-18"
+                    >
+                      <span class="sr-only">Cancel</span>
+                      <CloseIcon />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Cancel</TooltipContent>
+                </Tooltip>
               </CardAction>
             </CardHeader>
             <Progress
@@ -81,47 +77,45 @@
 
               <Dialog>
                 <CardAction v-if="smAndLarger">
-                  <TooltipProvider>
-                    <Tooltip>
-                      <DialogTrigger>
-                        <TooltipTrigger as-child>
-                          <Button variant="secondary" size="icon" class="rounded-r-none">
-                            <span class="sr-only">Info</span>
-                            <InfoIcon />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>Info</TooltipContent>
-                      </DialogTrigger>
-                    </Tooltip>
-                    <Tooltip>
+                  <Tooltip>
+                    <DialogTrigger>
                       <TooltipTrigger as-child>
-                        <Button
-                          variant="secondary"
-                          size="icon"
-                          @click.prevent="upload.copy(item)"
-                          class="rounded-none"
-                        >
-                          <span class="sr-only">Copy</span>
-                          <CopyIcon />
+                        <Button variant="secondary" size="icon" class="rounded-r-none">
+                          <span class="sr-only">Info</span>
+                          <InfoIcon />
                         </Button>
                       </TooltipTrigger>
-                      <TooltipContent>Copy Link</TooltipContent>
-                    </Tooltip>
-                    <Tooltip>
-                      <TooltipTrigger as-child>
-                        <Button
-                          variant="destructive"
-                          size="icon"
-                          @click.prevent="deleteItem(item)"
-                          class="rounded-l-none"
-                        >
-                          <span class="sr-only">Delete</span>
-                          <DeleteIcon />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>Delete</TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
+                      <TooltipContent>Info</TooltipContent>
+                    </DialogTrigger>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger as-child>
+                      <Button
+                        variant="secondary"
+                        size="icon"
+                        @click.prevent="upload.copy(item)"
+                        class="rounded-none"
+                      >
+                        <span class="sr-only">Copy</span>
+                        <CopyIcon />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Copy Link</TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger as-child>
+                      <Button
+                        variant="destructive"
+                        size="icon"
+                        @click.prevent="deleteItem(item)"
+                        class="rounded-l-none"
+                      >
+                        <span class="sr-only">Delete</span>
+                        <DeleteIcon />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Delete</TooltipContent>
+                  </Tooltip>
                 </CardAction>
 
                 <CardAction v-else>
@@ -183,12 +177,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu/index.js";
 import { Progress } from "@/components/ui/progress/index.js";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip/index.js";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip/index.js";
 import UploadInfo from "@/components/upload/UploadInfo.vue";
 import { type InProgressItem, type UploadedItem, useUploadStore } from "@/stores/upload.ts";
 import { formatBitsPerSecond, formatBytes } from "@/util/bytes.ts";

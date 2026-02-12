@@ -1,28 +1,28 @@
 <template>
   <div class="flex flex-col min-h-screen min-h-svh bg-background text-foreground">
-    <header class="grid grid-cols-3 border-b bg-surface px-4 py-2 items-center">
-      <div>
-        <Button variant="link" class="p-0" as-child>
-          <RouterLink to="/">
-            <h1 class="text-2xl font-semibold">{{ config.site.site_name }}</h1>
-          </RouterLink>
-        </Button>
-      </div>
-
-      <NavigationMenu class="justify-self-center">
-        <NavigationMenuList>
-          <NavigationMenuItem v-for="route in routes" :key="route.name">
-            <RouterLink :to="route.path" custom v-slot="{ isActive, href, navigate }">
-              <NavigationMenuLink :href="href" @click="navigate" :active="isActive">
-                {{ route.name }}
-              </NavigationMenuLink>
+    <TooltipProvider>
+      <header class="grid grid-cols-3 border-b bg-surface px-4 py-2 items-center">
+        <div>
+          <Button variant="link" class="p-0" as-child>
+            <RouterLink to="/">
+              <h1 class="text-2xl font-semibold">{{ config.site.site_name }}</h1>
             </RouterLink>
-          </NavigationMenuItem>
-        </NavigationMenuList>
-      </NavigationMenu>
+          </Button>
+        </div>
 
-      <div class="justify-self-end">
-        <TooltipProvider>
+        <NavigationMenu class="justify-self-center">
+          <NavigationMenuList>
+            <NavigationMenuItem v-for="route in routes" :key="route.name">
+              <RouterLink :to="route.path" custom v-slot="{ isActive, href, navigate }">
+                <NavigationMenuLink :href="href" @click="navigate" :active="isActive">
+                  {{ route.name }}
+                </NavigationMenuLink>
+              </RouterLink>
+            </NavigationMenuItem>
+          </NavigationMenuList>
+        </NavigationMenu>
+
+        <div class="justify-self-end">
           <Tooltip>
             <TooltipTrigger as-child :key="mode">
               <Button variant="ghost" @click="mode = nextMode" class="rounded-full">
@@ -47,13 +47,13 @@
             </TooltipTrigger>
             <TooltipContent>View source on GitHub</TooltipContent>
           </Tooltip>
-        </TooltipProvider>
-      </div>
-    </header>
+        </div>
+      </header>
 
-    <main class="flex-1 content-center p-6">
-      <router-view />
-    </main>
+      <main class="flex-1 content-center p-6">
+        <router-view />
+      </main>
+    </TooltipProvider>
 
     <Toaster />
   </div>
