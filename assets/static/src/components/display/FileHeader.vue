@@ -1,40 +1,41 @@
 <template>
-  <CardHeader class="flex flex-wrap justify-between items-center gap-4">
-    <div class="flex flex-col gap-1 max-w-full">
-      <CardTitle class="wrap-break-word">
-        {{ state.meta.original_name || state.meta.filename }}
-      </CardTitle>
+  <CardHeader class="gap-4 sm:flex sm:flex-wrap sm:items-center sm:justify-between">
+    <div class="flex flex-wrap items-start gap-4 w-full sm:w-auto sm:flex-1 sm:min-w-0">
+      <div class="flex flex-col gap-1 min-w-56 max-w-full flex-1">
+        <CardTitle class="wrap-break-word">
+          {{ state.meta.original_name || state.meta.filename }}
+        </CardTitle>
 
-      <UseTimeAgo
-        v-if="expiry"
-        v-slot="{ timeAgo }"
-        :time="expiry"
-        :show-second="true"
-        :update-interval="1000"
-      >
-        <CardDescription class="text-xs tabular-nums">
-          {{ expired ? "expired" : "expires" }} {{ timeAgo }}
-        </CardDescription>
-      </UseTimeAgo>
+        <UseTimeAgo
+          v-if="expiry"
+          v-slot="{ timeAgo }"
+          :time="expiry"
+          :show-second="true"
+          :update-interval="1000"
+        >
+          <CardDescription class="text-xs tabular-nums">
+            {{ expired ? "expired" : "expires" }} {{ timeAgo }}
+          </CardDescription>
+        </UseTimeAgo>
+      </div>
+
+      <div class="flex shrink-0 max-w-full ml-auto" v-if="isPlainText">
+        <EditButton :meta="state.meta" :content="state.content" class="rounded-r-none" />
+        <CopyButton :content="state.content" class="rounded-l-none border-l-0" />
+      </div>
     </div>
 
-    <div v-if="showWrapSwitch" class="flex items-center space-x-2">
-      <Switch id="opt-wrap" v-model="wrap" />
-      <Label for="opt-wrap">Wrap</Label>
-    </div>
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-end w-full sm:w-auto">
+      <div v-if="showWrapSwitch" class="flex items-center space-x-2">
+        <Switch id="opt-wrap" v-model="wrap" />
+        <Label for="opt-wrap">Wrap</Label>
+      </div>
 
-    <div
-      class="flex flex-col sm:flex-row gap-4 sm:gap-0 flex-wrap mx-auto sm:mx-0 w-full sm:w-auto"
-    >
-      <template v-if="isPlainText">
-        <EditButton :meta="state.meta" :content="state.content" class="sm:rounded-r-none" />
-        <CopyButton :content="state.content" class="sm:rounded-none sm:border-l-0" />
-      </template>
       <DownloadButton
         v-if="state.meta"
         :meta="state.meta"
-        :class="{ 'sm:border-l-0 sm:rounded-l-none': isPlainText }"
         :disabled="expired"
+        class="w-full sm:w-auto"
       />
     </div>
   </CardHeader>

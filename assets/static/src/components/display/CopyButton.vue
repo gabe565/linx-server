@@ -1,13 +1,19 @@
 <template>
-  <Button variant="outline" @click="copy">
-    <CopyIcon class="text-2xl" />
-    Copy
-  </Button>
+  <Tooltip>
+    <TooltipTrigger as-child>
+      <Button variant="outline" @click="copy" v-bind="$attrs">
+        <CopyIcon class="text-2xl" />
+        <span class="sr-only">Copy</span>
+      </Button>
+    </TooltipTrigger>
+    <TooltipContent side="bottom">Copy</TooltipContent>
+  </Tooltip>
 </template>
 
 <script setup lang="ts">
 import { toast } from "vue-sonner";
 import { Button } from "@/components/ui/button/index.js";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import CopyIcon from "~icons/material-symbols/content-copy-rounded";
 
 const props = defineProps({
