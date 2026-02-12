@@ -22,15 +22,19 @@
       <ButtonGroup class="shrink-0 max-w-full ml-auto" v-if="isPlainText">
         <EditButton :meta="state.meta" :content="state.content" />
         <CopyButton :content="state.content" />
+        <Tooltip v-if="showWrapSwitch">
+          <TooltipTrigger as-child>
+            <Toggle variant="outline" v-model="wrap" :data-state="wrap ? 'on' : 'off'">
+              <WrapTextIcon class="text-2xl" />
+              <span class="sr-only">Wrap text</span>
+            </Toggle>
+          </TooltipTrigger>
+          <TooltipContent side="bottom">Wrap text</TooltipContent>
+        </Tooltip>
       </ButtonGroup>
     </div>
 
     <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-end w-full sm:w-auto">
-      <div v-if="showWrapSwitch" class="flex items-center space-x-2">
-        <Switch id="opt-wrap" v-model="wrap" />
-        <Label for="opt-wrap">Wrap</Label>
-      </div>
-
       <DownloadButton
         v-if="state.meta"
         :meta="state.meta"
@@ -51,8 +55,9 @@ import DownloadButton from "@/components/display/DownloadButton.vue";
 import EditButton from "@/components/display/EditButton.vue";
 import { ButtonGroup } from "@/components/ui/button-group";
 import { CardDescription, CardHeader, CardTitle } from "@/components/ui/card/index.js";
-import { Label } from "@/components/ui/label/index.js";
-import { Switch } from "@/components/ui/switch/index.js";
+import { Toggle } from "@/components/ui/toggle";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import WrapTextIcon from "~icons/material-symbols/wrap-text-rounded";
 
 const props = defineProps({
   state: { type: Object, required: true },
