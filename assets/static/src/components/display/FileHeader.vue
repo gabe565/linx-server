@@ -1,7 +1,7 @@
 <template>
-  <CardHeader class="gap-4 sm:flex sm:flex-wrap sm:items-center sm:justify-between">
-    <div class="flex flex-wrap items-start gap-4 w-full sm:w-auto sm:flex-1 sm:min-w-0">
-      <div class="flex flex-col gap-1 min-w-56 max-w-full flex-1">
+  <CardHeader class="flex flex-wrap items-start gap-4">
+    <div class="flex flex-wrap items-start gap-4 min-w-0 flex-1 basis-72">
+      <div class="flex flex-col gap-1 min-w-0 max-w-full flex-1">
         <CardTitle class="wrap-break-word">
           {{ state.meta.original_name || state.meta.filename }}
         </CardTitle>
@@ -34,12 +34,12 @@
       </ButtonGroup>
     </div>
 
-    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-end w-full sm:w-auto">
+    <div class="min-w-56 flex-1 basis-80 md:min-w-0 md:flex-none md:basis-auto">
       <DownloadButton
         v-if="state.meta"
         :meta="state.meta"
         :disabled="expired"
-        class="w-full sm:w-auto"
+        class="w-full md:w-auto"
       />
     </div>
   </CardHeader>
