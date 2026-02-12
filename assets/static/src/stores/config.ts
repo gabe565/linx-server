@@ -38,7 +38,14 @@ export const useConfigStore = defineStore(
   },
   {
     persist: {
-      pick: ["apiKey"],
+      pick: ["apiKey", "expiry"],
+      afterHydrate(ctx) {
+        const options = (ctx.store.site?.expiration_times ?? []) as ExpirationTime[];
+        const fallback = options.at(-1)?.value ?? "";
+        if (!options.some((opt) => opt.value === ctx.store.expiry)) {
+          ctx.store.expiry = fallback;
+        }
+      },
     },
   },
 );
