@@ -27,7 +27,9 @@ export const useConfigStore = defineStore(
   () => {
     const site = ref(window.config);
     const apiKey = ref("");
-    const expiry = ref(site.value?.expiration_times?.at(-1)?.value ?? "");
+    const defaultExpiry =
+      site.value?.expiration_times?.[site.value.expiration_times.length - 1]?.value ?? "";
+    const expiry = ref(defaultExpiry);
     const filename = ref("");
     const extension = ref("txt");
     const randomFilename = ref(true);
@@ -41,7 +43,7 @@ export const useConfigStore = defineStore(
       pick: ["apiKey", "expiry"],
       afterHydrate(ctx) {
         const options = (ctx.store.site?.expiration_times ?? []) as ExpirationTime[];
-        const fallback = options.at(-1)?.value ?? "";
+        const fallback = options[options.length - 1]?.value ?? "";
         if (!options.some((opt) => opt.value === ctx.store.expiry)) {
           ctx.store.expiry = fallback;
         }
