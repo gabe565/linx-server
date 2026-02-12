@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"gabe565.com/linx-server/assets"
+	"gabe565.com/linx-server/internal/auth/keyhash"
 	"gabe565.com/linx-server/internal/backends"
 	"gabe565.com/linx-server/internal/config"
 	"gabe565.com/linx-server/internal/headers"
@@ -46,39 +47,52 @@ type ErrorResponse struct {
 	Error string `json:"error"`
 }
 
+func AccessKeyFromRequest(r *http.Request, src AccessKeySource) (string, bool) {
+	var key string
+	switch src {
+	case AccessKeySourceCookie:
+		cookieKey, err := r.Cookie(AccessKeyHeader)
+		if err != nil {
+			return "", false
+		}
+		key = util.TryPathUnescape(cookieKey.Value)
+	case AccessKeySourceHeader:
+		key = util.TryPathUnescape(r.Header.Get(AccessKeyHeader))
+	case AccessKeySourceForm:
+		key = r.PostFormValue(AccessKeyParam)
+	case AccessKeySourceQuery:
+		key = r.URL.Query().Get(AccessKeyParam)
+	default:
+		return "", false
+	}
+	return key, key != ""
+}
+
 func CheckAccessKey(r *http.Request, metadata *backends.Metadata) (AccessKeySource, error) {
 	key := metadata.AccessKey
 	if key == "" {
 		return AccessKeySourceNone, nil
 	}
 
-	cookieKey, err := r.Cookie(AccessKeyHeader)
-	if err == nil {
-		if util.TryPathUnescape(cookieKey.Value) == key {
-			return AccessKeySourceCookie, nil
+	for _, src := range []AccessKeySource{
+		AccessKeySourceCookie,
+		AccessKeySourceHeader,
+		AccessKeySourceForm,
+		AccessKeySourceQuery,
+	} {
+		requestKey, ok := AccessKeyFromRequest(r, src)
+		if !ok {
+			continue
 		}
-		return AccessKeySourceCookie, errInvalidAccessKey
-	}
 
-	headerKey := util.TryPathUnescape(r.Header.Get(AccessKeyHeader))
-	if headerKey == key {
-		return AccessKeySourceHeader, nil
-	} else if headerKey != "" {
-		return AccessKeySourceHeader, errInvalidAccessKey
-	}
-
-	formKey := r.PostFormValue(AccessKeyParam)
-	if formKey == key {
-		return AccessKeySourceForm, nil
-	} else if formKey != "" {
-		return AccessKeySourceForm, errInvalidAccessKey
-	}
-
-	queryKey := r.URL.Query().Get(AccessKeyParam)
-	if queryKey == key {
-		return AccessKeySourceQuery, nil
-	} else if formKey != "" {
-		return AccessKeySourceQuery, errInvalidAccessKey
+		match, err := keyhash.CheckWithFallback(key, requestKey)
+		if err != nil {
+			return src, err
+		}
+		if match {
+			return src, nil
+		}
+		return src, errInvalidAccessKey
 	}
 
 	return AccessKeySourceNone, errInvalidAccessKey
@@ -132,7 +146,8 @@ func FileAccessHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if src, err := CheckAccessKey(r, &metadata); err != nil {
+	src, err := CheckAccessKey(r, &metadata)
+	if err != nil {
 		// remove invalid cookie
 		if src == AccessKeySourceCookie {
 			SetAccessKeyCookies(w, r, fileName, "", time.Unix(0, 0))
@@ -150,11 +165,13 @@ func FileAccessHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if metadata.AccessKey != "" {
-		var expiry time.Time
-		if config.Default.Auth.CookieExpiry.Duration != 0 {
-			expiry = time.Now().Add(config.Default.Auth.CookieExpiry.Duration)
+		if requestKey, ok := AccessKeyFromRequest(r, src); ok {
+			var expiry time.Time
+			if config.Default.Auth.CookieExpiry.Duration != 0 {
+				expiry = time.Now().Add(config.Default.Auth.CookieExpiry.Duration)
+			}
+			SetAccessKeyCookies(w, r, fileName, requestKey, expiry)
 		}
-		SetAccessKeyCookies(w, r, fileName, metadata.AccessKey, expiry)
 	}
 
 	FileDisplay(w, r, fileName, metadata)

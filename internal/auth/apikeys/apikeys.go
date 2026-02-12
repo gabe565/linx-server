@@ -2,7 +2,6 @@ package apikeys
 
 import (
 	"bufio"
-	"encoding/base64"
 	"log/slog"
 	"net/http"
 	"os"
@@ -10,16 +9,8 @@ import (
 	"strconv"
 	"strings"
 
+	"gabe565.com/linx-server/internal/auth/keyhash"
 	"gabe565.com/linx-server/internal/util"
-	"golang.org/x/crypto/scrypt"
-)
-
-const (
-	scryptSalt   = "linx-server"
-	scryptN      = 16384
-	scryptr      = 8
-	scryptp      = 1
-	scryptKeyLen = 32
 )
 
 type AuthOptions struct {
@@ -49,7 +40,7 @@ func ReadAuthKeys(authFile string) []string {
 	}()
 
 	scanner := bufio.NewScanner(f)
-	for scanner.Scan() {
+	for i := 0; scanner.Scan(); i++ {
 		if len(scanner.Bytes()) == 0 || scanner.Bytes()[0] == '#' {
 			continue
 		}
@@ -59,9 +50,21 @@ func ReadAuthKeys(authFile string) []string {
 			key = key[:i]
 		}
 		key = strings.TrimSpace(key)
-		if key != "" {
-			authKeys = append(authKeys, key)
+
+		if key == "" {
+			continue
 		}
+
+		if !strings.HasPrefix(key, keyhash.KeyPrefix) {
+			key = keyhash.KeyPrefix + key
+		}
+
+		if !keyhash.IsValidHash(key) {
+			slog.Warn("Skipping invalid key in authfile", "line", i+1)
+			continue
+		}
+
+		authKeys = append(authKeys, key)
 	}
 
 	if err := scanner.Err(); err != nil {
@@ -69,23 +72,7 @@ func ReadAuthKeys(authFile string) []string {
 		os.Exit(1) //nolint:gocritic
 	}
 
-	return authKeys
-}
-
-func CheckAuth(authKeys []string, key string) (bool, error) {
-	checkKey, err := scrypt.Key([]byte(key), []byte(scryptSalt), scryptN, scryptr, scryptp, scryptKeyLen)
-	if err != nil {
-		return false, err
-	}
-
-	encodedKey := base64.StdEncoding.EncodeToString(checkKey)
-	for _, v := range authKeys {
-		if encodedKey == v {
-			return true, nil
-		}
-	}
-
-	return false, nil
+	return slices.Clip(authKeys)
 }
 
 func (a Middleware) getSitePrefix() string {
@@ -136,7 +123,7 @@ func (a Middleware) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	result, err := CheckAuth(a.authKeys, key)
+	result, err := keyhash.CheckList(a.authKeys, key)
 	if err != nil || !result {
 		http.HandlerFunc(a.badAuthorizationHandler).ServeHTTP(w, r)
 		return

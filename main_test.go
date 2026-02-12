@@ -15,6 +15,7 @@ import (
 	"testing"
 	"time"
 
+	"gabe565.com/linx-server/internal/auth/keyhash"
 	"gabe565.com/linx-server/internal/config"
 	"gabe565.com/linx-server/internal/server"
 	"gabe565.com/linx-server/internal/template"
@@ -29,6 +30,7 @@ type RespOkJSON struct {
 	Filename  string `json:"filename"`
 	URL       string `json:"url"`
 	DeleteKey string `json:"delete_key"`
+	AccessKey string `json:"access_key"`
 	Expiry    string `json:"expiry"`
 	Size      string `json:"size"`
 }
@@ -182,7 +184,7 @@ func newPostForm(
 	t *testing.T,
 	filename, content string,
 	expiry time.Duration,
-	accessKey string, //nolint:unparam
+	accessKey string,
 	randomize bool,
 ) (*multipart.Writer, bytes.Buffer) {
 	var b bytes.Buffer
@@ -293,6 +295,72 @@ func TestPostJSONUpload(t *testing.T) {
 	assert.Equal(t, filename, myjson.Filename)
 	assert.Equal(t, "0", myjson.Expiry)
 	assert.Equal(t, "12", myjson.Size)
+}
+
+func TestPostJSONUploadAccessKeyStoredHashed(t *testing.T) {
+	r, w := setup(t, nil)
+
+	filename := upload.GenerateBarename() + ".txt"
+	mw, b := newPostForm(t, filename, "File content", 0, "supersecret", false)
+
+	req, err := http.NewRequestWithContext(t.Context(), http.MethodPost, "/upload", &b)
+	require.NoError(t, err)
+	req.Header.Set("Content-Type", mw.FormDataContentType())
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("Referer", config.Default.SiteURL.String())
+
+	r.ServeHTTP(w, req)
+	assertResponse(t, w, http.StatusOK, "application/json")
+
+	var myjson RespOkJSON
+	err = json.Unmarshal(w.Body.Bytes(), &myjson)
+	require.NoError(t, err)
+	assert.Equal(t, "supersecret", myjson.AccessKey)
+
+	metadata, err := config.StorageBackend.Head(t.Context(), myjson.Filename)
+	require.NoError(t, err)
+	assert.NotEqual(t, "supersecret", metadata.AccessKey)
+	assert.True(t, strings.HasPrefix(metadata.AccessKey, keyhash.KeyPrefix))
+
+	ok, err := keyhash.CheckWithFallback(metadata.AccessKey, "supersecret")
+	require.NoError(t, err)
+	assert.True(t, ok)
+}
+
+func TestAccessProtectedFileWithAccessKeyHeader(t *testing.T) {
+	r, w := setup(t, nil)
+
+	filename := upload.GenerateBarename() + ".txt"
+	mw, b := newPostForm(t, filename, "File content", 0, "supersecret", false)
+
+	req, err := http.NewRequestWithContext(t.Context(), http.MethodPost, "/upload", &b)
+	require.NoError(t, err)
+	req.Header.Set("Content-Type", mw.FormDataContentType())
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("Referer", config.Default.SiteURL.String())
+
+	r.ServeHTTP(w, req)
+	assertResponse(t, w, http.StatusOK, "application/json")
+
+	var myjson RespOkJSON
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &myjson))
+
+	w = httptest.NewRecorder()
+	req, err = http.NewRequestWithContext(t.Context(), http.MethodGet, path.Join("/", myjson.Filename), nil)
+	require.NoError(t, err)
+	req.Header.Set("Accept", "application/json")
+
+	r.ServeHTTP(w, req)
+	assertResponse(t, w, http.StatusUnauthorized, "application/json")
+
+	w = httptest.NewRecorder()
+	req, err = http.NewRequestWithContext(t.Context(), http.MethodGet, path.Join("/", myjson.Filename), nil)
+	require.NoError(t, err)
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("Linx-Access-Key", "supersecret")
+
+	r.ServeHTTP(w, req)
+	assertResponse(t, w, http.StatusOK, "application/json")
 }
 
 func TestPostJSONUploadMaxExpiry(t *testing.T) {
@@ -756,6 +824,12 @@ func TestPutAndSpecificDelete(t *testing.T) {
 	var myjson RespOkJSON
 	err = json.Unmarshal(w.Body.Bytes(), &myjson)
 	require.NoError(t, err)
+	assert.Equal(t, "supersecret", myjson.DeleteKey)
+
+	metadata, err := config.StorageBackend.Head(t.Context(), myjson.Filename)
+	require.NoError(t, err)
+	assert.NotEqual(t, "supersecret", metadata.DeleteKey)
+	assert.NotEmpty(t, metadata.DeleteKey)
 
 	// Delete it
 	w = httptest.NewRecorder()

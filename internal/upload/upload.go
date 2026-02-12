@@ -19,7 +19,7 @@ import (
 	"time"
 
 	"gabe565.com/linx-server/assets"
-	"gabe565.com/linx-server/internal/auth/apikeys"
+	"gabe565.com/linx-server/internal/auth/keyhash"
 	"gabe565.com/linx-server/internal/backends"
 	"gabe565.com/linx-server/internal/config"
 	"gabe565.com/linx-server/internal/csrf"
@@ -202,7 +202,7 @@ func Remote(w http.ResponseWriter, r *http.Request) {
 				key = password
 			}
 		}
-		result, err := apikeys.CheckAuth(config.RemoteAuthKeys, key)
+		result, err := keyhash.CheckList(config.RemoteAuthKeys, key)
 		if err != nil || !result {
 			if config.Default.Auth.Basic {
 				rs := ""
@@ -363,7 +363,12 @@ func Process(ctx context.Context, upReq Request) (Upload, error) {
 	if fileexists {
 		metad, merr := config.StorageBackend.Head(ctx, upload.Filename)
 		if merr == nil {
-			if upReq.deleteKey == metad.DeleteKey {
+			deleteKeyMatch, err := keyhash.CheckWithFallback(metad.DeleteKey, upReq.deleteKey)
+			if err != nil {
+				return upload, err
+			}
+
+			if deleteKeyMatch {
 				fileexists = false
 			} else if config.Default.ForceRandomFilename {
 				// the file exists
@@ -420,16 +425,28 @@ func Process(ctx context.Context, upReq Request) (Upload, error) {
 	if upReq.deleteKey == "" {
 		upReq.deleteKey = uniuri.NewLen(config.Default.RandomDeleteKeyLength)
 	}
+	hashedDeleteKey, err := keyhash.Hash(upReq.deleteKey)
+	if err != nil {
+		return upload, err
+	}
+	storedAccessKey := upReq.accessKey
+	if storedAccessKey != "" {
+		if storedAccessKey, err = keyhash.Hash(storedAccessKey); err != nil {
+			return upload, err
+		}
+	}
 
 	upload.Metadata, err = config.StorageBackend.Put(ctx, upReq.src, upload.Filename, upReq.size, backends.PutOptions{
 		OriginalName: upload.OriginalName,
 		Expiry:       fileExpiry,
-		DeleteKey:    upReq.deleteKey,
-		AccessKey:    upReq.accessKey,
+		DeleteKey:    hashedDeleteKey,
+		AccessKey:    storedAccessKey,
 	})
 	if err != nil {
 		return upload, err
 	}
+	upload.Metadata.DeleteKey = upReq.deleteKey
+	upload.Metadata.AccessKey = upReq.accessKey
 
 	return upload, err
 }

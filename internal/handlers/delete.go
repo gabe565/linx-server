@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 
+	"gabe565.com/linx-server/internal/auth/keyhash"
 	"gabe565.com/linx-server/internal/backends"
 	"gabe565.com/linx-server/internal/config"
 	"gabe565.com/linx-server/internal/util"
@@ -27,7 +28,8 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if metadata.DeleteKey == "" || metadata.DeleteKey != requestKey {
+	matchDeleteKey, err := keyhash.CheckWithFallback(metadata.DeleteKey, requestKey)
+	if err != nil || !matchDeleteKey {
 		Error(w, r, http.StatusUnauthorized) // 401 - wrong delete key
 		return
 	}
