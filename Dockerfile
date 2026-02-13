@@ -29,7 +29,7 @@ RUN --mount=type=cache,target=/root/.cache \
   CGO_ENABLED=0 GOOS="$TARGETOS" GOARCH="$TARGETARCH" \
   go build -ldflags='-w -s' -trimpath
 
-FROM alpine:3.22.1
+FROM alpine:3.23.3
 WORKDIR /data
 
 COPY --from=backend /app/linx-server /usr/bin
