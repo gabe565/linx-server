@@ -13,12 +13,8 @@ COPY assets/static .
 RUN --mount=type=cache,target=/root/.cache \
   pnpm run build
 
-FROM --platform=$BUILDPLATFORM tonistiigi/xx:1.6.1 AS xx
-
 FROM --platform=$BUILDPLATFORM golang:1.26.0-alpine AS backend
 WORKDIR /app
-
-COPY --from=xx / /
 
 COPY go.mod go.sum ./
 RUN go mod download
@@ -27,9 +23,11 @@ COPY . .
 
 COPY --from=frontend /app/dist assets/static/dist
 
-ARG TARGETPLATFORM
+ARG TARGETOS
+ARG TARGETARCH
 RUN --mount=type=cache,target=/root/.cache \
-  CGO_ENABLED=0 xx-go build -ldflags='-w -s' -trimpath
+  CGO_ENABLED=0 GOOS="$TARGETOS" GOARCH="$TARGETARCH" \
+  go build -ldflags='-w -s' -trimpath
 
 FROM alpine:3.22.1
 WORKDIR /data
