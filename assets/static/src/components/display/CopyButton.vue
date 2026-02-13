@@ -3,10 +3,10 @@
     <TooltipTrigger as-child>
       <Button variant="outline" @click="copy" v-bind="$attrs">
         <CopyIcon class="text-2xl" />
-        <span class="sr-only">Copy</span>
+        <span class="sr-only">Copy raw</span>
       </Button>
     </TooltipTrigger>
-    <TooltipContent side="bottom">Copy</TooltipContent>
+    <TooltipContent side="bottom">Copy raw</TooltipContent>
   </Tooltip>
 </template>
 
