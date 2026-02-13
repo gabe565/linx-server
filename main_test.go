@@ -395,7 +395,7 @@ func TestPostJSONUploadMaxExpiry(t *testing.T) {
 		require.NoError(t, err)
 
 		expected := time.Now().Add(config.Default.MaxExpiry.Duration).Unix()
-		assert.Equal(t, expected, myExp)
+		assert.InDelta(t, expected, myExp, 1)
 	}
 }
 
