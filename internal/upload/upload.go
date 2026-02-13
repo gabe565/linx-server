@@ -324,7 +324,7 @@ func Process(ctx context.Context, upReq Request) (Upload, error) {
 
 	// Determine the appropriate filename
 	barename, extension := BarePlusExt(upReq.filename)
-	randomize := false
+	var randomize bool
 
 	if config.Default.KeepOriginalFilename && !strings.HasPrefix(upReq.filename, ".") {
 		upload.OriginalName = upReq.filename
@@ -354,41 +354,39 @@ func Process(ctx context.Context, upReq Request) (Upload, error) {
 
 	upload.Filename = barename + "." + extension
 
-	fileexists, err := config.StorageBackend.Exists(ctx, upload.Filename)
-	if err != nil {
-		return upload, err
-	}
-
-	// Check if the delete key matches, in which case overwrite
-	if fileexists {
-		metad, merr := config.StorageBackend.Head(ctx, upload.Filename)
-		if merr == nil {
-			deleteKeyMatch, err := keyhash.CheckWithFallback(metad.DeleteKey, upReq.deleteKey)
+	var exists, deleteKeyMatch bool
+	var err error
+	if upReq.deleteKey == "" {
+		exists, err = config.StorageBackend.Exists(ctx, upload.Filename)
+		if err != nil {
+			return upload, err
+		}
+	} else {
+		meta, err := config.StorageBackend.Head(ctx, upload.Filename)
+		switch {
+		case err == nil:
+			if deleteKeyMatch, err = keyhash.CheckWithFallback(meta.DeleteKey, upReq.deleteKey); err != nil {
+				return upload, err
+			}
+			exists = !deleteKeyMatch
+		case errors.Is(err, backends.ErrNotFound):
+			exists = false
+		default:
+			exists, err = config.StorageBackend.Exists(ctx, upload.Filename)
 			if err != nil {
 				return upload, err
 			}
-
-			if deleteKeyMatch {
-				fileexists = false
-			} else if config.Default.ForceRandomFilename {
-				// the file exists
-				// the delete key doesn't match
-				// force random filenames is enabled
-				randomize = true
-			}
 		}
-	} else if config.Default.ForceRandomFilename {
-		// the file doesn't exist
-		// force random filenames is enabled
-		randomize = true
+	}
 
-		// set fileexists to true to generate a new barename
-		fileexists = true
+	if !deleteKeyMatch && config.Default.ForceRandomFilename {
+		randomize = true
+		exists = true
 	}
 
 	origBarename := barename
 	var counter int
-	for fileexists {
+	for exists {
 		if randomize {
 			barename = GenerateBarename()
 		} else {
@@ -398,7 +396,7 @@ func Process(ctx context.Context, upReq Request) (Upload, error) {
 		upload.Filename = barename + "." + extension
 
 		var err error
-		fileexists, err = config.StorageBackend.Exists(ctx, upload.Filename)
+		exists, err = config.StorageBackend.Exists(ctx, upload.Filename)
 		if err != nil {
 			return upload, err
 		}

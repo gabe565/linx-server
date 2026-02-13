@@ -583,6 +583,49 @@ func TestPutForceRandomUpload(t *testing.T) {
 	assert.NotEqual(t, expect.String(), w.Body.String())
 }
 
+func TestPutForceRandomUploadExistingName(t *testing.T) {
+	r, w := setup(t, nil)
+
+	filename := "randomizeme.file"
+	req, err := http.NewRequestWithContext(t.Context(),
+		http.MethodPut, path.Join("/upload", filename), strings.NewReader("File content"),
+	)
+	require.NoError(t, err)
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("Linx-Randomize", "false")
+
+	r.ServeHTTP(w, req)
+	assertResponse(t, w, http.StatusOK, "application/json")
+
+	var first RespOkJSON
+	err = json.Unmarshal(w.Body.Bytes(), &first)
+	require.NoError(t, err)
+	assert.Equal(t, filename, first.Filename, "first upload should keep explicit filename")
+
+	config.Default.ForceRandomFilename = true
+
+	w = httptest.NewRecorder()
+	req, err = http.NewRequestWithContext(t.Context(),
+		http.MethodPut, path.Join("/upload", filename), strings.NewReader("New file content"),
+	)
+	require.NoError(t, err)
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("Linx-Randomize", "false")
+
+	r.ServeHTTP(w, req)
+	assertResponse(t, w, http.StatusOK, "application/json")
+
+	var second RespOkJSON
+	err = json.Unmarshal(w.Body.Bytes(), &second)
+	require.NoError(t, err)
+
+	assert.NotEqual(t, filename, second.Filename, "second upload should be randomized")
+
+	ext := path.Ext(second.Filename)
+	assert.Equal(t, ".file", ext)
+	assert.Len(t, strings.TrimSuffix(second.Filename, ext), config.Default.RandomFilenameLength)
+}
+
 func TestPutNoExtensionUpload(t *testing.T) {
 	r, w := setup(t, nil)
 
