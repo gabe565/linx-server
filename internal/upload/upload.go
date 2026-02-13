@@ -355,6 +355,7 @@ func Process(ctx context.Context, upReq Request) (Upload, error) {
 	upload.Filename = barename + "." + extension
 
 	var exists, deleteKeyMatch bool
+	var existingMeta backends.Metadata
 	var err error
 	if upReq.deleteKey == "" {
 		exists, err = config.StorageBackend.Exists(ctx, upload.Filename)
@@ -362,10 +363,10 @@ func Process(ctx context.Context, upReq Request) (Upload, error) {
 			return upload, err
 		}
 	} else {
-		meta, err := config.StorageBackend.Head(ctx, upload.Filename)
+		existingMeta, err = config.StorageBackend.Head(ctx, upload.Filename)
 		switch {
 		case err == nil:
-			if deleteKeyMatch, err = keyhash.CheckWithFallback(meta.DeleteKey, upReq.deleteKey); err != nil {
+			if deleteKeyMatch, err = keyhash.CheckWithFallback(existingMeta.DeleteKey, upReq.deleteKey); err != nil {
 				return upload, err
 			}
 			exists = !deleteKeyMatch
@@ -377,6 +378,11 @@ func Process(ctx context.Context, upReq Request) (Upload, error) {
 				return upload, err
 			}
 		}
+	}
+
+	if deleteKeyMatch && existingMeta.OriginalName != "" {
+		// Keep the original filename when replacing an existing upload.
+		upload.OriginalName = existingMeta.OriginalName
 	}
 
 	if !deleteKeyMatch && config.Default.ForceRandomFilename {

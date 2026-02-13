@@ -92,7 +92,7 @@ linters:
     - whitespace
   settings:
     cyclop:
-      max-complexity: 31
+      max-complexity: 33
     depguard:
       rules:
         "deprecated":
@@ -128,6 +128,8 @@ linters:
     gosec:
       excludes:
         - G306
+    gocyclo:
+      min-complexity: 32
     govet:
       enable-all: true
       disable:

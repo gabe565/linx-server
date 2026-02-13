@@ -27,12 +27,13 @@ import (
 )
 
 type RespOkJSON struct {
-	Filename  string `json:"filename"`
-	URL       string `json:"url"`
-	DeleteKey string `json:"delete_key"`
-	AccessKey string `json:"access_key"`
-	Expiry    string `json:"expiry"`
-	Size      string `json:"size"`
+	OriginalName string `json:"original_name"`
+	Filename     string `json:"filename"`
+	URL          string `json:"url"`
+	DeleteKey    string `json:"delete_key"`
+	AccessKey    string `json:"access_key"`
+	Expiry       string `json:"expiry"`
+	Size         string `json:"size"`
 }
 
 type RespErrJSON struct {
@@ -282,6 +283,8 @@ func TestPostJSONUpload(t *testing.T) {
 	require.NoError(t, err)
 	req.Header.Set("Content-Type", mw.FormDataContentType())
 	req.Header.Set("Accept", "application/json")
+	req.Header.Set("Referer", config.Default.SiteURL.String())
+	req.Header.Set("Referer", config.Default.SiteURL.String())
 	req.Header.Set("Referer", config.Default.SiteURL.String())
 	require.NoError(t, err)
 
@@ -812,6 +815,47 @@ func TestPutAndOverwrite(t *testing.T) {
 	r.ServeHTTP(w, req)
 	assertResponse(t, w, http.StatusOK, "text/plain; charset=utf-8")
 	assert.Equal(t, "New file content", w.Body.String())
+}
+
+func TestPutAndOverwritePreservesOriginalName(t *testing.T) {
+	r, w := setup(t, nil)
+
+	mw, b := newPostForm(t, "original-name.txt", "File content", 0, "", true)
+
+	req, err := http.NewRequestWithContext(t.Context(), http.MethodPost, "/upload", &b)
+	require.NoError(t, err)
+	req.Header.Set("Content-Type", mw.FormDataContentType())
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("Referer", config.Default.SiteURL.String())
+
+	r.ServeHTTP(w, req)
+	assertResponse(t, w, http.StatusOK, "application/json")
+
+	var created RespOkJSON
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &created))
+	require.NotEmpty(t, created.Filename)
+	require.NotEmpty(t, created.DeleteKey)
+	require.Equal(t, "original-name.txt", created.OriginalName)
+
+	// Overwrite it in place.
+	w = httptest.NewRecorder()
+	req, err = http.NewRequestWithContext(
+		t.Context(),
+		http.MethodPut,
+		path.Join("/upload", created.Filename),
+		strings.NewReader("Updated content"),
+	)
+	require.NoError(t, err)
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("Linx-Delete-Key", created.DeleteKey)
+
+	r.ServeHTTP(w, req)
+	assertResponse(t, w, http.StatusOK, "application/json")
+
+	var overwritten RespOkJSON
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &overwritten))
+	assert.Equal(t, created.Filename, overwritten.Filename)
+	assert.Equal(t, "original-name.txt", overwritten.OriginalName)
 }
 
 func TestPutAndOverwriteForceRandom(t *testing.T) {
