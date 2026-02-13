@@ -68,6 +68,12 @@ export const loadLanguage = async (language: string) => {
     case "go":
       lang = await import("highlight.js/lib/languages/go");
       break;
+    case "gradle":
+      lang = await import("highlight.js/lib/languages/gradle");
+      break;
+    case "graphql":
+      lang = await import("highlight.js/lib/languages/graphql");
+      break;
     case "ini":
       lang = await import("highlight.js/lib/languages/ini");
       break;
@@ -95,8 +101,14 @@ export const loadLanguage = async (language: string) => {
     case "lua":
       lang = await import("highlight.js/lib/languages/lua");
       break;
+    case "makefile":
+      lang = await import("highlight.js/lib/languages/makefile");
+      break;
     case "nginx":
       lang = await import("highlight.js/lib/languages/nginx");
+      break;
+    case "nix":
+      lang = await import("highlight.js/lib/languages/nix");
       break;
     case "objectivec":
       lang = await import("highlight.js/lib/languages/objectivec");
@@ -119,6 +131,9 @@ export const loadLanguage = async (language: string) => {
     case "python":
       lang = await import("highlight.js/lib/languages/python");
       break;
+    case "r":
+      lang = await import("highlight.js/lib/languages/r");
+      break;
     case "ruby":
       lang = await import("highlight.js/lib/languages/ruby");
       break;
@@ -136,6 +151,9 @@ export const loadLanguage = async (language: string) => {
       break;
     case "sql":
       lang = await import("highlight.js/lib/languages/sql");
+      break;
+    case "swift":
+      lang = await import("highlight.js/lib/languages/swift");
       break;
     case "tcl":
       lang = await import("highlight.js/lib/languages/tcl");

@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"net/http"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -37,12 +36,8 @@ func FileDisplay(w http.ResponseWriter, r *http.Request, fileName string, metada
 			Expiry:       strconv.FormatInt(max(metadata.Expiry.Unix(), 0), 10),
 			Size:         strconv.FormatInt(metadata.Size, 10),
 			Mimetype:     metadata.Mimetype,
+			Language:     util.InferLang(fileName, metadata),
 			ArchiveFiles: metadata.ArchiveFiles,
-		}
-
-		extension := strings.TrimPrefix(filepath.Ext(fileName), ".")
-		if strings.HasPrefix(metadata.Mimetype, "text/") || util.SupportedBinExtension(extension) {
-			res.Language = util.ExtensionToHlLang(fileName, extension)
 		}
 
 		if !config.Default.NoTorrent {
@@ -62,11 +57,6 @@ func FileDisplay(w http.ResponseWriter, r *http.Request, fileName string, metada
 		http.ServeContent(w, r, fileName, metadata.ModTime, bytes.NewReader(b))
 	}
 
-	prettyName := fileName
-	if metadata.OriginalName != "" {
-		prettyName = metadata.OriginalName
-	}
-
 	description := "Download this file on " + config.Default.SiteName + "."
 	if !metadata.Expiry.IsZero() {
 		now := time.Now()
@@ -83,6 +73,11 @@ func FileDisplay(w http.ResponseWriter, r *http.Request, fileName string, metada
 			when = metadata.Expiry.Format("Jan 2, 2006")
 		}
 		description += " Expires " + when + "."
+	}
+
+	prettyName := metadata.OriginalName
+	if metadata.OriginalName == "" {
+		prettyName = fileName
 	}
 
 	AssetHandler(
