@@ -20,7 +20,7 @@ const props = defineProps<{
 const model = defineModel<string>();
 
 const show = ref(false);
-const text = computed(() => (show.value ? "Hide password" : "Show password"));
+const text = computed(() => (show.value ? "Hide" : "Show"));
 </script>
 
 <template>
@@ -31,6 +31,7 @@ const text = computed(() => (show.value ? "Hide password" : "Show password"));
       placeholder="Password"
       aria-label="Password"
       class="pr-10"
+      v-bind="$attrs"
     />
     <TooltipProvider>
       <Tooltip>

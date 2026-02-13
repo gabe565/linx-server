@@ -30,13 +30,23 @@
       <TableRow v-if="item.access_key">
         <TableCell>Password</TableCell>
         <TableCell>
-          <PasswordViewInput :model-value="item.access_key" />
+          <PasswordInput
+            :model-value="item.access_key"
+            readonly
+            @focus="$event.target.select()"
+            @click="$event.target.select()"
+          />
         </TableCell>
       </TableRow>
       <TableRow v-if="item.delete_key">
         <TableCell>Delete Key</TableCell>
         <TableCell>
-          <PasswordViewInput :model-value="item.delete_key" />
+          <PasswordInput
+            :model-value="item.delete_key"
+            readonly
+            @focus="$event.target.select()"
+            @click="$event.target.select()"
+          />
         </TableCell>
       </TableRow>
       <TableRow v-if="item.uploaded">
@@ -68,7 +78,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog/index.js";
 import { Table, TableCell, TableRow } from "@/components/ui/table/index.js";
-import PasswordViewInput from "@/components/upload/PasswordViewInput.vue";
+import PasswordInput from "@/components/upload/PasswordInput.vue";
 import { formatBytes } from "@/util/bytes.ts";
 
 defineProps({
