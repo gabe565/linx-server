@@ -149,10 +149,6 @@ func (b Backend) Get(ctx context.Context, key string) (backends.Metadata, io.Rea
 }
 
 func (b Backend) ServeFile(key string, w http.ResponseWriter, r *http.Request) error {
-	if _, err := b.Head(r.Context(), key); err != nil {
-		return err
-	}
-
 	filesRoot, err := os.OpenRoot(b.filesPath)
 	if err != nil {
 		return err
