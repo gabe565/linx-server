@@ -34,9 +34,24 @@ export const useConfigStore = defineStore(
     const extension = ref("txt");
     const randomFilename = ref(true);
     const password = ref("");
+    const overwrite = ref(false);
+    const editTargetFilename = ref("");
+    const editDeleteKey = ref("");
     const content = ref("");
 
-    return { site, apiKey, expiry, filename, extension, randomFilename, password, content };
+    return {
+      site,
+      apiKey,
+      expiry,
+      filename,
+      extension,
+      randomFilename,
+      password,
+      overwrite,
+      editTargetFilename,
+      editDeleteKey,
+      content,
+    };
   },
   {
     persist: {

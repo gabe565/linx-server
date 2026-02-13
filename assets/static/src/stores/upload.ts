@@ -56,6 +56,75 @@ export const useUploadStore = defineStore(
 
     const wakelock = reactive(useWakeLock());
 
+    const ensureAuth = async () => {
+      if (!config.site.auth) return;
+      await axios.post(ApiPath("/api/auth"), null, {
+        headers: {
+          "Linx-Api-Key": encodeURIComponent(config.apiKey),
+        },
+        validateStatus: (s) => s === 200,
+      });
+    };
+
+    const normalizeUploadResponse = (
+      data: Record<string, any>,
+      file: File,
+      saveOriginalName: boolean,
+    ) => {
+      if (saveOriginalName) {
+        data.original_name = file.name;
+      }
+      data.uploaded = new Date();
+      data.expiry = Number(data.expiry ?? 0);
+      data.size = Number(data.size ?? 0);
+      return data as UploadedItem;
+    };
+
+    const onUploadSuccess = (item: UploadedItem) => {
+      toast.success("File uploaded", {
+        description: item.original_name || item.filename,
+        action: {
+          label: "Copy",
+          onClick: async () => await copy(item),
+        },
+      });
+      uploads.value = [item, ...uploads.value.filter((u) => u.filename !== item.filename)];
+      removeExpired();
+      return item;
+    };
+
+    const uploadErrorDescription = (err: unknown) => {
+      let description = err instanceof Error ? err.message : String(err);
+      if (isAxiosError(err) && err.response?.data?.error) description = err.response.data.error;
+      return description;
+    };
+
+    const runUploadRequest = async ({
+      file,
+      saveOriginalName,
+      request,
+      canceledByUserText,
+    }: {
+      file: File;
+      saveOriginalName: boolean;
+      request: () => Promise<{ data: Record<string, any> }>;
+      canceledByUserText?: string;
+    }) => {
+      try {
+        await ensureAuth();
+        const res = await request();
+        const item = normalizeUploadResponse(res.data, file, saveOriginalName);
+        return onUploadSuccess(item);
+      } catch (err) {
+        let description = uploadErrorDescription(err);
+        if (canceledByUserText && description === "canceled") {
+          description = canceledByUserText;
+        }
+        toast.error("Upload failed", { description });
+        throw err;
+      }
+    };
+
     useEventListener(window, "beforeunload", (e) => {
       if (Object.keys(inProgress).length !== 0) {
         e.preventDefault();
@@ -96,56 +165,62 @@ export const useUploadStore = defineStore(
       form.append("file", file);
 
       try {
-        if (config.site.auth) {
-          await axios.post(ApiPath("/api/auth"), null, {
-            headers: {
-              "Linx-Api-Key": encodeURIComponent(config.apiKey),
-            },
-            validateStatus: (s) => s === 200,
-          });
-        }
-
-        const res = await axios.post(ApiPath(`/upload`), form, {
-          headers: {
-            Accept: "application/json",
-            "Linx-Api-Key": encodeURIComponent(config.apiKey),
-          },
-          signal: controller.signal,
-          validateStatus: (s) => s === 200,
-          onUploadProgress(state) {
-            if (inProgress[id]) inProgress[id].progress = state;
-          },
+        return await runUploadRequest({
+          file,
+          saveOriginalName,
+          canceledByUserText: "Canceled by user",
+          request: async () =>
+            await axios.post(ApiPath(`/upload`), form, {
+              headers: {
+                Accept: "application/json",
+                "Linx-Api-Key": encodeURIComponent(config.apiKey),
+              },
+              signal: controller.signal,
+              validateStatus: (s) => s === 200,
+              onUploadProgress(state) {
+                if (inProgress[id]) inProgress[id].progress = state;
+              },
+            }),
         });
-
-        if (saveOriginalName) {
-          res.data.original_name = file.name;
-        }
-        res.data.uploaded = new Date();
-        res.data.expiry = Number(res.data.expiry ?? 0);
-        res.data.size = Number(res.data.size ?? 0);
-
-        toast.success("File uploaded", {
-          description: res.data.original_name || res.data.filename,
-          action: {
-            label: "Copy",
-            onClick: async () => await copy(res.data),
-          },
-        });
-        uploads.value.unshift(res.data);
-        removeExpired();
-        return res.data;
-      } catch (err) {
-        let description = err instanceof Error ? err.message : String(err);
-        if (isAxiosError(err) && err.response?.data?.error) description = err.response.data.error;
-        if (description === "canceled") description = "Canceled by user";
-        toast.error("Upload failed", { description });
-        throw err;
       } finally {
         delete inProgress[id];
         if (Object.keys(inProgress).length === 0) {
           wakelock.release();
         }
       }
+    };
+
+    const overwriteFile = async ({
+      file,
+      filename,
+      deleteKey,
+      expiry,
+      password,
+      saveOriginalName = true,
+    }: {
+      file: File;
+      filename: string;
+      deleteKey: string;
+      expiry: number | string;
+      password?: string;
+      saveOriginalName?: boolean;
+    }) => {
+      return await runUploadRequest({
+        file,
+        saveOriginalName,
+        request: async () =>
+          await axios.put(ApiPath(`/upload/${encodeURIComponent(filename)}`), file, {
+            headers: {
+              Accept: "application/json",
+              "Content-Type": "application/octet-stream",
+              "Linx-Api-Key": encodeURIComponent(config.apiKey),
+              "Linx-Delete-Key": encodeURIComponent(deleteKey),
+              "Linx-Expiry": encodeURIComponent(String(expiry)),
+              "Linx-Access-Key": encodeURIComponent(password ?? ""),
+            },
+            validateStatus: (s) => s === 200,
+          }),
+      });
     };
 
     const deleteItem = async (upload: UploadedItem) => {
@@ -183,7 +258,16 @@ export const useUploadStore = defineStore(
       timeout = setTimeout(removeExpired, nextRun);
     };
 
-    return { version, uploads, inProgress, uploadFile, deleteItem, removeExpired, copy };
+    return {
+      version,
+      uploads,
+      inProgress,
+      uploadFile,
+      overwriteFile,
+      deleteItem,
+      removeExpired,
+      copy,
+    };
   },
   {
     persist: {

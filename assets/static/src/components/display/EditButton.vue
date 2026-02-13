@@ -15,6 +15,7 @@ import { useRouter } from "vue-router";
 import { Button } from "@/components/ui/button/index.js";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useConfigStore } from "@/stores/config.ts";
+import { useUploadStore } from "@/stores/upload.ts";
 import { getExtension } from "@/util/extensions.ts";
 import EditIcon from "~icons/material-symbols/edit-rounded";
 
@@ -24,11 +25,19 @@ const props = defineProps({
 });
 
 const config = useConfigStore();
+const upload = useUploadStore();
 const router = useRouter();
 
 const edit = () => {
-  config.extension = getExtension(props.meta.filename);
+  const existing = upload.uploads.find((item) => item.filename === props.meta.filename);
+  const preferredName = props.meta.original_name || props.meta.filename;
+
+  config.extension = getExtension(preferredName);
+  config.filename = preferredName.split(".").slice(0, -1).join(".");
   config.content = props.content;
+  config.editTargetFilename = props.meta.filename;
+  config.editDeleteKey = existing?.delete_key ?? "";
+  config.overwrite = !!existing?.delete_key;
   router.push({ path: "/paste" });
 };
 </script>
