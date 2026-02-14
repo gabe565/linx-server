@@ -17,7 +17,6 @@ import (
 	"gabe565.com/linx-server/internal/backends"
 	"gabe565.com/linx-server/internal/config"
 	"gabe565.com/linx-server/internal/csrf"
-	"gabe565.com/linx-server/internal/expiry"
 	"gabe565.com/linx-server/internal/headers"
 	"gabe565.com/linx-server/internal/template"
 	"gabe565.com/linx-server/internal/util"
@@ -178,7 +177,7 @@ func CheckFile(ctx context.Context, filename string) (backends.Metadata, error) 
 		return metadata, err
 	}
 
-	if expiry.IsTSExpired(metadata.Expiry) {
+	if metadata.Expired() {
 		go func() {
 			if err := config.StorageBackend.Delete(context.Background(), filename); err != nil {
 				slog.Error("Failed to delete expired file", "path", filename, "error", err)

@@ -25,3 +25,7 @@ func (m Metadata) Etag() string {
 		m.Checksum + "-" + strconv.FormatInt(m.ModTime.Unix(), 36),
 	)
 }
+
+func (m Metadata) Expired() bool {
+	return !m.Expiry.IsZero() && m.Expiry.Before(time.Now())
+}

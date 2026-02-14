@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"gabe565.com/linx-server/internal/backends"
-	"gabe565.com/linx-server/internal/expiry"
 )
 
 func Cleanup(ctx context.Context, backend backends.ListBackend, noLogs bool) error {
@@ -30,7 +29,7 @@ func Cleanup(ctx context.Context, backend backends.ListBackend, noLogs bool) err
 			continue
 		}
 
-		if expiry.IsTSExpired(metadata.Expiry) {
+		if metadata.Expired() {
 			if !noLogs {
 				slog.Info("Delete upload", "name", filename)
 			}

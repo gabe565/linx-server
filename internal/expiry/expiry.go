@@ -32,7 +32,7 @@ func IsFileExpired(ctx context.Context, filename string) (bool, error) {
 		return false, err
 	}
 
-	return IsTSExpired(metadata.Expiry), nil
+	return metadata.Expired(), nil
 }
 
 // Return a list of expiration times and their humanized versions.
@@ -67,9 +67,4 @@ func ListExpirationTimes() []ExpirationTime {
 	}
 
 	return expiryList
-}
-
-// IsTSExpired determines if a file with expiry set to "ts" has expired yet.
-func IsTSExpired(ts time.Time) bool {
-	return !ts.IsZero() && time.Now().After(ts)
 }

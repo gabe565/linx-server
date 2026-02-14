@@ -12,7 +12,6 @@ import (
 
 	"gabe565.com/linx-server/internal/backends"
 	"gabe565.com/linx-server/internal/config"
-	"gabe565.com/linx-server/internal/expiry"
 	"gabe565.com/linx-server/internal/handlers"
 	"gabe565.com/linx-server/internal/headers"
 	"gabe565.com/linx-server/internal/util"
@@ -100,7 +99,7 @@ func FileTorrentHandler(w http.ResponseWriter, r *http.Request) {
 		_ = f.Close()
 	}()
 
-	if expiry.IsTSExpired(metadata.Expiry) {
+	if metadata.Expired() {
 		go func() {
 			if err := config.StorageBackend.Delete(context.Background(), fileName); err != nil {
 				slog.Error("Failed to delete expired file", "path", fileName)
