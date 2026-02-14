@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"time"
 
 	"gabe565.com/linx-server/internal/backends"
 	"gabe565.com/linx-server/internal/config"
@@ -59,20 +58,7 @@ func FileDisplay(w http.ResponseWriter, r *http.Request, fileName string, metada
 
 	description := "Download this file on " + config.Default.SiteName + "."
 	if !metadata.Expiry.IsZero() {
-		now := time.Now()
-		diff := metadata.Expiry.Sub(now)
-		var when string
-		switch {
-		case diff < 24*time.Hour:
-			when = "today"
-		case diff < 7*24*time.Hour:
-			when = metadata.Expiry.Format("Mon, Jan 2")
-		case metadata.Expiry.Year() == now.Year():
-			when = metadata.Expiry.Format("Jan 2")
-		default:
-			when = metadata.Expiry.Format("Jan 2, 2006")
-		}
-		description += " Expires " + when + "."
+		description += " Expires " + metadata.Expiry.Format("Jan 2, 2006") + "."
 	}
 
 	prettyName := metadata.OriginalName
