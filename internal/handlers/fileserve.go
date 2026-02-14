@@ -112,6 +112,7 @@ func AssetHandler(opts ...template.OptionFunc) http.HandlerFunc {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusNotFound)
 			_ = json.NewEncoder(w).Encode(ErrorResponse{Error: "Not found"})
+			return
 		}
 
 		ServeAsset(w, r, http.StatusOK, opts...)

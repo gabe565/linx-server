@@ -54,6 +54,7 @@ func FileDisplay(w http.ResponseWriter, r *http.Request, fileName string, metada
 
 		b, _ := json.Marshal(res)
 		http.ServeContent(w, r, fileName, metadata.ModTime, bytes.NewReader(b))
+		return
 	}
 
 	description := "Download this file on " + config.Default.SiteName + "."
