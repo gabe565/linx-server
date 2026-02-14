@@ -51,7 +51,7 @@ func FileDisplay(w http.ResponseWriter, r *http.Request, fileName string, metada
 		}
 		w.Header().Set("Vary", "Accept, Linx-Delete-Key")
 		w.Header().Set("Content-Type", "application/json")
-		w.Header().Set("ETag", strconv.Quote(metadata.Checksum))
+		w.Header().Set("ETag", metadata.Etag())
 
 		b, _ := json.Marshal(res)
 		http.ServeContent(w, r, fileName, metadata.ModTime, bytes.NewReader(b))

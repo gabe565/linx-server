@@ -2,6 +2,7 @@ package backends
 
 import (
 	"errors"
+	"strconv"
 	"time"
 )
 
@@ -18,3 +19,9 @@ type Metadata struct {
 }
 
 var ErrBadMetadata = errors.New("corrupted metadata")
+
+func (m Metadata) Etag() string {
+	return strconv.Quote(
+		m.Checksum + "-" + strconv.FormatInt(m.ModTime.Unix(), 36),
+	)
+}
