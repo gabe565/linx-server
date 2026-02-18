@@ -24,7 +24,7 @@ type Backend struct {
 type MetadataJSON struct {
 	OriginalName string          `json:"original_name,omitzero"`
 	DeleteKey    string          `json:"delete_key"`
-	AccessKey    string          `json:"access_key,omitzero"`
+	AccessKey    string          `json:"access_key,omitzero"` //nolint:gosec
 	Salt         string          `json:"salt,omitzero"`
 	Sha256sum    string          `json:"sha256sum,omitzero"`
 	Checksum     string          `json:"checksum"`

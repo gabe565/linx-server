@@ -86,11 +86,11 @@ func FileTorrentHandler(w http.ResponseWriter, r *http.Request) {
 			handlers.ErrorMsg(w, r, http.StatusNotFound, "File not found")
 			return
 		case errors.Is(err, backends.ErrBadMetadata):
-			slog.Error("Corrupt metadata", "path", fileName, "error", err)
+			slog.Error("Corrupt metadata", "path", fileName, "error", err) //nolint:gosec
 			handlers.ErrorMsg(w, r, http.StatusInternalServerError, "Corrupt metadata")
 			return
 		default:
-			slog.Error("Failed to get file", "path", fileName, "error", err)
+			slog.Error("Failed to get file", "path", fileName, "error", err) //nolint:gosec
 			handlers.Error(w, r, http.StatusInternalServerError)
 			return
 		}

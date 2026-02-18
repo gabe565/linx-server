@@ -33,7 +33,7 @@ func FileServeHandler(w http.ResponseWriter, r *http.Request) {
 		if errors.Is(err, backends.ErrNotFound) {
 			ErrorMsg(w, r, http.StatusNotFound, "File not found")
 		} else {
-			slog.Error("Corrupt metadata", "path", fileName, "error", err)
+			slog.Error("Corrupt metadata", "path", fileName, "error", err) //nolint:gosec
 			ErrorMsg(w, r, http.StatusInternalServerError, "Corrupt metadata")
 		}
 		return
@@ -99,7 +99,7 @@ func FileServeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := config.StorageBackend.ServeFile(fileName, w, r); err != nil {
-		slog.Error("Failed to serve file", "path", fileName, "error", err)
+		slog.Error("Failed to serve file", "path", fileName, "error", err) //nolint:gosec
 		Error(w, r, http.StatusInternalServerError)
 		return
 	}
@@ -144,7 +144,7 @@ func ServeAsset(w http.ResponseWriter, r *http.Request, status int, opts ...temp
 		var ok bool
 		file, ok = asset.(io.ReadSeeker)
 		if !ok {
-			slog.Error("Static asset is not a ReadSeeker", "path", path)
+			slog.Error("Static asset is not a ReadSeeker", "path", path) //nolint:gosec
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}

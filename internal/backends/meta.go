@@ -9,7 +9,7 @@ import (
 type Metadata struct {
 	OriginalName string
 	DeleteKey    string
-	AccessKey    string
+	AccessKey    string //nolint:gosec
 	Salt         string
 	Checksum     string
 	Mimetype     string

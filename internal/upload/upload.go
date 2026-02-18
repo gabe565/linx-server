@@ -65,7 +65,7 @@ type JSONResponse struct {
 	DirectURL    string `json:"direct_url"`
 	Filename     string `json:"filename"`
 	DeleteKey    string `json:"delete_key"`
-	AccessKey    string `json:"access_key"`
+	AccessKey    string `json:"access_key"` //nolint:gosec
 	Expiry       string `json:"expiry"`
 	Size         string `json:"size"`
 	Mimetype     string `json:"mimetype"`
@@ -189,7 +189,8 @@ func PUTHandler(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(upload.JSONResponse(r))
 	} else {
-		_, _ = io.WriteString(w, headers.GetFileURL(r, upload.Filename).String()+"\n")
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		_, _ = io.WriteString(w, headers.GetFileURL(r, upload.Filename).String()+"\n") //nolint:gosec
 	}
 }
 
@@ -247,7 +248,7 @@ func Remote(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 
-	resp, err := client.Do(req)
+	resp, err := client.Do(req) //nolint:gosec
 	if err != nil {
 		handlers.ErrorMsg(w, r, http.StatusServiceUnavailable, "Could not retrieve URL")
 		return
