@@ -106,6 +106,7 @@ func SetAccessKeyCookies(w http.ResponseWriter, r *http.Request, fileName, value
 		HttpOnly: true,
 		Domain:   u.Hostname(),
 		Expires:  expires,
+		Secure:   u.Scheme == "https",
 	}
 
 	cookie.Path = path.Join(u.Path, fileName)
@@ -150,7 +151,7 @@ func FileAccessHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		// remove invalid cookie
 		if src == AccessKeySourceCookie {
-			SetAccessKeyCookies(w, r, fileName, "", time.Unix(0, 0))
+			SetAccessKeyCookies(w, r, fileName, "", time.Time{})
 		}
 
 		if strings.EqualFold("application/json", r.Header.Get("Accept")) {

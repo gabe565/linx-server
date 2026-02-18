@@ -42,7 +42,7 @@ func FileServeHandler(w http.ResponseWriter, r *http.Request) {
 	if src, err := CheckAccessKey(r, &metadata); err != nil {
 		// remove invalid cookie
 		if src == AccessKeySourceCookie {
-			SetAccessKeyCookies(w, r, fileName, "", time.Unix(0, 0))
+			SetAccessKeyCookies(w, r, fileName, "", time.Time{})
 		}
 		Error(w, r, http.StatusUnauthorized)
 		return
