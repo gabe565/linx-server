@@ -17,8 +17,11 @@ const (
 	scryptKeyLen = 32
 )
 
-func Hash(key string) (string, error) {
-	hashed, err := scrypt.Key([]byte(key), []byte(scryptSalt), scryptN, scryptR, scryptP, scryptKeyLen)
+func Hash(key, salt string) (string, error) {
+	if salt == "" {
+		salt = scryptSalt
+	}
+	hashed, err := scrypt.Key([]byte(key), []byte(salt), scryptN, scryptR, scryptP, scryptKeyLen)
 	if err != nil {
 		return "", err
 	}
@@ -40,8 +43,11 @@ func IsValidHash(key string) bool {
 	return err == nil
 }
 
-func Check(stored, request string) (bool, error) {
-	requestHash, err := scrypt.Key([]byte(request), []byte(scryptSalt), scryptN, scryptR, scryptP, scryptKeyLen)
+func Check(stored, request, salt string) (bool, error) {
+	if salt == "" {
+		salt = scryptSalt
+	}
+	requestHash, err := scrypt.Key([]byte(request), []byte(salt), scryptN, scryptR, scryptP, scryptKeyLen)
 	if err != nil {
 		return false, err
 	}
@@ -55,8 +61,11 @@ func Check(stored, request string) (bool, error) {
 	return subtle.ConstantTimeCompare(storedHash, requestHash) == 1, nil
 }
 
-func CheckList(stored []string, request string) (bool, error) {
-	requestHash, err := scrypt.Key([]byte(request), []byte(scryptSalt), scryptN, scryptR, scryptP, scryptKeyLen)
+func CheckList(stored []string, request, salt string) (bool, error) {
+	if salt == "" {
+		salt = scryptSalt
+	}
+	requestHash, err := scrypt.Key([]byte(request), []byte(salt), scryptN, scryptR, scryptP, scryptKeyLen)
 	if err != nil {
 		return false, err
 	}
@@ -77,9 +86,9 @@ func CheckList(stored []string, request string) (bool, error) {
 	return false, nil
 }
 
-func CheckWithFallback(stored, request string) (bool, error) {
+func CheckWithFallback(stored, request, salt string) (bool, error) {
 	if strings.HasPrefix(stored, KeyPrefix) {
-		return Check(stored, request)
+		return Check(stored, request, salt)
 	}
 
 	return stored == request, nil

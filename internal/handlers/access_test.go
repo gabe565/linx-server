@@ -22,32 +22,32 @@ func TestCheckAccessKeyNoProtection(t *testing.T) {
 }
 
 func TestCheckAccessKeyHeaderValid(t *testing.T) {
-	stored, err := keyhash.Hash("supersecret")
+	stored, err := keyhash.Hash("supersecret", "test")
 	require.NoError(t, err)
 
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	req.Header.Set(AccessKeyHeader, "supersecret")
 
-	src, err := CheckAccessKey(req, &backends.Metadata{AccessKey: stored})
+	src, err := CheckAccessKey(req, &backends.Metadata{AccessKey: stored, Salt: "test"})
 	require.NoError(t, err)
 	assert.Equal(t, AccessKeySourceHeader, src)
 }
 
 func TestCheckAccessKeyCookieHasPriority(t *testing.T) {
-	stored, err := keyhash.Hash("supersecret")
+	stored, err := keyhash.Hash("supersecret", "test")
 	require.NoError(t, err)
 
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	req.AddCookie(&http.Cookie{Name: AccessKeyHeader, Value: url.PathEscape("wrong")})
 	req.Header.Set(AccessKeyHeader, "supersecret")
 
-	src, err := CheckAccessKey(req, &backends.Metadata{AccessKey: stored})
+	src, err := CheckAccessKey(req, &backends.Metadata{AccessKey: stored, Salt: "test"})
 	require.ErrorIs(t, err, errInvalidAccessKey)
 	assert.Equal(t, AccessKeySourceCookie, src)
 }
 
 func TestCheckAccessKeyHeaderHasPriorityOverForm(t *testing.T) {
-	stored, err := keyhash.Hash("supersecret")
+	stored, err := keyhash.Hash("supersecret", "test")
 	require.NoError(t, err)
 
 	req := httptest.NewRequest(
@@ -58,7 +58,7 @@ func TestCheckAccessKeyHeaderHasPriorityOverForm(t *testing.T) {
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Set(AccessKeyHeader, "wrong")
 
-	src, err := CheckAccessKey(req, &backends.Metadata{AccessKey: stored})
+	src, err := CheckAccessKey(req, &backends.Metadata{AccessKey: stored, Salt: "test"})
 	require.ErrorIs(t, err, errInvalidAccessKey)
 	assert.Equal(t, AccessKeySourceHeader, src)
 }

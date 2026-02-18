@@ -22,7 +22,7 @@ func New() *cobra.Command {
 func run(cmd *cobra.Command, args []string) error {
 	cmd.SilenceUsage = true
 
-	checkKey, err := keyhash.Hash(args[0])
+	checkKey, err := keyhash.Hash(args[0], "")
 	if err != nil {
 		return err
 	}

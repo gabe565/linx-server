@@ -202,7 +202,7 @@ func Remote(w http.ResponseWriter, r *http.Request) {
 				key = password
 			}
 		}
-		result, err := keyhash.CheckList(config.RemoteAuthKeys, key)
+		result, err := keyhash.CheckList(config.RemoteAuthKeys, key, "")
 		if err != nil || !result {
 			if config.Default.Auth.Basic {
 				rs := ""
@@ -366,7 +366,9 @@ func Process(ctx context.Context, upReq Request) (Upload, error) {
 		existingMeta, err = config.StorageBackend.Head(ctx, upload.Filename)
 		switch {
 		case err == nil:
-			if deleteKeyMatch, err = keyhash.CheckWithFallback(existingMeta.DeleteKey, upReq.deleteKey); err != nil {
+			if deleteKeyMatch, err = keyhash.CheckWithFallback(
+				existingMeta.DeleteKey, upReq.deleteKey, existingMeta.Salt,
+			); err != nil {
 				return upload, err
 			}
 			exists = !deleteKeyMatch
@@ -426,16 +428,18 @@ func Process(ctx context.Context, upReq Request) (Upload, error) {
 		fileExpiry = time.Now().Add(upReq.expiry)
 	}
 
+	salt := uniuri.NewLen(16)
+
 	if upReq.deleteKey == "" {
 		upReq.deleteKey = uniuri.NewLen(config.Default.RandomDeleteKeyLength)
 	}
-	hashedDeleteKey, err := keyhash.Hash(upReq.deleteKey)
+	hashedDeleteKey, err := keyhash.Hash(upReq.deleteKey, salt)
 	if err != nil {
 		return upload, err
 	}
 	storedAccessKey := upReq.accessKey
 	if storedAccessKey != "" {
-		if storedAccessKey, err = keyhash.Hash(storedAccessKey); err != nil {
+		if storedAccessKey, err = keyhash.Hash(storedAccessKey, salt); err != nil {
 			return upload, err
 		}
 	}
@@ -445,6 +449,7 @@ func Process(ctx context.Context, upReq Request) (Upload, error) {
 		Expiry:       fileExpiry,
 		DeleteKey:    hashedDeleteKey,
 		AccessKey:    storedAccessKey,
+		Salt:         salt,
 	})
 	if err != nil {
 		return upload, err

@@ -28,7 +28,7 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	matchDeleteKey, err := keyhash.CheckWithFallback(metadata.DeleteKey, requestKey)
+	matchDeleteKey, err := keyhash.CheckWithFallback(metadata.DeleteKey, requestKey, metadata.Salt)
 	if err != nil || !matchDeleteKey {
 		Error(w, r, http.StatusUnauthorized) // 401 - wrong delete key
 		return

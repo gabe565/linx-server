@@ -25,6 +25,7 @@ type MetadataJSON struct {
 	OriginalName string          `json:"original_name,omitzero"`
 	DeleteKey    string          `json:"delete_key"`
 	AccessKey    string          `json:"access_key,omitzero"`
+	Salt         string          `json:"salt,omitzero"`
 	Sha256sum    string          `json:"sha256sum,omitzero"`
 	Checksum     string          `json:"checksum"`
 	Mimetype     string          `json:"mimetype"`
@@ -109,6 +110,7 @@ func (b Backend) Head(_ context.Context, key string) (backends.Metadata, error) 
 	metadata.OriginalName = mjson.OriginalName
 	metadata.DeleteKey = mjson.DeleteKey
 	metadata.AccessKey = mjson.AccessKey
+	metadata.Salt = mjson.Salt
 	metadata.Mimetype = mjson.Mimetype
 	metadata.ArchiveFiles = mjson.ArchiveFiles
 	metadata.Checksum = mjson.Checksum
@@ -166,6 +168,7 @@ func (b Backend) writeMetadata(key string, metadata backends.Metadata) error {
 		OriginalName: metadata.OriginalName,
 		DeleteKey:    metadata.DeleteKey,
 		AccessKey:    metadata.AccessKey,
+		Salt:         metadata.Salt,
 		Mimetype:     metadata.Mimetype,
 		ArchiveFiles: metadata.ArchiveFiles,
 		Checksum:     metadata.Checksum,
@@ -250,6 +253,7 @@ func (b Backend) Put(
 	m.Expiry = opts.Expiry
 	m.DeleteKey = opts.DeleteKey
 	m.AccessKey = opts.AccessKey
+	m.Salt = opts.Salt
 
 	if _, err := f.Seek(0, io.SeekStart); err == nil {
 		m.ArchiveFiles, _ = helpers.ListArchiveFiles(m.Mimetype, m.Size, f)

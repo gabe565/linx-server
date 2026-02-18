@@ -98,6 +98,7 @@ func run(cmd *cobra.Command, _ []string) error {
 				Expiry:       meta.Expiry,
 				DeleteKey:    meta.DeleteKey,
 				AccessKey:    meta.AccessKey,
+				Salt:         meta.Salt,
 			}); err != nil {
 				return fmt.Errorf("failed to put upload: %w", err)
 			}

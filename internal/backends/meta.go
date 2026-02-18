@@ -10,6 +10,7 @@ type Metadata struct {
 	OriginalName string
 	DeleteKey    string
 	AccessKey    string
+	Salt         string
 	Checksum     string
 	Mimetype     string
 	Size         int64

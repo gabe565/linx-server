@@ -119,6 +119,7 @@ func (b Backend) Put(
 		OriginalName: opts.OriginalName,
 		DeleteKey:    opts.DeleteKey,
 		AccessKey:    opts.AccessKey,
+		Salt:         opts.Salt,
 		Mimetype:     mime.String(),
 		Expiry:       opts.Expiry,
 	}

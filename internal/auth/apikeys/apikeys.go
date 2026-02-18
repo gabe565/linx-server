@@ -123,7 +123,7 @@ func (a Middleware) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	result, err := keyhash.CheckList(a.authKeys, key)
+	result, err := keyhash.CheckList(a.authKeys, key, "")
 	if err != nil || !result {
 		http.HandlerFunc(a.badAuthorizationHandler).ServeHTTP(w, r)
 		return

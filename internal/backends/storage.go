@@ -25,6 +25,7 @@ type PutOptions struct {
 	Expiry       time.Time
 	DeleteKey    string
 	AccessKey    string
+	Salt         string
 }
 
 type ListBackend interface {

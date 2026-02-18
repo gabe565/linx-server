@@ -15,6 +15,7 @@ import (
 const (
 	DeleteKey = "deletekey"
 	AccessKey = "accesskey"
+	Salt      = "salt"
 	Expiry    = "expiry"
 )
 
@@ -25,6 +26,9 @@ func mapMetadata(m backends.Metadata) map[string]string {
 	}
 	if m.AccessKey != "" {
 		mapped[AccessKey] = url.QueryEscape(m.AccessKey)
+	}
+	if m.Salt != "" {
+		mapped[Salt] = url.QueryEscape(m.Salt)
 	}
 	if !m.Expiry.IsZero() {
 		mapped[Expiry] = m.Expiry.Format(time.RFC3339)
@@ -56,6 +60,8 @@ func unmapMetadata(info minio.ObjectInfo) (backends.Metadata, error) {
 			m.DeleteKey = util.TryQueryUnescape(v)
 		case AccessKey:
 			m.AccessKey = util.TryQueryUnescape(v)
+		case Salt:
+			m.Salt = util.TryQueryUnescape(v)
 		case "sha256sum":
 			m.Checksum = v
 		case "mimetype":

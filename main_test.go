@@ -325,7 +325,7 @@ func TestPostJSONUploadAccessKeyStoredHashed(t *testing.T) {
 	assert.NotEqual(t, "supersecret", metadata.AccessKey)
 	assert.True(t, strings.HasPrefix(metadata.AccessKey, keyhash.KeyPrefix))
 
-	ok, err := keyhash.CheckWithFallback(metadata.AccessKey, "supersecret")
+	ok, err := keyhash.CheckWithFallback(metadata.AccessKey, "supersecret", metadata.Salt)
 	require.NoError(t, err)
 	assert.True(t, ok)
 }
