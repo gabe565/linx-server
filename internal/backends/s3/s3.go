@@ -130,8 +130,7 @@ func (b Backend) Put(
 		UserMetadata:       mapMetadata(m),
 	})
 	if err != nil {
-		var urlErr *url.Error
-		if errors.As(err, &urlErr) && strings.Contains(err.Error(), "ContentLength=") &&
+		if _, ok := errors.AsType[*url.Error](err); ok && strings.Contains(err.Error(), "ContentLength=") &&
 			strings.Contains(err.Error(), "with Body length") {
 			err = fmt.Errorf("%w: %w", backends.ErrSizeMismatch, err)
 		}

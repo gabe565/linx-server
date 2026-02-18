@@ -461,9 +461,9 @@ func Process(ctx context.Context, upReq Request) (Upload, error) {
 }
 
 func HandleProcessError(w http.ResponseWriter, r *http.Request, err error) {
-	var maxBytes *http.MaxBytesError
+	_, isMaxBytes := errors.AsType[*http.MaxBytesError](err)
 	switch {
-	case errors.As(err, &maxBytes):
+	case isMaxBytes:
 		handlers.ErrorMsg(w, r, http.StatusRequestEntityTooLarge, "File too large")
 	case errors.Is(err, io.EOF):
 		handlers.ErrorMsg(w, r, http.StatusBadRequest, "Unexpected EOF")
