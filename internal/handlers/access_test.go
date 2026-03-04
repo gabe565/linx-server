@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/base64"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -22,43 +23,64 @@ func TestCheckAccessKeyNoProtection(t *testing.T) {
 }
 
 func TestCheckAccessKeyHeaderValid(t *testing.T) {
-	stored, err := keyhash.Hash("supersecret", "test")
+	const key, salt = "supersecret", "mysalt"
+
+	stored, err := keyhash.Hash(key, salt, base64.RawURLEncoding)
 	require.NoError(t, err)
 
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
-	req.Header.Set(AccessKeyHeader, "supersecret")
+	req.Header.Set(AccessKeyHeader, key)
 
-	src, err := CheckAccessKey(req, &backends.Metadata{AccessKey: stored, Salt: "test"})
+	src, err := CheckAccessKey(req, &backends.Metadata{AccessKey: stored, Salt: salt})
 	require.NoError(t, err)
 	assert.Equal(t, AccessKeySourceHeader, src)
 }
 
 func TestCheckAccessKeyCookieHasPriority(t *testing.T) {
-	stored, err := keyhash.Hash("supersecret", "test")
+	const key, salt = "supersecret", "mysalt"
+
+	stored, err := keyhash.Hash(key, salt, base64.RawURLEncoding)
 	require.NoError(t, err)
 
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	req.AddCookie(&http.Cookie{Name: AccessKeyHeader, Value: url.PathEscape("wrong")})
-	req.Header.Set(AccessKeyHeader, "supersecret")
+	req.Header.Set(AccessKeyHeader, key)
 
-	src, err := CheckAccessKey(req, &backends.Metadata{AccessKey: stored, Salt: "test"})
+	src, err := CheckAccessKey(req, &backends.Metadata{AccessKey: stored, Salt: salt})
 	require.ErrorIs(t, err, errInvalidAccessKey)
 	assert.Equal(t, AccessKeySourceCookie, src)
 }
 
 func TestCheckAccessKeyHeaderHasPriorityOverForm(t *testing.T) {
-	stored, err := keyhash.Hash("supersecret", "test")
+	const key, salt = "supersecret", "mysalt"
+
+	stored, err := keyhash.Hash(key, salt, base64.RawURLEncoding)
 	require.NoError(t, err)
 
 	req := httptest.NewRequest(
 		http.MethodPost,
-		"/?"+AccessKeyParam+"=supersecret",
-		strings.NewReader("access_key=supersecret"),
+		"/?"+AccessKeyParam+"="+key,
+		strings.NewReader("access_key="+key),
 	)
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Set(AccessKeyHeader, "wrong")
 
-	src, err := CheckAccessKey(req, &backends.Metadata{AccessKey: stored, Salt: "test"})
+	src, err := CheckAccessKey(req, &backends.Metadata{AccessKey: stored, Salt: salt})
 	require.ErrorIs(t, err, errInvalidAccessKey)
 	assert.Equal(t, AccessKeySourceHeader, src)
+}
+
+func TestCheckAccessKeyStdBase64Fallback(t *testing.T) {
+	const key, salt = "supersecret", "mysalt"
+
+	stored, err := keyhash.Hash(key, salt, base64.StdEncoding)
+	require.NoError(t, err)
+
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req.AddCookie(&http.Cookie{Name: AccessKeyHeader, Value: url.PathEscape("wrong")})
+	req.Header.Set(AccessKeyHeader, key)
+
+	src, err := CheckAccessKey(req, &backends.Metadata{AccessKey: stored, Salt: salt})
+	require.ErrorIs(t, err, errInvalidAccessKey)
+	assert.Equal(t, AccessKeySourceCookie, src)
 }

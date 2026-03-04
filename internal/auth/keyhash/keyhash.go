@@ -17,7 +17,7 @@ const (
 	scryptKeyLen = 32
 )
 
-func Hash(key, salt string) (string, error) {
+func Hash(key, salt string, encoding *base64.Encoding) (string, error) {
 	if salt == "" {
 		salt = scryptSalt
 	}
@@ -26,10 +26,10 @@ func Hash(key, salt string) (string, error) {
 		return "", err
 	}
 
-	return KeyPrefix + base64.StdEncoding.EncodeToString(hashed), nil
+	return KeyPrefix + encoding.EncodeToString(hashed), nil
 }
 
-func IsValidHash(key string) bool {
+func IsValidHash(key string, encoding *base64.Encoding) bool {
 	if len(key) <= len(KeyPrefix)+scryptKeyLen {
 		return false
 	}
@@ -39,11 +39,11 @@ func IsValidHash(key string) bool {
 		return false
 	}
 
-	_, err := base64.StdEncoding.DecodeString(raw)
+	_, err := encoding.DecodeString(raw)
 	return err == nil
 }
 
-func Check(stored, request, salt string) (bool, error) {
+func Check(stored, request, salt string, encoding *base64.Encoding) (bool, error) {
 	if salt == "" {
 		salt = scryptSalt
 	}
@@ -53,7 +53,7 @@ func Check(stored, request, salt string) (bool, error) {
 	}
 
 	raw := strings.TrimPrefix(stored, KeyPrefix)
-	storedHash, err := base64.StdEncoding.DecodeString(raw)
+	storedHash, err := encoding.DecodeString(raw)
 	if err != nil {
 		return false, err
 	}
@@ -61,10 +61,11 @@ func Check(stored, request, salt string) (bool, error) {
 	return subtle.ConstantTimeCompare(storedHash, requestHash) == 1, nil
 }
 
-func CheckList(stored []string, request, salt string) (bool, error) {
+func CheckList(stored []string, request, salt string, encoding *base64.Encoding) (bool, error) {
 	if salt == "" {
 		salt = scryptSalt
 	}
+
 	requestHash, err := scrypt.Key([]byte(request), []byte(salt), scryptN, scryptR, scryptP, scryptKeyLen)
 	if err != nil {
 		return false, err
@@ -73,7 +74,7 @@ func CheckList(stored []string, request, salt string) (bool, error) {
 	for _, entry := range stored {
 		raw := strings.TrimPrefix(entry, KeyPrefix)
 
-		storedHash, err := base64.StdEncoding.DecodeString(raw)
+		storedHash, err := encoding.DecodeString(raw)
 		if err != nil {
 			return false, err
 		}
@@ -88,8 +89,16 @@ func CheckList(stored []string, request, salt string) (bool, error) {
 
 func CheckWithFallback(stored, request, salt string) (bool, error) {
 	if strings.HasPrefix(stored, KeyPrefix) {
-		return Check(stored, request, salt)
+		encoding := determineEncoding(stored)
+		return Check(stored, request, salt, encoding)
 	}
 
 	return stored == request, nil
+}
+
+func determineEncoding(key string) *base64.Encoding {
+	if strings.ContainsAny(key, "+/=") {
+		return base64.StdEncoding
+	}
+	return base64.RawURLEncoding
 }

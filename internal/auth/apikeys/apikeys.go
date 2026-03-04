@@ -2,6 +2,7 @@ package apikeys
 
 import (
 	"bufio"
+	"encoding/base64"
 	"log/slog"
 	"net/http"
 	"os"
@@ -59,7 +60,7 @@ func ReadAuthKeys(authFile string) []string {
 			key = keyhash.KeyPrefix + key
 		}
 
-		if !keyhash.IsValidHash(key) {
+		if !keyhash.IsValidHash(key, base64.StdEncoding) {
 			slog.Warn("Skipping invalid key in authfile", "line", i+1)
 			continue
 		}
@@ -123,7 +124,7 @@ func (a Middleware) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	result, err := keyhash.CheckList(a.authKeys, key, "")
+	result, err := keyhash.CheckList(a.authKeys, key, "", base64.StdEncoding)
 	if err != nil || !result {
 		http.HandlerFunc(a.badAuthorizationHandler).ServeHTTP(w, r)
 		return
