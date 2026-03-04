@@ -14,7 +14,12 @@
           :update-interval="1000"
         >
           <CardDescription class="text-xs tabular-nums">
-            {{ expired ? "expired" : "expires" }} {{ timeAgo }}
+            <Tooltip>
+              <TooltipTrigger>{{ expired ? "expired" : "expires" }} {{ timeAgo }}</TooltipTrigger>
+              <TooltipContent side="right">
+                {{ new Date(expiry).toLocaleString() }}
+              </TooltipContent>
+            </Tooltip>
           </CardDescription>
         </UseTimeAgo>
       </div>

@@ -11,7 +11,12 @@
           :show-second="true"
           :update-interval="1000"
         >
-          expires {{ timeAgo }}
+          <Tooltip>
+            <TooltipTrigger>expires {{ timeAgo }}</TooltipTrigger>
+            <TooltipContent side="right">
+              {{ new Date(item.expiry * 1000).toLocaleString() }}
+            </TooltipContent>
+          </Tooltip>
         </UseTimeAgo>
       </DialogDescription>
     </DialogHeader>
@@ -78,6 +83,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog/index.js";
 import { Table, TableCell, TableRow } from "@/components/ui/table/index.js";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import PasswordInput from "@/components/upload/PasswordInput.vue";
 import { formatBytes } from "@/util/bytes.ts";
 

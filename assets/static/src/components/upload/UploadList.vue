@@ -71,7 +71,12 @@
                   :show-second="true"
                   :update-interval="1000"
                 >
-                  expires {{ timeAgo }}
+                  <Tooltip>
+                    <TooltipTrigger>expires {{ timeAgo }}</TooltipTrigger>
+                    <TooltipContent side="right">
+                      {{ new Date(item.expiry * 1000).toLocaleString() }}
+                    </TooltipContent>
+                  </Tooltip>
                 </UseTimeAgo>
               </CardDescription>
 
