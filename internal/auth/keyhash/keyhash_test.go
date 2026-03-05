@@ -1,7 +1,6 @@
 package keyhash
 
 import (
-	"encoding/base64"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -14,15 +13,15 @@ func TestCheckList(t *testing.T) {
 		KeyPrefix + "vFpNprT9wbHgwAubpvRxYCCpA2FQMAK6hFqPvAGrdZo=",
 	}
 
-	ok, err := CheckList(stored, "", "", base64.StdEncoding)
+	ok, err := CheckList(stored, "", "", false)
 	require.NoError(t, err)
 	assert.False(t, ok)
 
-	ok, err = CheckList(stored, "thisisnotvalid", "", base64.StdEncoding)
+	ok, err = CheckList(stored, "thisisnotvalid", "", false)
 	require.NoError(t, err)
 	assert.False(t, ok)
 
-	ok, err = CheckList(stored, "haPVipRnGJ0QovA9nyqK", "", base64.StdEncoding)
+	ok, err = CheckList(stored, "haPVipRnGJ0QovA9nyqK", "", false)
 	require.NoError(t, err)
 	assert.True(t, ok)
 }
@@ -30,29 +29,29 @@ func TestCheckList(t *testing.T) {
 func TestHashAndCheckRoundTrip(t *testing.T) {
 	const key, salt = "supersecret", "mysalt"
 
-	hash, err := Hash(key, salt, base64.StdEncoding)
+	hash, err := Hash(key, salt, false)
 	require.NoError(t, err)
-	assert.True(t, IsValidHash(hash, base64.StdEncoding))
+	assert.True(t, IsValidHash(hash, false))
 
-	urlHash, err := Hash(key, salt, base64.RawURLEncoding)
+	urlHash, err := Hash(key, salt, true)
 	require.NoError(t, err)
-	assert.True(t, IsValidHash(urlHash, base64.RawURLEncoding))
+	assert.True(t, IsValidHash(urlHash, true))
 
 	assert.NotEqual(t, hash, urlHash)
 
-	ok, err := Check(hash, key, salt, base64.StdEncoding)
+	ok, err := Check(hash, key, salt, false)
 	require.NoError(t, err)
 	assert.True(t, ok)
 
-	ok, err = Check(urlHash, key, salt, base64.RawURLEncoding)
+	ok, err = Check(urlHash, key, salt, true)
 	require.NoError(t, err)
 	assert.True(t, ok)
 
-	ok, err = Check(hash, "wrong", salt, base64.StdEncoding)
+	ok, err = Check(hash, "wrong", salt, false)
 	require.NoError(t, err)
 	assert.False(t, ok)
 
-	ok, err = Check(hash, key, "wrongsalt", base64.StdEncoding)
+	ok, err = Check(hash, key, "wrongsalt", false)
 	require.NoError(t, err)
 	assert.False(t, ok)
 }
@@ -60,10 +59,10 @@ func TestHashAndCheckRoundTrip(t *testing.T) {
 func TestCheckWithFallback(t *testing.T) {
 	const key, salt = "supersecret", "mysalt"
 
-	hash, err := Hash(key, salt, base64.StdEncoding)
+	hash, err := Hash(key, salt, false)
 	require.NoError(t, err)
 
-	urlHash, err := Hash(key, salt, base64.RawURLEncoding)
+	urlHash, err := Hash(key, salt, true)
 	require.NoError(t, err)
 
 	ok, err := CheckWithFallback(hash, key, salt)
@@ -80,6 +79,6 @@ func TestCheckWithFallback(t *testing.T) {
 }
 
 func TestCheckListInvalidHash(t *testing.T) {
-	_, err := CheckList([]string{KeyPrefix + "not-base64!"}, "anything", "", base64.StdEncoding)
+	_, err := CheckList([]string{KeyPrefix + "not-base64!"}, "anything", "", false)
 	require.Error(t, err)
 }

@@ -9,15 +9,16 @@ import (
 )
 
 const (
-	KeyPrefix    = "scrypt$"
-	scryptSalt   = "linx-server"
-	scryptN      = 16384
-	scryptR      = 8
-	scryptP      = 1
-	scryptKeyLen = 32
+	KeyPrefix        = "scrypt$"
+	KeyPrefixURLSafe = "scrypt."
+	scryptSalt       = "linx-server"
+	scryptN          = 16384
+	scryptR          = 8
+	scryptP          = 1
+	scryptKeyLen     = 32
 )
 
-func Hash(key, salt string, encoding *base64.Encoding) (string, error) {
+func Hash(key, salt string, urlSafe bool) (string, error) {
 	if salt == "" {
 		salt = scryptSalt
 	}
@@ -26,15 +27,18 @@ func Hash(key, salt string, encoding *base64.Encoding) (string, error) {
 		return "", err
 	}
 
-	return KeyPrefix + encoding.EncodeToString(hashed), nil
+	prefix, encoding := getEncoding(urlSafe)
+	return prefix + encoding.EncodeToString(hashed), nil
 }
 
-func IsValidHash(key string, encoding *base64.Encoding) bool {
-	if len(key) <= len(KeyPrefix)+scryptKeyLen {
+func IsValidHash(key string, urlSafe bool) bool {
+	prefix, encoding := getEncoding(urlSafe)
+
+	if len(key) <= len(prefix)+scryptKeyLen {
 		return false
 	}
 
-	raw, found := strings.CutPrefix(key, KeyPrefix)
+	raw, found := strings.CutPrefix(key, prefix)
 	if !found {
 		return false
 	}
@@ -43,7 +47,7 @@ func IsValidHash(key string, encoding *base64.Encoding) bool {
 	return err == nil
 }
 
-func Check(stored, request, salt string, encoding *base64.Encoding) (bool, error) {
+func Check(stored, request, salt string, urlSafe bool) (bool, error) {
 	if salt == "" {
 		salt = scryptSalt
 	}
@@ -52,7 +56,9 @@ func Check(stored, request, salt string, encoding *base64.Encoding) (bool, error
 		return false, err
 	}
 
-	raw := strings.TrimPrefix(stored, KeyPrefix)
+	prefix, encoding := getEncoding(urlSafe)
+	raw := strings.TrimPrefix(stored, prefix)
+
 	storedHash, err := encoding.DecodeString(raw)
 	if err != nil {
 		return false, err
@@ -61,7 +67,7 @@ func Check(stored, request, salt string, encoding *base64.Encoding) (bool, error
 	return subtle.ConstantTimeCompare(storedHash, requestHash) == 1, nil
 }
 
-func CheckList(stored []string, request, salt string, encoding *base64.Encoding) (bool, error) {
+func CheckList(stored []string, request, salt string, urlSafe bool) (bool, error) {
 	if salt == "" {
 		salt = scryptSalt
 	}
@@ -71,8 +77,10 @@ func CheckList(stored []string, request, salt string, encoding *base64.Encoding)
 		return false, err
 	}
 
+	prefix, encoding := getEncoding(urlSafe)
+
 	for _, entry := range stored {
-		raw := strings.TrimPrefix(entry, KeyPrefix)
+		raw := strings.TrimPrefix(entry, prefix)
 
 		storedHash, err := encoding.DecodeString(raw)
 		if err != nil {
@@ -88,17 +96,19 @@ func CheckList(stored []string, request, salt string, encoding *base64.Encoding)
 }
 
 func CheckWithFallback(stored, request, salt string) (bool, error) {
-	if strings.HasPrefix(stored, KeyPrefix) {
-		encoding := determineEncoding(stored)
-		return Check(stored, request, salt, encoding)
+	switch {
+	case IsValidHash(stored, true):
+		return Check(stored, request, salt, true)
+	case IsValidHash(stored, false):
+		return Check(stored, request, salt, false)
+	default:
+		return stored == request, nil
 	}
-
-	return stored == request, nil
 }
 
-func determineEncoding(key string) *base64.Encoding {
-	if strings.ContainsAny(key, "+/=") {
-		return base64.StdEncoding
+func getEncoding(urlSafe bool) (string, *base64.Encoding) {
+	if urlSafe {
+		return KeyPrefixURLSafe, base64.RawURLEncoding
 	}
-	return base64.RawURLEncoding
+	return KeyPrefix, base64.StdEncoding
 }

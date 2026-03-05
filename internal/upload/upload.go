@@ -2,7 +2,6 @@ package upload
 
 import (
 	"context"
-	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"io"
@@ -204,7 +203,7 @@ func Remote(w http.ResponseWriter, r *http.Request) {
 				key = password
 			}
 		}
-		result, err := keyhash.CheckList(config.RemoteAuthKeys, key, "", base64.StdEncoding)
+		result, err := keyhash.CheckList(config.RemoteAuthKeys, key, "", false)
 		if err != nil || !result {
 			if config.Default.Auth.Basic {
 				rs := ""
@@ -435,13 +434,13 @@ func Process(ctx context.Context, upReq Request) (Upload, error) {
 	if upReq.deleteKey == "" {
 		upReq.deleteKey = uniuri.NewLen(config.Default.RandomDeleteKeyLength)
 	}
-	hashedDeleteKey, err := keyhash.Hash(upReq.deleteKey, salt, base64.RawURLEncoding)
+	hashedDeleteKey, err := keyhash.Hash(upReq.deleteKey, salt, true)
 	if err != nil {
 		return upload, err
 	}
 	storedAccessKey := upReq.accessKey
 	if storedAccessKey != "" {
-		if storedAccessKey, err = keyhash.Hash(storedAccessKey, salt, base64.RawURLEncoding); err != nil {
+		if storedAccessKey, err = keyhash.Hash(storedAccessKey, salt, true); err != nil {
 			return upload, err
 		}
 	}

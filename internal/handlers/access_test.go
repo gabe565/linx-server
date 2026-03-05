@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"encoding/base64"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -25,7 +24,7 @@ func TestCheckAccessKeyNoProtection(t *testing.T) {
 func TestCheckAccessKeyHeaderValid(t *testing.T) {
 	const key, salt = "supersecret", "mysalt"
 
-	stored, err := keyhash.Hash(key, salt, base64.RawURLEncoding)
+	stored, err := keyhash.Hash(key, salt, true)
 	require.NoError(t, err)
 
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
@@ -39,7 +38,7 @@ func TestCheckAccessKeyHeaderValid(t *testing.T) {
 func TestCheckAccessKeyCookieHasPriority(t *testing.T) {
 	const key, salt = "supersecret", "mysalt"
 
-	stored, err := keyhash.Hash(key, salt, base64.RawURLEncoding)
+	stored, err := keyhash.Hash(key, salt, true)
 	require.NoError(t, err)
 
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
@@ -54,7 +53,7 @@ func TestCheckAccessKeyCookieHasPriority(t *testing.T) {
 func TestCheckAccessKeyHeaderHasPriorityOverForm(t *testing.T) {
 	const key, salt = "supersecret", "mysalt"
 
-	stored, err := keyhash.Hash(key, salt, base64.RawURLEncoding)
+	stored, err := keyhash.Hash(key, salt, true)
 	require.NoError(t, err)
 
 	req := httptest.NewRequest(
@@ -73,7 +72,7 @@ func TestCheckAccessKeyHeaderHasPriorityOverForm(t *testing.T) {
 func TestCheckAccessKeyStdBase64Fallback(t *testing.T) {
 	const key, salt = "supersecret", "mysalt"
 
-	stored, err := keyhash.Hash(key, salt, base64.StdEncoding)
+	stored, err := keyhash.Hash(key, salt, false)
 	require.NoError(t, err)
 
 	req := httptest.NewRequest(http.MethodGet, "/", nil)

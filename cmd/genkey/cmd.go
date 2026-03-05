@@ -1,7 +1,6 @@
 package genkey
 
 import (
-	"encoding/base64"
 	"io"
 
 	"gabe565.com/linx-server/internal/auth/keyhash"
@@ -23,7 +22,7 @@ func New() *cobra.Command {
 func run(cmd *cobra.Command, args []string) error {
 	cmd.SilenceUsage = true
 
-	checkKey, err := keyhash.Hash(args[0], "", base64.StdEncoding)
+	checkKey, err := keyhash.Hash(args[0], "", false)
 	if err != nil {
 		return err
 	}

@@ -323,7 +323,7 @@ func TestPostJSONUploadAccessKeyStoredHashed(t *testing.T) {
 	metadata, err := config.StorageBackend.Head(t.Context(), myjson.Filename)
 	require.NoError(t, err)
 	assert.NotEqual(t, "supersecret", metadata.AccessKey)
-	assert.True(t, strings.HasPrefix(metadata.AccessKey, keyhash.KeyPrefix))
+	assert.True(t, keyhash.IsValidHash(metadata.AccessKey, true))
 
 	ok, err := keyhash.CheckWithFallback(metadata.AccessKey, "supersecret", metadata.Salt)
 	require.NoError(t, err)
