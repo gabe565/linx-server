@@ -19,7 +19,6 @@ import (
 	"gabe565.com/linx-server/internal/server"
 	"gabe565.com/utils/cobrax"
 	"github.com/spf13/cobra"
-	"golang.org/x/sync/errgroup"
 )
 
 func New(options ...cobrax.Option) *cobra.Command {
@@ -63,47 +62,55 @@ func run(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	ctx, cancel := signal.NotifyContext(cmd.Context(), os.Interrupt, syscall.SIGTERM, syscall.SIGQUIT)
-	defer cancel()
-
 	srv := &http.Server{
 		Addr:              config.Default.Bind,
 		Handler:           mux,
 		ReadHeaderTimeout: 3 * time.Second,
 	}
 
-	group, ctx := errgroup.WithContext(ctx)
+	errCh := make(chan error, 1)
 
-	group.Go(func() error {
-		<-ctx.Done()
-		timeout := config.Default.GracefulShutdown.Duration
-		slog.Info("Gracefully shutting down", "timeout", timeout)
-		ctx, cancel := context.WithTimeout(context.Background(), timeout)
-		defer cancel()
-		return srv.Shutdown(ctx)
-	})
-
-	group.Go(func() error {
+	go func() {
+		var err error
 		if config.Default.TLS.Cert != "" {
 			slog.Info("Serving over https", "address", config.Default.Bind)
-			return srv.ListenAndServeTLS(config.Default.TLS.Cert, config.Default.TLS.Key)
+			err = srv.ListenAndServeTLS(config.Default.TLS.Cert, config.Default.TLS.Key)
+		} else {
+			slog.Info("Serving over http", "address", config.Default.Bind)
+			err = srv.ListenAndServe()
 		}
-		slog.Info("Serving over http", "address", config.Default.Bind)
-		return srv.ListenAndServe()
-	})
+		if err != nil {
+			errCh <- err
+		}
+	}()
+
+	ctx, cancel := signal.NotifyContext(cmd.Context(), os.Interrupt, syscall.SIGTERM, syscall.SIGQUIT)
+	defer cancel()
 
 	if config.Default.CleanupEvery.Duration > 0 {
 		if backend, ok := config.StorageBackend.(backends.ListBackend); ok {
-			group.Go(func() error {
+			go func() {
 				cleanup.PeriodicCleanup(ctx, backend, config.Default.CleanupEvery.Duration, config.Default.NoLogs)
-				return nil
-			})
+			}()
 		}
 	}
 
-	err = group.Wait()
-	if errors.Is(err, http.ErrServerClosed) {
-		err = nil
+	select {
+	case <-ctx.Done():
+		timeout := config.Default.GracefulShutdown.Duration
+
+		ctx, cancelTimeout := context.WithTimeout(context.Background(), timeout)
+		defer cancelTimeout()
+
+		ctx, cancelSignal := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM, syscall.SIGQUIT)
+		defer cancelSignal()
+
+		slog.Info("Gracefully stopping server", "timeout", timeout)
+		if err := srv.Shutdown(ctx); err != nil && !errors.Is(err, context.DeadlineExceeded) {
+			return err
+		}
+		return nil
+	case err := <-errCh:
+		return err
 	}
-	return err
 }
