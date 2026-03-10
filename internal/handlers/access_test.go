@@ -14,7 +14,7 @@ import (
 )
 
 func TestCheckAccessKeyNoProtection(t *testing.T) {
-	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/", nil)
 
 	src, err := CheckAccessKey(req, &backends.Metadata{})
 	require.NoError(t, err)
@@ -27,7 +27,7 @@ func TestCheckAccessKeyHeaderValid(t *testing.T) {
 	stored, err := keyhash.Hash(key, salt, true)
 	require.NoError(t, err)
 
-	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/", nil)
 	req.Header.Set(AccessKeyHeader, key)
 
 	src, err := CheckAccessKey(req, &backends.Metadata{AccessKey: stored, Salt: salt})
@@ -41,7 +41,7 @@ func TestCheckAccessKeyCookieHasPriority(t *testing.T) {
 	stored, err := keyhash.Hash(key, salt, true)
 	require.NoError(t, err)
 
-	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/", nil)
 	req.AddCookie(&http.Cookie{Name: AccessKeyHeader, Value: url.PathEscape("wrong")})
 	req.Header.Set(AccessKeyHeader, key)
 
@@ -56,7 +56,7 @@ func TestCheckAccessKeyHeaderHasPriorityOverForm(t *testing.T) {
 	stored, err := keyhash.Hash(key, salt, true)
 	require.NoError(t, err)
 
-	req := httptest.NewRequest(
+	req := httptest.NewRequestWithContext(t.Context(),
 		http.MethodPost,
 		"/?"+AccessKeyParam+"="+key,
 		strings.NewReader("access_key="+key),
@@ -75,7 +75,7 @@ func TestCheckAccessKeyStdBase64Fallback(t *testing.T) {
 	stored, err := keyhash.Hash(key, salt, false)
 	require.NoError(t, err)
 
-	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/", nil)
 	req.AddCookie(&http.Cookie{Name: AccessKeyHeader, Value: url.PathEscape("wrong")})
 	req.Header.Set(AccessKeyHeader, key)
 

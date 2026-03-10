@@ -58,6 +58,7 @@ linters:
     - loggercheck
     - makezero
     - mirror
+    - modernize
     - musttag
     - nakedret
     - nestif
@@ -158,9 +159,6 @@ linters:
       - legacy
       - std-error-handling
     rules:
-      - linters:
-          - revive
-        text: var-naming
       - path: _test\.go
         linters:
           - dupl

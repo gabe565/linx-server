@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"io"
 	"os"
-	"path/filepath"
 	"time"
 
 	"gabe565.com/linx-server/cmd"
@@ -35,6 +34,14 @@ func main() {
 		panic(err)
 	}
 
+	root, err := os.OpenRoot("completions")
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		_ = root.Close()
+	}()
+
 	rootCmd := cmd.New()
 	name := rootCmd.Name()
 	var buf bytes.Buffer
@@ -45,7 +52,9 @@ func main() {
 			panic(err)
 		}
 
-		f, err := os.Create(filepath.Join("completions", name+"."+string(shell)))
+		outPath := name + "." + string(shell)
+
+		f, err := root.Create(outPath)
 		if err != nil {
 			panic(err)
 		}
@@ -58,7 +67,7 @@ func main() {
 			panic(err)
 		}
 
-		if err := os.Chtimes(f.Name(), date, date); err != nil {
+		if err := root.Chtimes(outPath, date, date); err != nil {
 			panic(err)
 		}
 	}

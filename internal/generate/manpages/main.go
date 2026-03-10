@@ -5,7 +5,6 @@ import (
 	"io"
 	"io/fs"
 	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -35,6 +34,14 @@ func main() {
 		panic(err)
 	}
 
+	root, err := os.OpenRoot("manpages")
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		_ = root.Close()
+	}()
+
 	rootCmd := cmd.New()
 	rootName := rootCmd.Name()
 
@@ -55,17 +62,19 @@ func main() {
 		panic(err)
 	}
 
-	if err := filepath.Walk("manpages", func(path string, info fs.FileInfo, err error) error {
-		if err != nil || info.IsDir() {
+	if err := fs.WalkDir(root.FS(), ".", func(path string, d fs.DirEntry, err error) error {
+		if err != nil || d.IsDir() {
 			return err
 		}
 
-		in, err := os.Open(path)
+		in, err := root.Open(path)
 		if err != nil {
 			return err
 		}
 
-		out, err := os.Create(path + ".gz")
+		outPath := path + ".gz"
+
+		out, err := root.Create(outPath)
 		if err != nil {
 			return err
 		}
@@ -78,7 +87,7 @@ func main() {
 		if err := in.Close(); err != nil {
 			return err
 		}
-		if err := os.Remove(path); err != nil {
+		if err := root.Remove(path); err != nil {
 			return err
 		}
 
@@ -86,6 +95,10 @@ func main() {
 			return err
 		}
 		if err := out.Close(); err != nil {
+			return err
+		}
+
+		if err := root.Chtimes(outPath, date, date); err != nil {
 			return err
 		}
 

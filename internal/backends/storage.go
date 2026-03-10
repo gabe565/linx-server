@@ -24,7 +24,7 @@ type PutOptions struct {
 	OriginalName string
 	Expiry       time.Time
 	DeleteKey    string
-	AccessKey    string //nolint:gosec
+	AccessKey    string
 	Salt         string
 }
 

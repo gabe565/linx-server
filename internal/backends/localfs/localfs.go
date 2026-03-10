@@ -24,7 +24,7 @@ type Backend struct {
 type MetadataJSON struct {
 	OriginalName string          `json:"original_name,omitzero"`
 	DeleteKey    string          `json:"delete_key"`
-	AccessKey    string          `json:"access_key,omitzero"` //nolint:gosec
+	AccessKey    string          `json:"access_key,omitzero"`
 	Salt         string          `json:"salt,omitzero"`
 	Sha256sum    string          `json:"sha256sum,omitzero"`
 	Checksum     string          `json:"checksum"`
@@ -196,6 +196,7 @@ func (b Backend) writeMetadata(key string, metadata backends.Metadata) error {
 		}
 	}()
 
+	//nolint:gosec // Metadata includes user-provided fields and hashed keys by design.
 	if err = json.NewEncoder(f).Encode(mjson); err != nil {
 		return err
 	}

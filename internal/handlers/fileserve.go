@@ -178,8 +178,12 @@ func CheckFile(ctx context.Context, filename string) (backends.Metadata, error) 
 	}
 
 	if metadata.Expired() {
+		//nolint:gosec // Intentional async cleanup; delete should not block the response.
 		go func() {
-			if err := config.StorageBackend.Delete(context.Background(), filename); err != nil {
+			ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+			defer cancel()
+
+			if err := config.StorageBackend.Delete(ctx, filename); err != nil {
 				slog.Error("Failed to delete expired file", "path", filename, "error", err)
 			}
 		}()

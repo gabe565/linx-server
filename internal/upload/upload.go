@@ -65,7 +65,7 @@ type JSONResponse struct {
 	DirectURL    string `json:"direct_url"`
 	Filename     string `json:"filename"`
 	DeleteKey    string `json:"delete_key"`
-	AccessKey    string `json:"access_key"` //nolint:gosec
+	AccessKey    string `json:"access_key"`
 	Expiry       string `json:"expiry"`
 	Size         string `json:"size"`
 	Mimetype     string `json:"mimetype"`
@@ -164,6 +164,7 @@ func POSTHandler(w http.ResponseWriter, r *http.Request) {
 
 	if strings.EqualFold("application/json", r.Header.Get("Accept")) {
 		w.Header().Set("Content-Type", "application/json")
+		//nolint:gosec // JSON response intentionally includes keys for client use.
 		_ = json.NewEncoder(w).Encode(upload.JSONResponse(r))
 	} else {
 		http.Redirect(w, r, headers.GetFileURL(r, upload.Filename).String(), http.StatusSeeOther)
@@ -187,6 +188,7 @@ func PUTHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Vary", "Accept")
 	if strings.EqualFold("application/json", r.Header.Get("Accept")) {
 		w.Header().Set("Content-Type", "application/json")
+		//nolint:gosec // JSON response intentionally includes keys for client use.
 		_ = json.NewEncoder(w).Encode(upload.JSONResponse(r))
 	} else {
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
@@ -194,6 +196,7 @@ func PUTHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+//nolint:gosec // Upload routes are wrapped with server.LimitBodySize(MaxSize).
 func Remote(w http.ResponseWriter, r *http.Request) {
 	if config.Default.Auth.RemoteFile != "" {
 		key := util.TryPathUnescape(r.FormValue("key"))
@@ -234,6 +237,7 @@ func Remote(w http.ResponseWriter, r *http.Request) {
 		allowZeroSize: true,
 	}
 
+	//nolint:gosec // Endpoint is disabled by default and auth is recommended.
 	req, err := http.NewRequestWithContext(r.Context(), http.MethodGet, grabURL.String(), nil)
 	if err != nil {
 		handlers.ErrorMsg(w, r, http.StatusInternalServerError, "Failed to create request")
@@ -291,6 +295,7 @@ func Remote(w http.ResponseWriter, r *http.Request) {
 
 	if strings.EqualFold("application/json", r.Header.Get("Accept")) {
 		w.Header().Set("Content-Type", "application/json")
+		//nolint:gosec // JSON response intentionally includes keys for client use.
 		_ = json.NewEncoder(w).Encode(upload.JSONResponse(r))
 	} else {
 		var u *url.URL

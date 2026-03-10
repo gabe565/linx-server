@@ -100,11 +100,16 @@ func FileTorrentHandler(w http.ResponseWriter, r *http.Request) {
 	}()
 
 	if metadata.Expired() {
+		//nolint:gosec // Intentional async cleanup; delete should not block the response.
 		go func() {
-			if err := config.StorageBackend.Delete(context.Background(), fileName); err != nil {
+			ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+			defer cancel()
+
+			if err := config.StorageBackend.Delete(ctx, fileName); err != nil {
 				slog.Error("Failed to delete expired file", "path", fileName)
 			}
 		}()
+
 		handlers.ErrorMsg(w, r, http.StatusNotFound, "File not found")
 		return
 	}
