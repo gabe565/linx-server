@@ -3,7 +3,7 @@ module gabe565.com/linx-server
 go 1.26.0
 
 require (
-	gabe565.com/utils v0.0.0-20251001054419-00a1424779a7
+	gabe565.com/utils v0.0.0-20260310002041-b3b94f17b36b
 	github.com/dchest/uniuri v1.2.0
 	github.com/dustin/go-humanize v1.0.1
 	github.com/gabriel-vasile/mimetype v1.4.13
