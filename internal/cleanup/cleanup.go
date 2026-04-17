@@ -42,18 +42,18 @@ func Cleanup(ctx context.Context, backend backends.ListBackend, noLogs bool) err
 }
 
 func PeriodicCleanup(ctx context.Context, backend backends.ListBackend, d time.Duration, noLogs bool) {
-	ticker := time.NewTicker(time.Second)
+	ticker := time.NewTicker(d)
 	defer ticker.Stop()
+
 	for {
+		if err := Cleanup(ctx, backend, noLogs); err != nil {
+			slog.Error("Cleanup failed", "error", err)
+		}
+
 		select {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			ticker.Reset(d)
-			if err := Cleanup(ctx, backend, noLogs); err != nil {
-				slog.Error("Cleanup failed", "error", err)
-			}
-			continue
 		}
 	}
 }
