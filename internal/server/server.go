@@ -146,6 +146,7 @@ func Setup() (*chi.Mux, error) {
 		if !config.Default.NoTorrent {
 			r.Get("/torrent/{name}", torrent.FileTorrentHandler)
 			r.Get("/{name}/torrent", func(w http.ResponseWriter, r *http.Request) {
+				//nolint:gosec // Redirect target is a relative same-origin path.
 				http.Redirect(w, r, "/torrent/"+chi.URLParam(r, "name"), http.StatusMovedPermanently)
 			})
 		}

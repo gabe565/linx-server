@@ -100,6 +100,7 @@ func CheckAccessKey(r *http.Request, metadata *backends.Metadata) (AccessKeySour
 
 func SetAccessKeyCookies(w http.ResponseWriter, r *http.Request, fileName, value string, expires time.Time) {
 	u := headers.GetSiteURL(r)
+	//nolint:gosec // Secure is conditional because linx supports both http and https deployments.
 	cookie := http.Cookie{
 		Name:     AccessKeyHeader,
 		Value:    url.PathEscape(value),
@@ -107,6 +108,7 @@ func SetAccessKeyCookies(w http.ResponseWriter, r *http.Request, fileName, value
 		Domain:   u.Hostname(),
 		Expires:  expires,
 		Secure:   u.Scheme == "https",
+		SameSite: http.SameSiteLaxMode,
 	}
 
 	cookie.Path = path.Join(u.Path, fileName)

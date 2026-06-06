@@ -82,6 +82,7 @@ func FileServeHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if !ok {
+			//nolint:gosec // GetFileURL builds a same-origin URL from the configured site URL.
 			http.Redirect(w, r, headers.GetFileURL(r, fileName).String(), http.StatusSeeOther)
 			return
 		}

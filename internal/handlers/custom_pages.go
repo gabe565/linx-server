@@ -51,6 +51,7 @@ func CustomPage(dir string) http.HandlerFunc {
 		}()
 
 		w.Header().Set("Cache-Control", "public, no-cache")
+		//nolint:gosec // os.OpenRoot confines FS access to the configured directory.
 		http.ServeFileFS(w, r, root.FS(), name)
 	}
 }

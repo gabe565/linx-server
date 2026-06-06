@@ -167,6 +167,7 @@ func POSTHandler(w http.ResponseWriter, r *http.Request) {
 		//nolint:gosec // JSON response intentionally includes keys for client use.
 		_ = json.NewEncoder(w).Encode(upload.JSONResponse(r))
 	} else {
+		//nolint:gosec // GetFileURL builds a same-origin URL from the configured site URL.
 		http.Redirect(w, r, headers.GetFileURL(r, upload.Filename).String(), http.StatusSeeOther)
 	}
 }

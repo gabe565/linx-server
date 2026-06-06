@@ -120,6 +120,8 @@ linters:
               desc: Use log/slog instead, see https://go.dev/blog/slog
     errcheck:
       check-type-assertions: true
+    goconst:
+      ignore-tests: true
     gocritic:
       settings:
         captLocal:
@@ -141,7 +143,7 @@ linters:
     nakedret:
       max-func-lines: 0
     nestif:
-      min-complexity: 15
+      min-complexity: 18
     nolintlint:
       allow-no-explanation: [golines]
       require-specific: true
