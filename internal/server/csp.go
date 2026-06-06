@@ -1,21 +1,19 @@
 package server
 
 import (
+	"context"
+	"log/slog"
 	"net/http"
-	"strings"
 
 	"gabe565.com/linx-server/internal/config"
+	"gabe565.com/linx-server/internal/csp"
 	"gabe565.com/linx-server/internal/template"
 	"gabe565.com/linx-server/internal/util"
 )
 
 const (
-	DefaultCSP    = "default-src 'self' " + defaultSrcKey + "; img-src 'self' data:; style-src 'self' 'unsafe-inline'; frame-ancestors 'none';"
-	defaultSrcKey = "$DEFAULT_SRC"
-
-	cspHeader          = "Content-Security-Policy"
-	rpHeader           = "Referrer-Policy"
-	frameOptionsHeader = "X-Frame-Options"
+	cspHeader = "Content-Security-Policy"
+	rpHeader  = "Referrer-Policy"
 )
 
 type CSPMiddleware struct {
@@ -26,7 +24,6 @@ type CSPMiddleware struct {
 type Options struct {
 	Policy         string
 	ReferrerPolicy string
-	Frame          string
 }
 
 func (c CSPMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -40,8 +37,6 @@ func (c CSPMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add(rpHeader, c.opts.ReferrerPolicy)
 	}
 
-	w.Header().Set(frameOptionsHeader, c.opts.Frame)
-
 	c.h.ServeHTTP(w, r)
 }
 
@@ -52,17 +47,48 @@ func NewCSPMiddleware(o Options) func(http.Handler) http.Handler {
 	return fn
 }
 
-func GenerateCSP() string {
+func GenerateCSP() csp.CSP {
 	conf, err := template.ConfigBytes()
 	if err != nil {
 		panic(err)
 	}
 
-	defaultSrc := util.SubresourceIntegrity(conf)
-
+	defaultSrc := []string{csp.Self, util.SubresourceIntegrity(conf)}
 	if u := config.Default.ViteURL; u != "" {
-		defaultSrc += " " + u + " ws:"
+		defaultSrc = append(defaultSrc, u, "ws:")
 	}
 
-	return strings.Replace(DefaultCSP, defaultSrcKey, defaultSrc, 1)
+	policy := csp.CSP{
+		"default-src":     defaultSrc,
+		"img-src":         {csp.Self, csp.Data},
+		"style-src":       {csp.Self, csp.UnsafeInline},
+		"frame-ancestors": {csp.None},
+	}
+
+	if origin := s3PresignedOrigin(); origin != "" {
+		policy["img-src"] = append(policy["img-src"], origin)
+		policy["media-src"] = []string{csp.Self, origin}
+		policy["object-src"] = []string{csp.Self, origin}
+		policy["connect-src"] = []string{csp.Self, origin}
+	}
+
+	return policy
+}
+
+func s3PresignedOrigin() string {
+	if !config.Default.S3.PresignedURLs {
+		return ""
+	}
+	ctx := context.Background()
+	backend, err := config.Default.NewS3Backend(ctx)
+	if err != nil {
+		slog.Warn("Could not initialize S3 backend to probe presigned origin", "error", err)
+		return ""
+	}
+	origin, err := backend.PresignedOrigin(ctx)
+	if err != nil {
+		slog.Warn("Could not probe presigned URL origin for CSP", "error", err)
+		return ""
+	}
+	return origin
 }

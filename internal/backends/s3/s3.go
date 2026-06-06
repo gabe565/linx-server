@@ -18,11 +18,15 @@ import (
 	"github.com/minio/minio-go/v7/pkg/credentials"
 )
 
-var _ backends.ListBackend = Backend{}
+var (
+	_ backends.ListBackend      = Backend{}
+	_ backends.PresignedBackend = Backend{}
+)
 
 type Backend struct {
-	bucket string
-	client *minio.Client
+	bucket          string
+	client          *minio.Client
+	presignedExpiry time.Duration
 }
 
 func (b Backend) Delete(ctx context.Context, key string) error {
@@ -74,6 +78,38 @@ func (b Backend) Get(ctx context.Context, key string) (backends.Metadata, io.Rea
 	}
 
 	return m, obj, nil
+}
+
+func (b Backend) GetPresignedURL(ctx context.Context, key, contentDisposition string) (*url.URL, error) {
+	meta, err := b.Head(ctx, key)
+	if err != nil {
+		return nil, err
+	}
+
+	if meta.Salt == "" {
+		switch {
+		case meta.AccessKey != "":
+			return nil, fmt.Errorf("%w: legacy access key", backends.ErrPresignedUnsupported)
+		case meta.DeleteKey != "":
+			return nil, fmt.Errorf("%w: legacy delete key", backends.ErrPresignedUnsupported)
+		}
+	}
+
+	var reqParams url.Values
+	if contentDisposition != "" {
+		reqParams = url.Values{"response-content-disposition": []string{contentDisposition}}
+	}
+
+	expires := b.presignedExpiry
+	if !meta.Expiry.IsZero() {
+		expires = min(expires, time.Until(meta.Expiry))
+	}
+
+	u, err := b.client.PresignedGetObject(ctx, b.bucket, key, expires, reqParams)
+	if err != nil {
+		return nil, err
+	}
+	return u, nil
 }
 
 func (b Backend) ServeFile(key string, w http.ResponseWriter, r *http.Request) error {
@@ -180,10 +216,19 @@ func (b Backend) List(ctx context.Context) iter.Seq2[string, error] {
 	}
 }
 
+func (b Backend) PresignedOrigin(ctx context.Context) (string, error) {
+	u, err := b.client.PresignedGetObject(ctx, b.bucket, "_probe", time.Minute, nil)
+	if err != nil {
+		return "", err
+	}
+	return u.Scheme + "://" + u.Host, nil
+}
+
 func New(
 	_ context.Context,
 	bucket, region, endpoint string,
 	forcePathStyle bool,
+	presignedExpiry time.Duration,
 ) (Backend, error) {
 	u, err := url.Parse(endpoint)
 	if err != nil {
@@ -206,5 +251,5 @@ func New(
 	if err != nil {
 		return Backend{}, err
 	}
-	return Backend{bucket: bucket, client: client}, nil
+	return Backend{bucket: bucket, client: client, presignedExpiry: presignedExpiry}, nil
 }

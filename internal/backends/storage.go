@@ -6,6 +6,7 @@ import (
 	"io"
 	"iter"
 	"net/http"
+	"net/url"
 	"time"
 )
 
@@ -20,6 +21,17 @@ type StorageBackend interface {
 	Size(ctx context.Context, key string) (int64, error)
 }
 
+type ListBackend interface {
+	StorageBackend
+	List(ctx context.Context) iter.Seq2[string, error]
+}
+
+type PresignedBackend interface {
+	StorageBackend
+	PresignedOrigin(ctx context.Context) (string, error)
+	GetPresignedURL(ctx context.Context, key, contentDisposition string) (*url.URL, error)
+}
+
 type PutOptions struct {
 	OriginalName string
 	Expiry       time.Time
@@ -28,13 +40,9 @@ type PutOptions struct {
 	Salt         string
 }
 
-type ListBackend interface {
-	StorageBackend
-	List(ctx context.Context) iter.Seq2[string, error]
-}
-
 var (
-	ErrNotFound     = errors.New("file not found")
-	ErrFileEmpty    = errors.New("empty file")
-	ErrSizeMismatch = errors.New("size mismatch")
+	ErrNotFound             = errors.New("file not found")
+	ErrFileEmpty            = errors.New("empty file")
+	ErrSizeMismatch         = errors.New("size mismatch")
+	ErrPresignedUnsupported = errors.New("file does not support signed URLs")
 )

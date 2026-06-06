@@ -58,10 +58,12 @@ type Auth struct {
 }
 
 type S3 struct {
-	Endpoint       string `toml:"endpoint"`
-	Region         string `toml:"region"`
-	Bucket         string `toml:"bucket"`
-	ForcePathStyle bool   `toml:"force-path-style" comment:"Force path-style addressing for S3 (e.g. https://s3.amazonaws.com/linx/example.txt)"`
+	Endpoint        string   `toml:"endpoint"`
+	Region          string   `toml:"region"`
+	Bucket          string   `toml:"bucket"`
+	ForcePathStyle  bool     `toml:"force-path-style" comment:"Force path-style addressing for S3 (e.g. https://s3.amazonaws.com/linx/example.txt)"`
+	PresignedURLs   bool     `toml:"presigned-urls"   comment:"Serve presigned S3 URLs in file metadata for direct bucket fetches. Requires bucket CORS.\nFaster, but exposes hashed access/delete keys in S3 response headers\n(safe with random keys; weak user-set keys are offline-brute-forceable)."`
+	PresignedExpiry Duration `toml:"presigned-expiry" comment:"Maximum expiration time for presigned URLs"`
 }
 
 type Limit struct {
@@ -77,7 +79,6 @@ type Header struct {
 	AddHeaders         map[string]string `toml:"add-headers,inline"`
 	ReferrerPolicy     string            `toml:"referrer-policy"`
 	FileReferrerPolicy string            `toml:"file-referrer-policy"`
-	XFrameOptions      string            `toml:"x-frame-options"`
 }
 
 func New() *Config {
@@ -95,6 +96,9 @@ func New() *Config {
 		RandomDeleteKeyLength: 32,
 		KeepOriginalFilename:  true,
 		CleanupEvery:          Duration{time.Hour},
+		S3: S3{
+			PresignedExpiry: Duration{6 * time.Hour},
+		},
 		Limit: Limit{
 			UploadMaxRequests: 5,
 			UploadInterval:    Duration{15 * time.Second},
@@ -105,7 +109,6 @@ func New() *Config {
 			AddHeaders:         map[string]string{},
 			ReferrerPolicy:     "same-origin",
 			FileReferrerPolicy: "same-origin",
-			XFrameOptions:      "SAMEORIGIN",
 		},
 	}
 	if os.Getenv("LINX_DEFAULTS") == "container" {

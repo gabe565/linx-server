@@ -60,6 +60,12 @@ custom-pages-path = ''
   bucket = ''
   # Force path-style addressing for S3 (e.g. https://s3.amazonaws.com/linx/example.txt)
   force-path-style = false
+  # Serve presigned S3 URLs in file metadata for direct bucket fetches. Requires bucket CORS.
+  # Faster, but exposes hashed access/delete keys in S3 response headers
+  # (safe with random keys; weak user-set keys are offline-brute-forceable).
+  presigned-urls = false
+  # Maximum expiration time for presigned URLs
+  presigned-expiry = '6h0m0s'
 
 # Configure rate limits
 [limit]
@@ -75,4 +81,3 @@ custom-pages-path = ''
   add-headers = {}
   referrer-policy = 'same-origin'
   file-referrer-policy = 'same-origin'
-  x-frame-options = 'SAMEORIGIN'

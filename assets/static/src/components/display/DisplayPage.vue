@@ -107,6 +107,7 @@ type DisplayMeta = Record<string, any> & {
   original_name?: string;
   language?: string;
   direct_url: string;
+  download_url: string;
   archive_files?: string[];
   expiry?: number;
 };
@@ -169,13 +170,17 @@ const { state, isLoading, error, execute } = useAsyncState<DisplayState>(
       meta.size < 512 * 1024 &&
       (mode === Modes.TEXT || mode === Modes.MARKDOWN || mode === Modes.CSV)
     ) {
+      // Presigned URLs encode auth in the query string and live on a different
+      // origin; sending the access-key header or credentials cross-origin breaks
+      // CORS preflight.
+      const sameOrigin = new URL(meta.direct_url, location.href).origin === location.origin;
       try {
         const res = await Promise.all([
           axios.get(meta.direct_url, {
-            headers: { "Linx-Access-Key": encAccessKey.value },
+            headers: sameOrigin ? { "Linx-Access-Key": encAccessKey.value } : {},
             responseType: "text",
             validateStatus: (s) => s === 200,
-            withCredentials: true,
+            withCredentials: sameOrigin,
           }),
           loadLanguage(meta.language),
         ]);

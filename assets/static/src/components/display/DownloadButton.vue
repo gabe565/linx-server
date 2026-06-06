@@ -3,7 +3,7 @@
     <Button
       :as="disabled ? 'button' : 'a'"
       variant="outline"
-      :href="`${meta.direct_url}?download`"
+      :href="meta.download_url"
       :download="meta.original_name || meta.filename"
       class="flex-1"
       v-bind="$attrs"

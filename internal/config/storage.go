@@ -18,7 +18,7 @@ func (c *Config) NewStorageBackend(ctx context.Context) (backends.StorageBackend
 }
 
 func (c *Config) NewS3Backend(ctx context.Context) (s3.Backend, error) {
-	return s3.New(ctx, c.S3.Bucket, c.S3.Region, c.S3.Endpoint, c.S3.ForcePathStyle)
+	return s3.New(ctx, c.S3.Bucket, c.S3.Region, c.S3.Endpoint, c.S3.ForcePathStyle, c.S3.PresignedExpiry.Duration)
 }
 
 func (c *Config) NewLocalBackend() (localfs.Backend, error) {

@@ -86,9 +86,8 @@ func Setup() (*chi.Mux, error) {
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.GetHead)
 	r.Use(NewCSPMiddleware(Options{
-		Policy:         GenerateCSP(),
+		Policy:         GenerateCSP().String(),
 		ReferrerPolicy: config.Default.Header.ReferrerPolicy,
-		Frame:          config.Default.Header.XFrameOptions,
 	}))
 	r.Use(headers.AddHeaders(config.Default.Header.AddHeaders))
 

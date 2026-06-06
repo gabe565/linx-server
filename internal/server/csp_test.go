@@ -4,10 +4,10 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
-	"strings"
 	"testing"
 
 	"gabe565.com/linx-server/internal/config"
+	"gabe565.com/linx-server/internal/csp"
 	"gabe565.com/linx-server/internal/template"
 	"gabe565.com/linx-server/internal/util"
 	"gabe565.com/utils/bytefmt"
@@ -16,10 +16,7 @@ import (
 )
 
 func TestContentSecurityPolicy(t *testing.T) {
-	const (
-		wantReferrerPolicy = "strict-origin-when-cross-origin"
-		wantXFrameOptions  = "SAMEORIGIN"
-	)
+	const wantReferrerPolicy = "strict-origin-when-cross-origin"
 
 	// config.Default.SiteURL = "http://linx.example.org/"
 	config.Default.SiteURL.URL = url.URL{Scheme: "http", Host: "linx.example.org"}
@@ -30,7 +27,6 @@ func TestContentSecurityPolicy(t *testing.T) {
 	config.Default.SiteName = "linx"
 	config.Default.SelifPath = "/selif"
 	config.Default.Header.ReferrerPolicy = wantReferrerPolicy
-	config.Default.Header.XFrameOptions = wantXFrameOptions
 	r, err := Setup()
 	require.NoError(t, err)
 
@@ -44,10 +40,15 @@ func TestContentSecurityPolicy(t *testing.T) {
 	conf, err := template.ConfigBytes()
 	require.NoError(t, err)
 
+	wantCSP := csp.CSP{
+		"default-src":     {csp.Self, util.SubresourceIntegrity(conf)},
+		"img-src":         {csp.Self, csp.Data},
+		"style-src":       {csp.Self, csp.UnsafeInline},
+		"frame-ancestors": {csp.None},
+	}.String()
 	testCSPHeaders := map[string]string{
-		"Content-Security-Policy": strings.Replace(DefaultCSP, defaultSrcKey, util.SubresourceIntegrity(conf), 1),
+		"Content-Security-Policy": wantCSP,
 		"Referrer-Policy":         wantReferrerPolicy,
-		"X-Frame-Options":         wantXFrameOptions,
 	}
 
 	for k, v := range testCSPHeaders {

@@ -16,6 +16,7 @@ import (
 	"gabe565.com/linx-server/assets"
 	"gabe565.com/linx-server/internal/backends"
 	"gabe565.com/linx-server/internal/config"
+	"gabe565.com/linx-server/internal/csp"
 	"gabe565.com/linx-server/internal/csrf"
 	"gabe565.com/linx-server/internal/headers"
 	"gabe565.com/linx-server/internal/template"
@@ -23,7 +24,15 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-const FileCSP = "default-src 'none'; img-src 'self'; object-src 'self'; media-src 'self'; style-src 'self' 'unsafe-inline';"
+//nolint:gochecknoglobals
+var FileCSP = csp.CSP{
+	"default-src":     {csp.None},
+	"img-src":         {csp.Self},
+	"object-src":      {csp.Self},
+	"media-src":       {csp.Self},
+	"style-src":       {csp.Self, csp.UnsafeInline},
+	"frame-ancestors": {csp.Self},
+}.String()
 
 func FileServeHandler(w http.ResponseWriter, r *http.Request) {
 	fileName := chi.URLParam(r, "name")
@@ -33,7 +42,7 @@ func FileServeHandler(w http.ResponseWriter, r *http.Request) {
 		if errors.Is(err, backends.ErrNotFound) {
 			ErrorMsg(w, r, http.StatusNotFound, "File not found")
 		} else {
-			slog.Error("Corrupt metadata", "path", fileName, "error", err) //nolint:gosec
+			slog.Error("Corrupt metadata", "path", fileName, "error", err)
 			ErrorMsg(w, r, http.StatusInternalServerError, "Corrupt metadata")
 		}
 		return
@@ -99,7 +108,7 @@ func FileServeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := config.StorageBackend.ServeFile(fileName, w, r); err != nil {
-		slog.Error("Failed to serve file", "path", fileName, "error", err) //nolint:gosec
+		slog.Error("Failed to serve file", "path", fileName, "error", err)
 		Error(w, r, http.StatusInternalServerError)
 		return
 	}
@@ -144,7 +153,7 @@ func ServeAsset(w http.ResponseWriter, r *http.Request, status int, opts ...temp
 		var ok bool
 		file, ok = asset.(io.ReadSeeker)
 		if !ok {
-			slog.Error("Static asset is not a ReadSeeker", "path", path) //nolint:gosec
+			slog.Error("Static asset is not a ReadSeeker", "path", path)
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
