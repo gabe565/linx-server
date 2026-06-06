@@ -24,7 +24,7 @@ func TestCheckAccessKeyNoProtection(t *testing.T) {
 func TestCheckAccessKeyHeaderValid(t *testing.T) {
 	const key, salt = "supersecret", "mysalt"
 
-	stored, err := keyhash.Hash(key, salt, true)
+	stored, err := keyhash.Hash(key, salt, nil, true)
 	require.NoError(t, err)
 
 	req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/", nil)
@@ -38,7 +38,7 @@ func TestCheckAccessKeyHeaderValid(t *testing.T) {
 func TestCheckAccessKeyCookieHasPriority(t *testing.T) {
 	const key, salt = "supersecret", "mysalt"
 
-	stored, err := keyhash.Hash(key, salt, true)
+	stored, err := keyhash.Hash(key, salt, nil, true)
 	require.NoError(t, err)
 
 	req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/", nil)
@@ -53,7 +53,7 @@ func TestCheckAccessKeyCookieHasPriority(t *testing.T) {
 func TestCheckAccessKeyHeaderHasPriorityOverForm(t *testing.T) {
 	const key, salt = "supersecret", "mysalt"
 
-	stored, err := keyhash.Hash(key, salt, true)
+	stored, err := keyhash.Hash(key, salt, nil, true)
 	require.NoError(t, err)
 
 	req := httptest.NewRequestWithContext(t.Context(),
@@ -72,7 +72,7 @@ func TestCheckAccessKeyHeaderHasPriorityOverForm(t *testing.T) {
 func TestCheckAccessKeyStdBase64Fallback(t *testing.T) {
 	const key, salt = "supersecret", "mysalt"
 
-	stored, err := keyhash.Hash(key, salt, false)
+	stored, err := keyhash.Hash(key, salt, nil, false)
 	require.NoError(t, err)
 
 	req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/", nil)

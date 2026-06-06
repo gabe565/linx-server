@@ -38,11 +38,18 @@ type Config struct {
 
 	CustomPagesPath string `toml:"custom-pages-path" comment:"Path to directory containing .md files to render as custom pages"`
 
+	AppKey          string   `toml:"app-key"           comment:"Optional secret used to hash per-file access/delete keys."`
+	AppPreviousKeys []string `toml:"app-previous-keys" comment:"Previously-used app-keys, still accepted during rotation."`
+
 	TLS    TLS    `toml:"tls"    comment:"TLS (HTTPS) configuration"`
 	Auth   Auth   `toml:"auth"`
 	S3     S3     `toml:"s3"     comment:"S3-compatible storage configuration"`
 	Limit  Limit  `toml:"limit"  comment:"Configure rate limits"`
 	Header Header `toml:"header" comment:"Modify request/response headers"`
+}
+
+func (c *Config) AppKeys() []string {
+	return append([]string{c.AppKey}, c.AppPreviousKeys...)
 }
 
 type TLS struct {

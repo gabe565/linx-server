@@ -44,13 +44,13 @@ func New(options ...cobrax.Option) *cobra.Command {
 }
 
 func run(cmd *cobra.Command, _ []string) error {
-	if err := config.Default.Load(cmd); err != nil {
-		return err
-	}
-
 	cmd.SilenceUsage = true
 
 	slog.Info("Linx Server", "version", cobrax.GetVersion(cmd), "commit", cobrax.GetCommit(cmd))
+
+	if err := config.Default.Load(cmd); err != nil {
+		return err
+	}
 
 	mux, err := server.Setup()
 	if err != nil {

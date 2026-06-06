@@ -206,7 +206,7 @@ func Remote(w http.ResponseWriter, r *http.Request) {
 				key = password
 			}
 		}
-		result, err := keyhash.CheckList(config.RemoteAuthKeys, key, "", false)
+		result, err := keyhash.CheckList(config.RemoteAuthKeys, key, "", nil, false)
 		if err != nil || !result {
 			if config.Default.Auth.Basic {
 				rs := ""
@@ -373,7 +373,7 @@ func Process(ctx context.Context, upReq Request) (Upload, error) {
 		switch {
 		case err == nil:
 			if deleteKeyMatch, err = keyhash.CheckWithFallback(
-				existingMeta.DeleteKey, upReq.deleteKey, existingMeta.Salt,
+				existingMeta.DeleteKey, upReq.deleteKey, existingMeta.Salt, config.Default.AppKeys(),
 			); err != nil {
 				return upload, err
 			}
@@ -439,13 +439,13 @@ func Process(ctx context.Context, upReq Request) (Upload, error) {
 	if upReq.deleteKey == "" {
 		upReq.deleteKey = uniuri.NewLen(config.Default.RandomDeleteKeyLength)
 	}
-	hashedDeleteKey, err := keyhash.Hash(upReq.deleteKey, salt, true)
+	hashedDeleteKey, err := keyhash.Hash(upReq.deleteKey, salt, config.Default.AppKeys(), true)
 	if err != nil {
 		return upload, err
 	}
 	storedAccessKey := upReq.accessKey
 	if storedAccessKey != "" {
-		if storedAccessKey, err = keyhash.Hash(storedAccessKey, salt, true); err != nil {
+		if storedAccessKey, err = keyhash.Hash(storedAccessKey, salt, config.Default.AppKeys(), true); err != nil {
 			return upload, err
 		}
 	}

@@ -85,7 +85,7 @@ func CheckAccessKey(r *http.Request, metadata *backends.Metadata) (AccessKeySour
 			continue
 		}
 
-		match, err := keyhash.CheckWithFallback(key, requestKey, metadata.Salt)
+		match, err := keyhash.CheckWithFallback(key, requestKey, metadata.Salt, config.Default.AppKeys())
 		if err != nil {
 			return src, err
 		}

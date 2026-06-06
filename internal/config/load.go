@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	"os"
 	"strings"
 
@@ -80,5 +81,16 @@ func (c *Config) Load(cmd *cobra.Command) error {
 		return err
 	}
 
-	return k.UnmarshalWithConf("", c, koanf.UnmarshalConf{Tag: "toml"})
+	if err := k.UnmarshalWithConf("", c, koanf.UnmarshalConf{Tag: "toml"}); err != nil {
+		return err
+	}
+	return c.Validate()
+}
+
+//nolint:err113
+func (c *Config) Validate() error {
+	if c.S3.PresignedURLs && c.AppKey == "" {
+		return errors.New("app-key must be set when s3.presigned-urls is enabled")
+	}
+	return nil
 }
