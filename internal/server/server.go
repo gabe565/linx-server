@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"net/http"
+	"net/netip"
 	"path"
 	"strings"
 	"time"
@@ -73,8 +74,11 @@ func Setup() (*chi.Mux, error) {
 	if config.Default.SiteURL.Path != "/" {
 		r.Use(middleware.StripPrefix(strings.TrimSuffix(config.Default.SiteURL.Path, "/")))
 	}
-	if config.Default.Header.RealIP {
-		r.Use(middleware.RealIP)
+
+	if len(config.Default.TrustedProxies) != 0 {
+		r.Use(middleware.ClientIPFromXFF(config.Default.TrustedProxies...))
+	} else {
+		r.Use(middleware.ClientIPFromRemoteAddr)
 	}
 
 	r.Use(middleware.Heartbeat("/ping"))
@@ -168,7 +172,17 @@ func Setup() (*chi.Mux, error) {
 
 func rateLimit(requestLimit int, windowLength time.Duration) func(next http.Handler) http.Handler {
 	limiter := httprate.NewRateLimiter(requestLimit, windowLength,
-		httprate.WithKeyByIP(),
+		httprate.WithKeyFuncs(func(r *http.Request) (string, error) {
+			ip := middleware.GetClientIPAddr(r.Context())
+			switch {
+			case !ip.IsValid():
+				return "", nil
+			case ip.Is4():
+				return ip.String(), nil
+			default:
+				return netip.PrefixFrom(ip, 64).Masked().Addr().String(), nil
+			}
+		}),
 		httprate.WithLimitHandler(func(w http.ResponseWriter, r *http.Request) {
 			handlers.ErrorMsg(w, r, http.StatusTooManyRequests, "Too many requests")
 		}),

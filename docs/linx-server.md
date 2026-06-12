@@ -27,7 +27,6 @@ linx-server [flags]
       --meta-path string              Path to metadata directory (default "data/meta")
       --no-direct-agents              Disable serving files directly for wget/curl user agents
       --no-logs                       Remove logging of each request
-      --real-ip                       Use X-Real-IP/X-Forwarded-For headers
       --remote-uploads                Enable remote uploads (/upload?url=https://...)
       --s3-bucket string              S3 bucket to use for files and metadata
       --s3-endpoint string            S3 endpoint
