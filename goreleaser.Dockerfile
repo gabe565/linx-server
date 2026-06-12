@@ -1,8 +1,8 @@
 FROM alpine:3.24.0
 WORKDIR /data
-LABEL org.opencontainers.image.source="https://github.com/gabe565/linx-server"
 
-COPY linx-server /usr/bin
+ARG TARGETPLATFORM
+COPY $TARGETPLATFORM/linx-server /usr/bin
 
 RUN <<EOT
   set -eux

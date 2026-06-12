@@ -130,18 +130,14 @@ jobs:
         run: |
           export REPO="$(tr '[[:upper:]]' '[[:lower:]]' <<< "ghcr.io/$GITHUB_REPOSITORY")"
           IMAGES=()
-          while read -r SOURCE DEST; do
-            docker tag "$SOURCE" "$DEST"
-            docker push "$DEST"
-            IMAGES+=("$DEST")
+          while read -r IMAGE; do
+            docker push "$IMAGE"
+            IMAGES+=("$IMAGE")
           done \
             < <(docker image ls --format=json | \
-              yq --input-format=json --output-format=tsv '
-                select(.Repository == strenv(REPO)) |
-                [
-                  .Repository + ":" + .Tag,
-                  .Repository + ":beta-" + (.Tag | sub(".*-", ""))
-                ]
+              yq --input-format=json --no-doc '
+                select(.Repository == strenv(REPO) and .Tag == "beta-*") |
+                .Repository + ":" + .Tag
               ')
 
           docker manifest create "$REPO:beta" "${IMAGES[@]}"

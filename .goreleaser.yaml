@@ -138,37 +138,19 @@ aurs:
     commit_author:
       name: goreleaserbot
       email: bot@goreleaser.com
-dockers:
-  - &dockers
-    image_templates:
-      - ghcr.io/gabe565/{{ .ProjectName }}:{{ .Version }}-amd64
-    use: buildx
-    dockerfile: goreleaser.Dockerfile
-    build_flag_templates:
-      - "--platform=linux/amd64"
-  - <<: *dockers
-    image_templates:
-      - ghcr.io/gabe565/{{ .ProjectName }}:{{ .Version }}-armv7
-    goarch: arm
-    goarm: 7
-    build_flag_templates:
-      - "--platform=linux/arm/v7"
-  - <<: *dockers
-    image_templates:
-      - ghcr.io/gabe565/{{ .ProjectName }}:{{ .Version }}-arm64v8
-    goarch: arm64
-    build_flag_templates:
-      - "--platform=linux/arm64/v8"
-docker_manifests:
-  - &docker_manifests
-    name_template: ghcr.io/gabe565/{{ .ProjectName }}:latest
-    image_templates:
-      - ghcr.io/gabe565/{{ .ProjectName }}:{{ .Version }}-amd64
-      - ghcr.io/gabe565/{{ .ProjectName }}:{{ .Version }}-armv7
-      - ghcr.io/gabe565/{{ .ProjectName }}:{{ .Version }}-arm64v8
-  - <<: *docker_manifests
-    name_template: ghcr.io/gabe565/{{ .ProjectName }}:{{ .Version }}
-  - <<: *docker_manifests
-    name_template: ghcr.io/gabe565/{{ .ProjectName }}:{{ .Major }}
-  - <<: *docker_manifests
-    name_template: ghcr.io/gabe565/{{ .ProjectName }}:{{ .Major }}.{{ .Minor }}
+dockers_v2:
+  - dockerfile: goreleaser.Dockerfile
+    images:
+      - ghcr.io/gabe565/{{ .ProjectName }}
+    tags:
+      - "{{ if not .IsSnapshot }}{{ .Version }}{{ end }}"
+      - "{{ if not .IsSnapshot }}{{ .Major }}.{{ .Minor }}{{ end }}"
+      - "{{ if not .IsSnapshot }}{{ .Major }}{{ end }}"
+      - "{{ if not .IsSnapshot }}latest{{ else }}beta{{ end }}"
+    labels:
+      org.opencontainers.image.description: "Self-hosted file/media sharing website"
+      org.opencontainers.image.created: "{{ .Date }}"
+      org.opencontainers.image.name: "{{ .ProjectName }}"
+      org.opencontainers.image.revision: "{{ .FullCommit }}"
+      org.opencontainers.image.version: "{{ .Version }}"
+      org.opencontainers.image.source: "{{ .GitURL }}"
