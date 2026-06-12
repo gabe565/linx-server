@@ -13,7 +13,7 @@ COPY assets/static .
 RUN --mount=type=cache,target=/root/.cache \
   pnpm run build
 
-FROM --platform=$BUILDPLATFORM golang:1.26.0-alpine AS backend
+FROM --platform=$BUILDPLATFORM golang:1.26.4-alpine AS backend
 WORKDIR /app
 
 COPY go.mod go.sum ./
@@ -29,7 +29,7 @@ RUN --mount=type=cache,target=/root/.cache \
   CGO_ENABLED=0 GOOS="$TARGETOS" GOARCH="$TARGETARCH" \
   go build -ldflags='-w -s' -trimpath
 
-FROM alpine:3.23.3
+FROM alpine:3.24.0
 WORKDIR /data
 
 COPY --from=backend /app/linx-server /usr/bin
