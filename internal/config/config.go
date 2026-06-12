@@ -18,6 +18,7 @@ type Config struct {
 	SiteURL          URL      `toml:"site-url"`
 	ViteURL          string   `toml:"vite-url,omitempty"`
 	SelifPath        string   `toml:"selif-path"         comment:"Path relative to site base url where files are accessed directly"`
+	TrustedProxies   []string `toml:"trusted-proxies"    comment:"CIDR ranges of reverse proxies whose X-Forwarded-For headers are trusted"`
 	GracefulShutdown Duration `toml:"graceful-shutdown"  comment:"Maximum time to wait for requests to finish during shutdown"`
 
 	MaxSize               Bytes    `toml:"max-size"                 comment:"Maximum upload file size"`
@@ -82,7 +83,6 @@ type Limit struct {
 }
 
 type Header struct {
-	RealIP             bool              `toml:"real-ip"              comment:"Use X-Real-IP/X-Forwarded-For headers"`
 	AddHeaders         map[string]string `toml:"add-headers,inline"`
 	ReferrerPolicy     string            `toml:"referrer-policy"`
 	FileReferrerPolicy string            `toml:"file-referrer-policy"`

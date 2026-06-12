@@ -7,6 +7,8 @@ site-name = 'Linx'
 site-url = ''
 # Path relative to site base url where files are accessed directly
 selif-path = 'selif'
+# CIDR ranges of reverse proxies whose X-Forwarded-For headers are trusted
+trusted-proxies = []
 # Maximum time to wait for requests to finish during shutdown
 graceful-shutdown = '30s'
 # Maximum upload file size
@@ -80,8 +82,6 @@ app-previous-keys = []
 
 # Modify request/response headers
 [header]
-  # Use X-Real-IP/X-Forwarded-For headers
-  real-ip = false
   add-headers = {}
   referrer-policy = 'same-origin'
   file-referrer-policy = 'same-origin'
