@@ -24,7 +24,6 @@ const (
 	FlagUploadMaxMemory     = "upload-max-memory"
 	FlagTLSCert             = "tls-cert"
 	FlagTLSKey              = "tls-key"
-	FlagRealIP              = "real-ip"
 	FlagRemoteUploads       = "remote-uploads"
 	FlagAuthFile            = "auth-file"
 	FlagAuthRemoteFile      = "auth-remote-file"
@@ -85,7 +84,6 @@ func (c *Config) RegisterServeFlags(cmd *cobra.Command) {
 	)
 	fs.StringVar(&c.TLS.Cert, FlagTLSCert, c.TLS.Cert, "Path to ssl certificate (for https)")
 	fs.StringVar(&c.TLS.Key, FlagTLSKey, c.TLS.Key, "Path to ssl key (for https)")
-	fs.BoolVar(&c.Header.RealIP, FlagRealIP, c.Header.RealIP, "Use X-Real-IP/X-Forwarded-For headers")
 	fs.BoolVar(&c.RemoteUploads, FlagRemoteUploads, c.RemoteUploads, "Enable remote uploads (/upload?url=https://...)")
 	fs.StringVar(&c.Auth.File, FlagAuthFile, c.Auth.File,
 		"Path to a file containing newline-separated scrypted auth keys",
