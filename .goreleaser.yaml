@@ -139,8 +139,7 @@ aurs:
       name: goreleaserbot
       email: bot@goreleaser.com
 dockers_v2:
-  - dockerfile: goreleaser.Dockerfile
-    images:
+  - images:
       - ghcr.io/gabe565/{{ .ProjectName }}
     tags:
       - "{{ if not .IsSnapshot }}{{ .Version }}{{ end }}"
@@ -154,3 +153,5 @@ dockers_v2:
       org.opencontainers.image.revision: "{{ .FullCommit }}"
       org.opencontainers.image.version: "{{ .Version }}"
       org.opencontainers.image.source: "{{ .GitURL }}"
+    build_args:
+      BUILDER: goreleaser
