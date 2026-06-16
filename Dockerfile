@@ -34,7 +34,7 @@ RUN --mount=type=cache,target=/root/.cache \
   go build -ldflags='-w -s' -trimpath
 
 
-FROM alpine:3.24.0 AS alpine-base
+FROM alpine:3.24.1 AS alpine-base
 
 FROM alpine-base AS source-backend
 COPY --from=backend /app/linx-server /usr/bin
