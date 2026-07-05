@@ -17,7 +17,7 @@ require (
 	github.com/knadh/koanf/v2 v2.3.5
 	github.com/minio/minio-go/v7 v7.2.0
 	github.com/minio/sha256-simd v1.0.1
-	github.com/pelletier/go-toml/v2 v2.3.1
+	github.com/pelletier/go-toml/v2 v2.4.3
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/pflag v1.0.10
 	github.com/stretchr/testify v1.11.1
