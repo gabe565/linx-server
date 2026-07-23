@@ -6,7 +6,7 @@ require (
 	gabe565.com/utils v0.0.0-20260511235214-4059440fa83b
 	github.com/dchest/uniuri v1.2.0
 	github.com/dustin/go-humanize v1.0.1
-	github.com/gabriel-vasile/mimetype v1.4.13
+	github.com/gabriel-vasile/mimetype v1.4.15
 	github.com/go-chi/chi/v5 v5.3.0
 	github.com/go-chi/httprate v0.15.0
 	github.com/gosimple/slug v1.15.0
