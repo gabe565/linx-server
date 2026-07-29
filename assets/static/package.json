@@ -39,7 +39,7 @@
     "highlightjs-vue": "^1.0.0",
     "marked": "^18.0.5",
     "papaparse": "^5.5.3",
-    "pinia": "^3.0.4",
+    "pinia": "^4.0.0",
     "pinia-plugin-persistedstate": "^4.7.1",
     "reka-ui": "^2.9.10",
     "tailwind-merge": "^3.6.0",
