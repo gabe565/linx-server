@@ -1,13 +1,22 @@
 <template>
-  <div v-if="formatted">
-    <Table>
-      <TableRow v-for="(row, key) in formatted?.data?.slice(0, csvRows)" :key="key">
-        <TableCell v-for="(cell, ckey) in row" :key="ckey">{{ cell }}</TableCell>
-      </TableRow>
-    </Table>
+  <div v-if="formatted" class="prose">
+    <div class="table-wrap">
+      <table>
+        <thead v-if="header">
+          <tr>
+            <th v-for="(cell, ckey) in header" :key="ckey">{{ cell }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="(row, key) in rows" :key="key">
+            <td v-for="(cell, ckey) in row" :key="ckey">{{ cell }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
     <div class="flex justify-between">
-      Showing {{ Math.min(csvRows, formatted?.data?.length) }} of {{ formatted?.data?.length }} rows
-      <Button v-if="csvRows < formatted?.data?.length" @click="csvRows += 250"> Show more </Button>
+      Showing {{ rows.length }} of {{ dataRows.length }} rows
+      <Button v-if="csvRows < dataRows.length" @click="csvRows += 250"> Show more </Button>
     </div>
   </div>
 </template>
@@ -16,12 +25,16 @@
 import { parse } from "papaparse";
 import { computed, ref } from "vue";
 import { Button } from "@/components/ui/button";
-import { Table, TableCell, TableRow } from "@/components/ui/table";
 
 const props = defineProps({
   content: { type: String, required: true },
 });
 
-const formatted = computed(() => parse(props.content));
+const formatted = computed(() => parse<string[]>(props.content));
 const csvRows = ref(250);
+
+// First record is treated as a header, the way GitHub renders CSVs.
+const header = computed(() => formatted.value.data[0]);
+const dataRows = computed(() => formatted.value.data.slice(1));
+const rows = computed(() => dataRows.value.slice(0, csvRows.value));
 </script>
