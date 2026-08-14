@@ -4,8 +4,8 @@
 
 <script setup lang="ts">
 import DOMPurify from "dompurify";
-import { marked } from "marked";
 import { computed } from "vue";
+import { marked } from "@/util/markdown.ts";
 
 const props = defineProps({
   content: { type: String, required: true },

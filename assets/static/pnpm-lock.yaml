@@ -80,6 +80,9 @@ importers:
       marked:
         specifier: ^18.0.5
         version: 18.0.5
+      marked-alert:
+        specifier: ^2.1.2
+        version: 2.1.2(marked@18.0.5)
       papaparse:
         specifier: ^5.5.3
         version: 5.5.3
@@ -1809,6 +1812,11 @@ packages:
 
   magic-string@0.30.21:
     resolution: {integrity: sha512-vd2F4YUyEXKGcLHoq+TEyCjxueSeHnFxyyjNp80yg0XV4vUhnDer/lvvlqM/arB5bXQN5K2/3oinyCRyx8T2CQ==}
+
+  marked-alert@2.1.2:
+    resolution: {integrity: sha512-EFNRZ08d8L/iEIPLTlQMDjvwIsj03gxWCczYTht6DCiHJIZhMk4NK5gtPY9UqAYb09eV5VGT+jD4lp396E0I+w==}
+    peerDependencies:
+      marked: '>=7.0.0'
 
   marked@18.0.5:
     resolution: {integrity: sha512-S6GcvALHg6K4ohtu4E7x0a1AqhAjp6cV8KhLSyN9qVapnzJkusVBxZRcIU9AeYsbe6P1hKDusSbEOzGyyuce6w==}
@@ -3892,6 +3900,10 @@ snapshots:
   magic-string@0.30.21:
     dependencies:
       '@jridgewell/sourcemap-codec': 1.5.5
+
+  marked-alert@2.1.2(marked@18.0.5):
+    dependencies:
+      marked: 18.0.5
 
   marked@18.0.5: {}
 

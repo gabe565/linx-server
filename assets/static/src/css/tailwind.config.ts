@@ -49,6 +49,34 @@ export default {
               border: "0",
               "background-color": "var(--border)",
             },
+            // Class names come from marked-alert; variants only swap --alert-accent.
+            ".markdown-alert": {
+              "--alert-accent": "var(--border)",
+              "margin-block": "1.25em",
+              "padding-block": "0.5em",
+              "padding-inline": "1em",
+              "border-inline-start": "0.25em solid var(--alert-accent)",
+            },
+            ".markdown-alert > :first-child": { "margin-block-start": "0" },
+            ".markdown-alert > :last-child": { "margin-block-end": "0" },
+            ".markdown-alert-title": {
+              display: "flex",
+              "align-items": "center",
+              "font-weight": "600",
+              color: "var(--alert-accent)",
+              "margin-block-end": "0.4em",
+            },
+            // Octicons ship without a fill, so they inherit the accent.
+            ".markdown-alert-title .octicon": {
+              fill: "currentColor",
+              "margin-inline-end": "0.5em",
+              "flex-shrink": "0",
+            },
+            ".markdown-alert-note": { "--alert-accent": "var(--alert-note)" },
+            ".markdown-alert-tip": { "--alert-accent": "var(--alert-tip)" },
+            ".markdown-alert-important": { "--alert-accent": "var(--alert-important)" },
+            ".markdown-alert-warning": { "--alert-accent": "var(--alert-warning)" },
+            ".markdown-alert-caution": { "--alert-accent": "var(--alert-caution)" },
             kbd: {
               display: "inline-block",
               "font-size": "0.85em",
