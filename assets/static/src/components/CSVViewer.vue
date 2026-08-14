@@ -30,7 +30,7 @@ const props = defineProps({
   content: { type: String, required: true },
 });
 
-const formatted = computed(() => parse<string[]>(props.content));
+const formatted = computed(() => parse<string[]>(props.content, { skipEmptyLines: true }));
 const csvRows = ref(250);
 
 // First record is treated as a header, the way GitHub renders CSVs.
