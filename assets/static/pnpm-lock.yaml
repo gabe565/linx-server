@@ -4,6 +4,9 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+patchedDependencies:
+  highlightjs-vue: 734003d014ba38bcb0578b0b98a61e49909c88a116bca19c52e3bda24f5c15b1
+
 importers:
 
   .:
@@ -76,7 +79,7 @@ importers:
         version: 11.11.1
       highlightjs-vue:
         specifier: ^1.0.0
-        version: 1.0.0
+        version: 1.0.0(patch_hash=734003d014ba38bcb0578b0b98a61e49909c88a116bca19c52e3bda24f5c15b1)
       marked:
         specifier: ^18.0.5
         version: 18.0.5
@@ -3754,7 +3757,7 @@ snapshots:
 
   highlight.js@11.11.1: {}
 
-  highlightjs-vue@1.0.0: {}
+  highlightjs-vue@1.0.0(patch_hash=734003d014ba38bcb0578b0b98a61e49909c88a116bca19c52e3bda24f5c15b1): {}
 
   hookable@5.5.3: {}
 

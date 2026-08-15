@@ -1,0 +1,13 @@
+diff --git a/dist/highlightjs-vue.esm.js b/dist/highlightjs-vue.esm.js
+index 8f50be9b9f1e81b22685aa12cbc30364d04b9388..1939769571ec8625df2ac9474e8837181dce6aa2 100644
+--- a/dist/highlightjs-vue.esm.js
++++ b/dist/highlightjs-vue.esm.js
+@@ -4,8 +4,6 @@ Requires: xml.js, javascript.js, typescript.js, css.js, stylus.js, scss.js
+ Author: Sara Lissette Luis Ibáñez <lissette.ibnz@gmail.com>
+ Description: Single-File Components of Vue.js Framework
+ */
+-var module = module ? module : {};
+-
+ function hljsDefineVue(hljs) {
+   return {
+     subLanguage: "xml",

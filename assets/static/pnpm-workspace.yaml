@@ -6,3 +6,6 @@ allowBuilds:
   vue-demi: true
   '@parcel/watcher': true
   '@tailwindcss/oxide': true
+
+patchedDependencies:
+  highlightjs-vue: patches/highlightjs-vue.patch
