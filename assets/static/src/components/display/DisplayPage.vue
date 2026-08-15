@@ -1,5 +1,5 @@
 <template>
-  <div class="container mx-auto" :class="[errorStatus === 401 ? 'max-w-lg' : 'max-w-5xl']">
+  <div class="container mx-auto" :class="maxWidth">
     <div v-if="isLoading" class="animate-in fade-in duration-1000 flex flex-col items-center">
       <SpinnerIcon class="text-4xl" />
     </div>
@@ -203,6 +203,16 @@ const { state, isLoading, error, execute } = useAsyncState<DisplayState>(
 );
 
 const errorStatus = computed(() => (isAxiosError(error.value) ? error.value.status : undefined));
+
+const maxWidth = computed(() => {
+  if (errorStatus.value === 401) return "max-w-lg";
+  if (error.value) return "max-w-xl";
+  if (!state.value.meta) return "max-w-5xl";
+  // Code wants every pixel; a file with no preview is just a download button.
+  if (state.value.mode === Modes.TEXT) return "max-w-7xl";
+  if (state.value.mode === null) return "max-w-xl";
+  return "max-w-5xl";
+});
 
 const message = computed(() => {
   const err = error.value;
