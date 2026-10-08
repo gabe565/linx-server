@@ -24,7 +24,7 @@ require (
 	github.com/zeebo/bencode v1.0.0
 	golang.org/x/crypto v0.55.0
 	golang.org/x/sync v0.22.0
-	maragu.dev/gomponents v1.3.0
+	maragu.dev/gomponents v1.4.0
 )
 
 require (
