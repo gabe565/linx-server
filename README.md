@@ -77,6 +77,21 @@ Ideally, you would use a reverse proxy such as nginx or caddy to handle TLS cert
 1. Grab the latest binary from the [releases](https://github.com/gabe565/linx-server/releases)
 2. Run `linx-server --config=path/to/config.toml`
 
+### Building from source
+
+Requires [Go](https://go.dev/dl/), [Node.js](https://nodejs.org), and [pnpm](https://pnpm.io/installation).
+
+```shell
+git clone https://github.com/gabe565/linx-server.git
+cd linx-server
+go generate
+go build
+```
+
+`go generate` installs the frontend dependencies and builds the frontend, which gets embedded into the binary. If you skip it, `go build` fails with `pattern static/dist: no matching files found`.
+
+To get a build identical to a release, install [GoReleaser](https://goreleaser.com/install/) and run `goreleaser build --snapshot --clean --single-target`. The binary will be in a subdirectory of `dist`.
+
 
 ## Usage
 
