@@ -17,7 +17,7 @@ RUN --mount=type=cache,target=/root/.cache \
   pnpm run build
 
 
-FROM --platform=$BUILDPLATFORM golang:1.26.6-alpine AS backend
+FROM --platform=$BUILDPLATFORM golang:1.27.2-alpine AS backend
 WORKDIR /app
 
 COPY go.mod go.sum ./

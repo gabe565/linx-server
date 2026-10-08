@@ -1,6 +1,6 @@
 module gabe565.com/linx-server
 
-go 1.26.6
+go 1.27.2
 
 require (
 	gabe565.com/utils v0.0.0-20260511235214-4059440fa83b
