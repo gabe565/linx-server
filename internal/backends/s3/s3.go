@@ -1,6 +1,7 @@
 package s3
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -29,8 +30,31 @@ type Backend struct {
 	presignedExpiry time.Duration
 }
 
+func (b Backend) Claim(ctx context.Context, key string) (bool, error) {
+	var opts minio.PutObjectOptions
+	opts.SetMatchETagExcept("*")
+	claimKey := backends.ClaimPrefix + key
+	_, err := b.client.PutObject(ctx, b.bucket, claimKey, bytes.NewReader(nil), 0, opts)
+	if err != nil {
+		switch minio.ToErrorResponse(err).StatusCode {
+		case http.StatusPreconditionFailed, http.StatusConflict:
+			return false, nil
+		}
+		return false, err
+	}
+
+	// A previous claim may have been released after the file was deleted
+	if exists, err := b.Exists(ctx, key); err != nil || !exists {
+		return false, errors.Join(err, b.client.RemoveObject(ctx, b.bucket, claimKey, minio.RemoveObjectOptions{}))
+	}
+	return true, nil
+}
+
 func (b Backend) Delete(ctx context.Context, key string) error {
-	return b.client.RemoveObject(ctx, b.bucket, key, minio.RemoveObjectOptions{})
+	if err := b.client.RemoveObject(ctx, b.bucket, key, minio.RemoveObjectOptions{}); err != nil {
+		return err
+	}
+	return b.client.RemoveObject(ctx, b.bucket, backends.ClaimPrefix+key, minio.RemoveObjectOptions{})
 }
 
 func (b Backend) Exists(ctx context.Context, key string) (bool, error) {
@@ -152,12 +176,13 @@ func (b Backend) Put(
 	}
 
 	m = backends.Metadata{
-		OriginalName: opts.OriginalName,
-		DeleteKey:    opts.DeleteKey,
-		AccessKey:    opts.AccessKey,
-		Salt:         opts.Salt,
-		Mimetype:     mime.String(),
-		Expiry:       opts.Expiry,
+		OriginalName:  opts.OriginalName,
+		DeleteKey:     opts.DeleteKey,
+		AccessKey:     opts.AccessKey,
+		Salt:          opts.Salt,
+		Mimetype:      mime.String(),
+		Expiry:        opts.Expiry,
+		BurnAfterRead: opts.BurnAfterRead,
 	}
 
 	info, err := b.client.PutObject(ctx, b.bucket, key, r, size, minio.PutObjectOptions{
@@ -207,6 +232,10 @@ func (b Backend) List(ctx context.Context) iter.Seq2[string, error] {
 			if item.Err != nil {
 				yield("", item.Err)
 				return
+			}
+
+			if strings.HasPrefix(item.Key, backends.ClaimPrefix) {
+				continue
 			}
 
 			if !yield(item.Key, nil) {

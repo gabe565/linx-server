@@ -99,6 +99,11 @@ func FileTorrentHandler(w http.ResponseWriter, r *http.Request) {
 		_ = f.Close()
 	}()
 
+	if metadata.BurnAfterRead {
+		handlers.ErrorMsg(w, r, http.StatusNotFound, "File not found")
+		return
+	}
+
 	if metadata.Expired() {
 		//nolint:gosec // Intentional async cleanup; delete should not block the response.
 		go func() {

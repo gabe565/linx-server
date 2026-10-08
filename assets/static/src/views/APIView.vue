@@ -62,6 +62,12 @@ import { AlphaNum, randomString } from "@/util/random.ts";
             ><code>$ curl {{ ApiPath('/upload/') }} -s -H 'Linx-Expiry: 20m' -T myphoto.jpg
 {{ ApiPath(`/${randomString(8, AlphaNum)}.jpg`) }}</code></pre>
 
+            <h5 class="font-medium">Upload a file that is deleted after one download</h5>
+            <pre
+              class="overflow-x-auto p-3 rounded text-sm font-mono"
+            ><code>$ curl {{ ApiPath('/upload/') }} -s -H 'Linx-Burn-After-Read: yes' -T secret.txt
+{{ ApiPath(`/${randomString(8, AlphaNum)}.txt`) }}</code></pre>
+
             <h5 class="font-medium">Upload from pipe</h5>
             <pre
               class="overflow-x-auto p-3 rounded text-sm font-mono"

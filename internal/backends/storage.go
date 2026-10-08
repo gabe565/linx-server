@@ -11,6 +11,9 @@ import (
 )
 
 type StorageBackend interface {
+	// Claim reports whether this is the first claim on a burn-after-read file
+	// that still exists.
+	Claim(ctx context.Context, key string) (bool, error)
 	Delete(ctx context.Context, key string) error
 	Exists(ctx context.Context, key string) (bool, error)
 	Head(ctx context.Context, key string) (Metadata, error)
@@ -33,12 +36,17 @@ type PresignedBackend interface {
 }
 
 type PutOptions struct {
-	OriginalName string
-	Expiry       time.Time
-	DeleteKey    string
-	AccessKey    string
-	Salt         string
+	OriginalName  string
+	Expiry        time.Time
+	DeleteKey     string
+	AccessKey     string
+	Salt          string
+	BurnAfterRead bool
 }
+
+// ClaimPrefix is prepended to a key to name its burn-after-read claim.
+// Filenames can't start with a dot, so claims never collide with uploads.
+const ClaimPrefix = ".burn-"
 
 var (
 	ErrNotFound             = errors.New("file not found")

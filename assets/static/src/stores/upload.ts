@@ -24,6 +24,7 @@ export type UploadedItem = {
   uploaded?: Date;
   size: number;
   mimetype?: string;
+  burn_after_read?: boolean;
 };
 
 const MaxDelay = 2 ** 31 - 1;
@@ -136,12 +137,14 @@ export const useUploadStore = defineStore(
       expiry,
       randomFilename = false,
       password,
+      burnAfterRead = false,
       saveOriginalName = true,
     }: {
       file: File;
       expiry: number | string;
       randomFilename?: boolean;
       password?: string;
+      burnAfterRead?: boolean;
       saveOriginalName?: boolean;
     }) => {
       const controller = new AbortController();
@@ -161,6 +164,7 @@ export const useUploadStore = defineStore(
       form.append("expires", String(expiry));
       if (password) form.append("access_key", password);
       form.append("randomize", randomFilename.toString());
+      if (burnAfterRead) form.append("burn_after_read", "true");
       // This field must be last since it is streamed
       form.append("file", file);
 
@@ -196,6 +200,7 @@ export const useUploadStore = defineStore(
       deleteKey,
       expiry,
       password,
+      burnAfterRead = false,
       saveOriginalName = true,
     }: {
       file: File;
@@ -203,6 +208,7 @@ export const useUploadStore = defineStore(
       deleteKey: string;
       expiry: number | string;
       password?: string;
+      burnAfterRead?: boolean;
       saveOriginalName?: boolean;
     }) => {
       return await runUploadRequest({
@@ -217,6 +223,7 @@ export const useUploadStore = defineStore(
               "Linx-Delete-Key": encodeURIComponent(deleteKey),
               "Linx-Expiry": encodeURIComponent(String(expiry)),
               "Linx-Access-Key": encodeURIComponent(password ?? ""),
+              "Linx-Burn-After-Read": String(burnAfterRead),
             },
             validateStatus: (s) => s === 200,
           }),

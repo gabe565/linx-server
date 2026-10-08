@@ -53,6 +53,7 @@
               :options="config.site?.expiration_times"
               class="w-full sm:w-40"
             />
+            <BurnToggle v-model="config.burnAfterRead" />
             <Button type="submit">Paste</Button>
           </div>
         </div>
@@ -97,6 +98,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Toggle } from "@/components/ui/toggle";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import AuthDialog from "@/components/upload/AuthDialog.vue";
+import BurnToggle from "@/components/upload/BurnToggle.vue";
 import ExpirySelect from "@/components/upload/ExpirySelect.vue";
 import PasswordInput from "@/components/upload/PasswordInput.vue";
 import { useConfigStore } from "@/stores/config.ts";
@@ -121,12 +123,14 @@ const doUpload = async () => {
             deleteKey: config.editDeleteKey,
             expiry: config.expiry,
             password: config.password,
+            burnAfterRead: config.burnAfterRead,
             saveOriginalName: false,
           })
         : await upload.uploadFile({
             file,
             expiry: config.expiry,
             password: config.password,
+            burnAfterRead: config.burnAfterRead,
             saveOriginalName: false,
           });
 

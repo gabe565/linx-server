@@ -7,16 +7,17 @@ import (
 )
 
 type Metadata struct {
-	OriginalName string
-	DeleteKey    string
-	AccessKey    string
-	Salt         string
-	Checksum     string
-	Mimetype     string
-	Size         int64
-	ModTime      time.Time
-	Expiry       time.Time
-	ArchiveFiles []string
+	OriginalName  string
+	DeleteKey     string
+	AccessKey     string
+	Salt          string
+	Checksum      string
+	Mimetype      string
+	Size          int64
+	ModTime       time.Time
+	Expiry        time.Time
+	ArchiveFiles  []string
+	BurnAfterRead bool
 }
 
 var ErrBadMetadata = errors.New("corrupted metadata")

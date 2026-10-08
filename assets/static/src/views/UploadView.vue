@@ -17,6 +17,7 @@
             :options="config.site?.expiration_times"
             class="w-full sm:w-40"
           />
+          <BurnToggle v-model="config.burnAfterRead" />
         </div>
         <DropZone @upload="doUpload" :max-file-size="config.site?.max_size" />
       </CardContent>
@@ -35,6 +36,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card/i
 import { Label } from "@/components/ui/label/index.js";
 import { Switch } from "@/components/ui/switch/index.js";
 import AuthDialog from "@/components/upload/AuthDialog.vue";
+import BurnToggle from "@/components/upload/BurnToggle.vue";
 import DropZone from "@/components/upload/DropZone.vue";
 import ExpirySelect from "@/components/upload/ExpirySelect.vue";
 import PasswordInput from "@/components/upload/PasswordInput.vue";
@@ -56,6 +58,7 @@ const doUpload = async (file: File | undefined) => {
       randomFilename: config.randomFilename,
       expiry: config.expiry,
       password: config.password,
+      burnAfterRead: config.burnAfterRead,
     });
   } catch (err) {
     console.error(err);

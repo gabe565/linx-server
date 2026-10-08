@@ -60,15 +60,17 @@ func GenerateCSP() csp.CSP {
 
 	policy := csp.CSP{
 		"default-src":     defaultSrc,
-		"img-src":         {csp.Self, csp.Data},
+		"img-src":         {csp.Self, csp.Data, csp.Blob},
+		"media-src":       {csp.Self, csp.Blob},
+		"object-src":      {csp.Self, csp.Blob},
 		"style-src":       {csp.Self, csp.UnsafeInline},
 		"frame-ancestors": {csp.None},
 	}
 
 	if origin := s3PresignedOrigin(); origin != "" {
 		policy["img-src"] = append(policy["img-src"], origin)
-		policy["media-src"] = []string{csp.Self, origin}
-		policy["object-src"] = []string{csp.Self, origin}
+		policy["media-src"] = append(policy["media-src"], origin)
+		policy["object-src"] = append(policy["object-src"], origin)
 		policy["connect-src"] = []string{csp.Self, origin}
 	}
 

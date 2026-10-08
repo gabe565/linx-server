@@ -18,7 +18,7 @@ Self-hosted file/media sharing website.
 - Display syntax-highlighted code with in-place editing
 - Documented API with keys for restricting uploads
 - Torrent download of files using web seeding
-- File expiry, deletion key, file access key, and random filename options
+- File expiry, deletion key, file access key, burn after reading, and random filename options
 
 
 ### Screenshots

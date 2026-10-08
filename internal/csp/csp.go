@@ -14,6 +14,7 @@ const (
 	None         = "'none'"
 	UnsafeInline = "'unsafe-inline'"
 	Data         = "data:"
+	Blob         = "blob:"
 )
 
 // CSP represents a Content-Security-Policy as directive name -> source list.

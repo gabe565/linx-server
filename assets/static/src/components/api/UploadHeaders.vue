@@ -52,6 +52,10 @@ const config = useConfigStore();
         <TableCell><code>Linx-Expiry: 1h</code></TableCell>
         <TableCell>Set file expiry (Go duration or seconds)</TableCell>
       </TableRow>
+      <TableRow>
+        <TableCell><code>Linx-Burn-After-Read: yes</code></TableCell>
+        <TableCell>Delete the file after it is downloaded once</TableCell>
+      </TableRow>
       <TableRow v-if="!config.site.force_random">
         <TableCell><code>Linx-Randomize: no</code></TableCell>
         <TableCell>Disable random filename</TableCell>

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"io/fs"
 	"iter"
 	"net/http"
 	"os"
@@ -22,15 +23,44 @@ type Backend struct {
 }
 
 type MetadataJSON struct {
-	OriginalName string          `json:"original_name,omitzero"`
-	DeleteKey    string          `json:"delete_key"`
-	AccessKey    string          `json:"access_key,omitzero"`
-	Salt         string          `json:"salt,omitzero"`
-	Sha256sum    string          `json:"sha256sum,omitzero"`
-	Checksum     string          `json:"checksum"`
-	Mimetype     string          `json:"mimetype"`
-	Expiry       backends.Expiry `json:"expiry,omitzero"`
-	ArchiveFiles []string        `json:"archive_files,omitzero"`
+	OriginalName  string          `json:"original_name,omitzero"`
+	DeleteKey     string          `json:"delete_key"`
+	AccessKey     string          `json:"access_key,omitzero"`
+	Salt          string          `json:"salt,omitzero"`
+	Sha256sum     string          `json:"sha256sum,omitzero"`
+	Checksum      string          `json:"checksum"`
+	Mimetype      string          `json:"mimetype"`
+	Expiry        backends.Expiry `json:"expiry,omitzero"`
+	ArchiveFiles  []string        `json:"archive_files,omitzero"`
+	BurnAfterRead bool            `json:"burn_after_read,omitzero"`
+}
+
+func (b Backend) Claim(ctx context.Context, key string) (bool, error) {
+	metaRoot, err := os.OpenRoot(b.metaPath)
+	if err != nil {
+		return false, err
+	}
+	defer func() {
+		_ = metaRoot.Close()
+	}()
+
+	claimKey := backends.ClaimPrefix + key
+	f, err := metaRoot.OpenFile(claimKey, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o600)
+	if err != nil {
+		if errors.Is(err, fs.ErrExist) {
+			return false, nil
+		}
+		return false, err
+	}
+	if err := f.Close(); err != nil {
+		return false, err
+	}
+
+	// A previous claim may have been released after the file was deleted
+	if exists, err := b.Exists(ctx, key); err != nil || !exists {
+		return false, errors.Join(err, metaRoot.Remove(claimKey))
+	}
+	return true, nil
 }
 
 func (b Backend) Delete(_ context.Context, key string) error {
@@ -57,7 +87,15 @@ func (b Backend) Delete(_ context.Context, key string) error {
 		}
 	}
 
-	return errors.Join(filesRoot.Remove(key), metaErr)
+	filesErr := filesRoot.Remove(key)
+	var claimErr error
+	if filesErr == nil || errors.Is(filesErr, fs.ErrNotExist) {
+		if claimErr = metaRoot.Remove(backends.ClaimPrefix + key); errors.Is(claimErr, fs.ErrNotExist) {
+			claimErr = nil
+		}
+	}
+
+	return errors.Join(filesErr, metaErr, claimErr)
 }
 
 func (b Backend) Exists(_ context.Context, key string) (bool, error) {
@@ -118,6 +156,7 @@ func (b Backend) Head(_ context.Context, key string) (backends.Metadata, error) 
 		metadata.Checksum = mjson.Sha256sum
 	}
 	metadata.Expiry = time.Time(mjson.Expiry)
+	metadata.BurnAfterRead = mjson.BurnAfterRead
 
 	if stat, err := f.Stat(); err == nil {
 		metadata.ModTime = stat.ModTime()
@@ -165,14 +204,15 @@ func (b Backend) ServeFile(key string, w http.ResponseWriter, r *http.Request) e
 
 func (b Backend) writeMetadata(key string, metadata backends.Metadata) error {
 	mjson := MetadataJSON{
-		OriginalName: metadata.OriginalName,
-		DeleteKey:    metadata.DeleteKey,
-		AccessKey:    metadata.AccessKey,
-		Salt:         metadata.Salt,
-		Mimetype:     metadata.Mimetype,
-		ArchiveFiles: metadata.ArchiveFiles,
-		Checksum:     metadata.Checksum,
-		Expiry:       backends.Expiry(metadata.Expiry),
+		OriginalName:  metadata.OriginalName,
+		DeleteKey:     metadata.DeleteKey,
+		AccessKey:     metadata.AccessKey,
+		Salt:          metadata.Salt,
+		Mimetype:      metadata.Mimetype,
+		ArchiveFiles:  metadata.ArchiveFiles,
+		Checksum:      metadata.Checksum,
+		Expiry:        backends.Expiry(metadata.Expiry),
+		BurnAfterRead: metadata.BurnAfterRead,
 	}
 
 	metaRoot, err := os.OpenRoot(b.metaPath)
@@ -255,6 +295,7 @@ func (b Backend) Put(
 	m.DeleteKey = opts.DeleteKey
 	m.AccessKey = opts.AccessKey
 	m.Salt = opts.Salt
+	m.BurnAfterRead = opts.BurnAfterRead
 
 	if _, err := f.Seek(0, io.SeekStart); err == nil {
 		m.ArchiveFiles, _ = helpers.ListArchiveFiles(m.Mimetype, m.Size, f)

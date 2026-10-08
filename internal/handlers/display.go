@@ -17,16 +17,17 @@ import (
 )
 
 type DisplayJSON struct {
-	OriginalName string   `json:"original_name,omitzero"`
-	Filename     string   `json:"filename"`
-	DirectURL    string   `json:"direct_url"`
-	DownloadURL  string   `json:"download_url"`
-	TorrentURL   string   `json:"torrent_url,omitzero"`
-	Expiry       string   `json:"expiry"`
-	Size         string   `json:"size"`
-	Mimetype     string   `json:"mimetype"`
-	Language     string   `json:"language,omitzero"`
-	ArchiveFiles []string `json:"archive_files,omitzero"`
+	OriginalName  string   `json:"original_name,omitzero"`
+	Filename      string   `json:"filename"`
+	DirectURL     string   `json:"direct_url"`
+	DownloadURL   string   `json:"download_url"`
+	TorrentURL    string   `json:"torrent_url,omitzero"`
+	Expiry        string   `json:"expiry"`
+	Size          string   `json:"size"`
+	Mimetype      string   `json:"mimetype"`
+	Language      string   `json:"language,omitzero"`
+	ArchiveFiles  []string `json:"archive_files,omitzero"`
+	BurnAfterRead bool     `json:"burn_after_read,omitzero"`
 }
 
 func FileDisplay(w http.ResponseWriter, r *http.Request, fileName string, metadata backends.Metadata) {
@@ -37,7 +38,7 @@ func FileDisplay(w http.ResponseWriter, r *http.Request, fileName string, metada
 		q.Set("download", "")
 		downloadURL.RawQuery = q.Encode()
 
-		if config.Default.S3.PresignedURLs {
+		if config.Default.S3.PresignedURLs && !metadata.BurnAfterRead {
 			if pb, ok := config.StorageBackend.(backends.PresignedBackend); ok {
 				if u, err := pb.GetPresignedURL(r.Context(), fileName, ""); err == nil {
 					directURL = u
@@ -63,24 +64,31 @@ func FileDisplay(w http.ResponseWriter, r *http.Request, fileName string, metada
 		}
 
 		res := DisplayJSON{
-			OriginalName: metadata.OriginalName,
-			Filename:     fileName,
-			DirectURL:    directURL.String(),
-			DownloadURL:  downloadURL.String(),
-			Expiry:       strconv.FormatInt(max(metadata.Expiry.Unix(), 0), 10),
-			Size:         strconv.FormatInt(metadata.Size, 10),
-			Mimetype:     metadata.Mimetype,
-			Language:     util.InferLang(fileName, metadata),
-			ArchiveFiles: metadata.ArchiveFiles,
+			OriginalName:  metadata.OriginalName,
+			Filename:      fileName,
+			DirectURL:     directURL.String(),
+			DownloadURL:   downloadURL.String(),
+			Expiry:        strconv.FormatInt(max(metadata.Expiry.Unix(), 0), 10),
+			Size:          strconv.FormatInt(metadata.Size, 10),
+			Mimetype:      metadata.Mimetype,
+			Language:      util.InferLang(fileName, metadata),
+			ArchiveFiles:  metadata.ArchiveFiles,
+			BurnAfterRead: metadata.BurnAfterRead,
 		}
 
-		if !config.Default.NoTorrent {
+		if metadata.BurnAfterRead {
+			// The listing would leak the contents
+			res.ArchiveFiles = nil
+		} else if !config.Default.NoTorrent {
 			res.TorrentURL = headers.GetTorrentURL(r, fileName).String()
 		}
 
-		if metadata.AccessKey != "" || config.Default.Auth.File != "" || config.Default.Auth.RemoteFile != "" {
+		switch {
+		case metadata.BurnAfterRead:
+			w.Header().Set("Cache-Control", "no-store")
+		case metadata.AccessKey != "" || config.Default.Auth.File != "" || config.Default.Auth.RemoteFile != "":
 			w.Header().Set("Cache-Control", "private, no-cache")
-		} else {
+		default:
 			w.Header().Set("Cache-Control", "public, no-cache")
 		}
 		w.Header().Set("Vary", "Accept, Linx-Delete-Key")
@@ -95,6 +103,9 @@ func FileDisplay(w http.ResponseWriter, r *http.Request, fileName string, metada
 	description := "Download this file on " + config.Default.SiteName + "."
 	if !metadata.Expiry.IsZero() {
 		description += " Expires " + metadata.Expiry.Format("Jan 2, 2006") + "."
+	}
+	if metadata.BurnAfterRead {
+		description += " This file will be deleted after it is viewed."
 	}
 
 	prettyName := metadata.OriginalName

@@ -13,10 +13,11 @@ import (
 )
 
 const (
-	DeleteKey = "deletekey"
-	AccessKey = "accesskey"
-	Salt      = "salt"
-	Expiry    = "expiry"
+	DeleteKey     = "deletekey"
+	AccessKey     = "accesskey"
+	Salt          = "salt"
+	Expiry        = "expiry"
+	BurnAfterRead = "burnafterread"
 )
 
 func mapMetadata(m backends.Metadata) map[string]string {
@@ -32,6 +33,9 @@ func mapMetadata(m backends.Metadata) map[string]string {
 	}
 	if !m.Expiry.IsZero() {
 		mapped[Expiry] = m.Expiry.Format(time.RFC3339)
+	}
+	if m.BurnAfterRead {
+		mapped[BurnAfterRead] = "true"
 	}
 	return mapped
 }
@@ -66,6 +70,8 @@ func unmapMetadata(info minio.ObjectInfo) (backends.Metadata, error) {
 			m.Checksum = v
 		case "mimetype":
 			m.Mimetype = v
+		case BurnAfterRead:
+			m.BurnAfterRead = util.ParseBool(v, false)
 		case Expiry:
 			b, err := json.Marshal(v)
 			if err != nil {

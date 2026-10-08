@@ -981,3 +981,95 @@ func TestPutAndGetCLI(t *testing.T) {
 	r.ServeHTTP(w, req)
 	assertResponse(t, w, http.StatusOK, "text/plain; charset=utf-8")
 }
+
+func TestPutBurnAfterRead(t *testing.T) {
+	r, _ := setup(t, nil)
+
+	w := httptest.NewRecorder()
+	req, err := http.NewRequestWithContext(t.Context(), http.MethodPut, "/upload", strings.NewReader("File content"))
+	require.NoError(t, err)
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set(upload.BurnAfterReadHeader, "true")
+
+	r.ServeHTTP(w, req)
+	assertResponse(t, w, http.StatusOK, "application/json")
+	assert.Contains(t, w.Body.String(), `"burn_after_read":true`)
+
+	var myjson RespOkJSON
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &myjson))
+	selifPath := path.Join("/", config.Default.SelifPath, myjson.Filename)
+
+	// display metadata does not burn the file
+	w = httptest.NewRecorder()
+	req, err = http.NewRequestWithContext(t.Context(), http.MethodGet, "/"+myjson.Filename, nil)
+	require.NoError(t, err)
+	req.Header.Set("Accept", "application/json")
+
+	r.ServeHTTP(w, req)
+	assertResponse(t, w, http.StatusOK, "application/json")
+	assert.Contains(t, w.Body.String(), `"burn_after_read":true`)
+	assert.NotContains(t, w.Body.String(), `"torrent_url"`)
+	assert.Equal(t, "no-store", w.Header().Get("Cache-Control"))
+
+	// torrent is unavailable
+	w = httptest.NewRecorder()
+	req, err = http.NewRequestWithContext(t.Context(), http.MethodGet, path.Join("/torrent", myjson.Filename), nil)
+	require.NoError(t, err)
+
+	r.ServeHTTP(w, req)
+	assert.Equal(t, http.StatusNotFound, w.Code)
+
+	// HEAD does not burn the file
+	w = httptest.NewRecorder()
+	req, err = http.NewRequestWithContext(t.Context(), http.MethodHead, selifPath, nil)
+	require.NoError(t, err)
+
+	r.ServeHTTP(w, req)
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	// first download returns the full file, ignoring range requests
+	w = httptest.NewRecorder()
+	req, err = http.NewRequestWithContext(t.Context(), http.MethodGet, selifPath, nil)
+	require.NoError(t, err)
+	req.Header.Set("Range", "bytes=0-3")
+
+	r.ServeHTTP(w, req)
+	assertResponse(t, w, http.StatusOK, "text/plain; charset=utf-8")
+	assert.Equal(t, "File content", w.Body.String())
+	assert.Equal(t, "no-store", w.Header().Get("Cache-Control"))
+
+	// second download is gone
+	w = httptest.NewRecorder()
+	req, err = http.NewRequestWithContext(t.Context(), http.MethodGet, selifPath, nil)
+	require.NoError(t, err)
+
+	r.ServeHTTP(w, req)
+	assert.Equal(t, http.StatusNotFound, w.Code)
+
+	exists, err := config.StorageBackend.Exists(t.Context(), myjson.Filename)
+	require.NoError(t, err)
+	assert.False(t, exists)
+}
+
+func TestPostBurnAfterRead(t *testing.T) {
+	r, w := setup(t, nil)
+
+	var b bytes.Buffer
+	mw := multipart.NewWriter(&b)
+	require.NoError(t, mw.WriteField(upload.BurnAfterReadParam, "true"))
+	fw, err := mw.CreateFormFile("file", upload.GenerateBarename()+".txt")
+	require.NoError(t, err)
+	_, err = io.WriteString(fw, "File content")
+	require.NoError(t, err)
+	require.NoError(t, mw.Close())
+
+	req, err := http.NewRequestWithContext(t.Context(), http.MethodPost, "/upload", &b)
+	require.NoError(t, err)
+	req.Header.Set("Content-Type", mw.FormDataContentType())
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("Referer", config.Default.SiteURL.String())
+
+	r.ServeHTTP(w, req)
+	assertResponse(t, w, http.StatusOK, "application/json")
+	assert.Contains(t, w.Body.String(), `"burn_after_read":true`)
+}

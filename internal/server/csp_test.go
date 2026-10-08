@@ -42,7 +42,9 @@ func TestContentSecurityPolicy(t *testing.T) {
 
 	wantCSP := csp.CSP{
 		"default-src":     {csp.Self, util.SubresourceIntegrity(conf)},
-		"img-src":         {csp.Self, csp.Data},
+		"img-src":         {csp.Self, csp.Data, csp.Blob},
+		"media-src":       {csp.Self, csp.Blob},
+		"object-src":      {csp.Self, csp.Blob},
 		"style-src":       {csp.Self, csp.UnsafeInline},
 		"frame-ancestors": {csp.None},
 	}.String()

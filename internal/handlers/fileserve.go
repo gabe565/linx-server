@@ -93,11 +93,30 @@ func FileServeHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", metadata.Mimetype)
 	w.Header().Set("Content-Length", strconv.FormatInt(metadata.Size, 10))
-	w.Header().Set("ETag", metadata.Etag())
-	if metadata.AccessKey != "" || config.Default.Auth.File != "" || config.Default.Auth.RemoteFile != "" {
+	switch {
+	case metadata.BurnAfterRead:
+		w.Header().Set("Cache-Control", "no-store")
+	case metadata.AccessKey != "" || config.Default.Auth.File != "" || config.Default.Auth.RemoteFile != "":
+		w.Header().Set("ETag", metadata.Etag())
 		w.Header().Set("Cache-Control", "private, no-cache")
-	} else {
+	default:
+		w.Header().Set("ETag", metadata.Etag())
 		w.Header().Set("Cache-Control", "public, no-cache")
+	}
+
+	if metadata.BurnAfterRead && r.Method == http.MethodGet {
+		claimed, err := config.StorageBackend.Claim(r.Context(), fileName)
+		if err != nil {
+			slog.Error("Failed to claim burn-after-read file", "path", fileName, "error", err)
+			Error(w, r, http.StatusInternalServerError)
+			return
+		}
+		if !claimed {
+			ErrorMsg(w, r, http.StatusNotFound, "File not found")
+			return
+		}
+		prepareBurnRequest(r)
+		defer Burn(r.Context(), fileName)
 	}
 
 	if r.URL.Query().Has("download") || IsDirectUA(r) {

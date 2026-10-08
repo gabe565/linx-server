@@ -46,12 +46,30 @@
       </CardContent>
     </Card>
 
+    <Card v-else-if="burnState === 'downloaded'">
+      <CardHeader>
+        <CardTitle>File Deleted</CardTitle>
+        <CardDescription>
+          This file has been downloaded and deleted from the server.
+        </CardDescription>
+      </CardHeader>
+    </Card>
+
     <Card v-else-if="error">
       <CardHeader>
         <CardTitle>Error</CardTitle>
         <CardDescription> An error occurred while loading the file: {{ message }} </CardDescription>
       </CardHeader>
     </Card>
+
+    <BurnNotice
+      v-else-if="state.meta && burnState === 'pending'"
+      :meta="state.meta"
+      :preview="canPreviewBurn"
+      :loading="isRevealing"
+      @view="reveal"
+      @download="onBurnDownload"
+    />
 
     <Card v-else-if="state.meta">
       <FileHeader v-model:wrap="wrap" :state="state" />
@@ -64,9 +82,10 @@
 import Modes from "./fileModes.ts";
 import { useAsyncState } from "@vueuse/core";
 import axios, { isAxiosError } from "axios";
-import { computed, ref } from "vue";
+import { computed, onBeforeUnmount, ref } from "vue";
 import { toast } from "vue-sonner";
 import DeadLink from "@/assets/dead-link.svg";
+import BurnNotice from "@/components/display/BurnNotice.vue";
 import FileHeader from "@/components/display/FileHeader.vue";
 import FileViewer from "@/components/display/FileViewer.vue";
 import { Button } from "@/components/ui/button/index.js";
@@ -110,6 +129,7 @@ type DisplayMeta = Record<string, any> & {
   download_url: string;
   archive_files?: string[];
   expiry?: number;
+  burn_after_read?: boolean;
 };
 
 type DisplayState = {
@@ -118,7 +138,23 @@ type DisplayState = {
   content: string | null;
 };
 
-const { state, isLoading, error, execute } = useAsyncState<DisplayState>(
+const MaxBurnPreviewSize = 100 * 1024 * 1024;
+const MaxTextSize = 512 * 1024;
+
+const isTextMode = (mode: symbol | null) =>
+  mode === Modes.TEXT || mode === Modes.MARKDOWN || mode === Modes.CSV;
+
+const burnState = ref<"pending" | "viewed" | "downloaded" | null>(null);
+const isRevealing = ref(false);
+const revealError = ref<unknown>();
+let objectURL: string | undefined;
+
+const {
+  state,
+  isLoading,
+  error: loadError,
+  execute,
+} = useAsyncState<DisplayState>(
   async () => {
     downloadAttempts.value += 1;
     let res;
@@ -165,11 +201,13 @@ const { state, isLoading, error, execute } = useAsyncState<DisplayState>(
       mode = Modes.TEXT;
     }
 
+    if (meta.burn_after_read) {
+      burnState.value = "pending";
+      return { meta, mode: mode ?? null, content: null };
+    }
+
     let content: string | undefined;
-    if (
-      meta.size < 512 * 1024 &&
-      (mode === Modes.TEXT || mode === Modes.MARKDOWN || mode === Modes.CSV)
-    ) {
+    if (meta.size < MaxTextSize && isTextMode(mode ?? null)) {
       // Presigned URLs encode auth in the query string and live on a different
       // origin; sending the access-key header or credentials cross-origin breaks
       // CORS preflight.
@@ -202,11 +240,66 @@ const { state, isLoading, error, execute } = useAsyncState<DisplayState>(
   { meta: null, mode: null, content: null },
 );
 
+const error = computed(() => loadError.value ?? revealError.value);
+
+const canPreviewBurn = computed(
+  () => state.value.mode !== null && (state.value.meta?.size ?? 0) <= MaxBurnPreviewSize,
+);
+
+const reveal = async () => {
+  const { meta, mode } = state.value;
+  if (!meta || isRevealing.value) return;
+  isRevealing.value = true;
+  try {
+    const [res] = await Promise.all([
+      axios.get<Blob>(meta.direct_url, {
+        headers: { "Linx-Access-Key": encAccessKey.value },
+        responseType: "blob",
+        validateStatus: (s) => s === 200,
+        withCredentials: true,
+      }),
+      loadLanguage(meta.language ?? ""),
+    ]);
+    const blob = res.data;
+    let content: string | null = null;
+    if (blob.size < MaxTextSize && isTextMode(mode)) {
+      content = await blob.text();
+    }
+    objectURL = URL.createObjectURL(blob);
+    state.value = {
+      meta: { ...meta, direct_url: objectURL, download_url: objectURL },
+      mode,
+      content,
+    };
+    burnState.value = "viewed";
+  } catch (err) {
+    console.error(err);
+    if (isAxiosError(err) && err.response?.status === 404) {
+      revealError.value = err;
+    } else {
+      const msg = err instanceof Error ? err.message : String(err);
+      toast.error("Failed to download file", { description: msg });
+    }
+  } finally {
+    isRevealing.value = false;
+  }
+};
+
+const onBurnDownload = () => {
+  // Let the download start before the link is removed
+  setTimeout(() => (burnState.value = "downloaded"));
+};
+
+onBeforeUnmount(() => {
+  if (objectURL) URL.revokeObjectURL(objectURL);
+});
+
 const errorStatus = computed(() => (isAxiosError(error.value) ? error.value.status : undefined));
 
 const maxWidth = computed(() => {
   if (errorStatus.value === 401) return "max-w-lg";
   if (error.value) return "max-w-xl";
+  if (burnState.value === "pending" || burnState.value === "downloaded") return "max-w-xl";
   if (!state.value.meta) return "max-w-5xl";
   // Code wants every pixel; a file with no preview is just a download button.
   if (state.value.mode === Modes.TEXT) return "max-w-7xl";

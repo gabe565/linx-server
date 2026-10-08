@@ -34,6 +34,7 @@ export const useConfigStore = defineStore(
     const extension = ref("txt");
     const randomFilename = ref(true);
     const password = ref("");
+    const burnAfterRead = ref(false);
     const overwrite = ref(false);
     const editTargetFilename = ref("");
     const editDeleteKey = ref("");
@@ -47,6 +48,7 @@ export const useConfigStore = defineStore(
       extension,
       randomFilename,
       password,
+      burnAfterRead,
       overwrite,
       editTargetFilename,
       editDeleteKey,

@@ -50,6 +50,7 @@ type Request struct {
 	deleteKey      string        // Empty string if not defined
 	randomBarename bool
 	accessKey      string // Empty string if not defined
+	burnAfterRead  bool   // Delete the file after it is first downloaded
 }
 
 // Metadata associated with a file as it would actually be stored.
@@ -60,15 +61,16 @@ type Upload struct {
 }
 
 type JSONResponse struct {
-	URL          string `json:"url"`
-	OriginalName string `json:"original_name,omitzero"`
-	DirectURL    string `json:"direct_url"`
-	Filename     string `json:"filename"`
-	DeleteKey    string `json:"delete_key"`
-	AccessKey    string `json:"access_key"`
-	Expiry       string `json:"expiry"`
-	Size         string `json:"size"`
-	Mimetype     string `json:"mimetype"`
+	URL           string `json:"url"`
+	OriginalName  string `json:"original_name,omitzero"`
+	DirectURL     string `json:"direct_url"`
+	Filename      string `json:"filename"`
+	DeleteKey     string `json:"delete_key"`
+	AccessKey     string `json:"access_key"`
+	Expiry        string `json:"expiry"`
+	Size          string `json:"size"`
+	Mimetype      string `json:"mimetype"`
+	BurnAfterRead bool   `json:"burn_after_read,omitzero"`
 }
 
 func (u Upload) JSONResponse(r *http.Request) JSONResponse {
@@ -77,22 +79,23 @@ func (u Upload) JSONResponse(r *http.Request) JSONResponse {
 		expiry = v
 	}
 	return JSONResponse{
-		URL:          headers.GetFileURL(r, u.Filename).String(),
-		OriginalName: u.OriginalName,
-		DirectURL:    headers.GetSelifURL(r, u.Filename).String(),
-		Filename:     u.Filename,
-		DeleteKey:    u.Metadata.DeleteKey,
-		AccessKey:    u.Metadata.AccessKey,
-		Expiry:       strconv.FormatInt(expiry, 10),
-		Size:         strconv.FormatInt(u.Metadata.Size, 10),
-		Mimetype:     u.Metadata.Mimetype,
+		URL:           headers.GetFileURL(r, u.Filename).String(),
+		OriginalName:  u.OriginalName,
+		DirectURL:     headers.GetSelifURL(r, u.Filename).String(),
+		Filename:      u.Filename,
+		DeleteKey:     u.Metadata.DeleteKey,
+		AccessKey:     u.Metadata.AccessKey,
+		Expiry:        strconv.FormatInt(expiry, 10),
+		Size:          strconv.FormatInt(u.Metadata.Size, 10),
+		Mimetype:      u.Metadata.Mimetype,
+		BurnAfterRead: u.Metadata.BurnAfterRead,
 	}
 }
 
 func POSTHandler(w http.ResponseWriter, r *http.Request) {
 	siteURL := headers.GetSiteURL(r).String()
 	if !csrf.StrictReferrerCheck(r, siteURL,
-		[]string{"Linx-Delete-Key", "Linx-Expiry", "Linx-Randomize", "X-Requested-With"},
+		[]string{"Linx-Delete-Key", "Linx-Expiry", "Linx-Randomize", BurnAfterReadHeader, "X-Requested-With"},
 	) {
 		handlers.Error(w, r, http.StatusBadRequest)
 		return
@@ -146,6 +149,8 @@ func POSTHandler(w http.ResponseWriter, r *http.Request) {
 			upReq.accessKey = string(b)
 		case "randomize":
 			upReq.randomBarename = util.ParseBool(string(b), false)
+		case BurnAfterReadParam:
+			upReq.burnAfterRead = util.ParseBool(string(b), false)
 		}
 	}
 
@@ -285,6 +290,7 @@ func Remote(w http.ResponseWriter, r *http.Request) {
 	upReq.accessKey = r.FormValue(handlers.AccessKeyParam)
 	upReq.randomBarename = util.ParseBool(r.FormValue("randomize"), false)
 	upReq.expiry = ParseExpiry(r.FormValue("expiry"))
+	upReq.burnAfterRead = util.ParseBool(r.FormValue(BurnAfterReadParam), false)
 
 	upload, err := Process(r.Context(), upReq)
 	if err != nil {
@@ -309,8 +315,14 @@ func Remote(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+const (
+	BurnAfterReadHeader = "Linx-Burn-After-Read"
+	BurnAfterReadParam  = "burn_after_read"
+)
+
 func HeaderProcess(r *http.Request, upReq *Request) {
 	upReq.randomBarename = util.ParseBool(r.Header.Get("Linx-Randomize"), false)
+	upReq.burnAfterRead = util.ParseBool(r.Header.Get(BurnAfterReadHeader), false)
 
 	upReq.deleteKey = util.TryPathUnescape(r.Header.Get("Linx-Delete-Key"))
 	upReq.accessKey = util.TryPathUnescape(r.Header.Get(handlers.AccessKeyHeader))
@@ -452,11 +464,12 @@ func Process(ctx context.Context, upReq Request) (Upload, error) {
 	}
 
 	upload.Metadata, err = config.StorageBackend.Put(ctx, upReq.src, upload.Filename, upReq.size, backends.PutOptions{
-		OriginalName: upload.OriginalName,
-		Expiry:       fileExpiry,
-		DeleteKey:    hashedDeleteKey,
-		AccessKey:    storedAccessKey,
-		Salt:         salt,
+		OriginalName:  upload.OriginalName,
+		Expiry:        fileExpiry,
+		DeleteKey:     hashedDeleteKey,
+		AccessKey:     storedAccessKey,
+		Salt:          salt,
+		BurnAfterRead: upReq.burnAfterRead,
 	})
 	if err != nil {
 		return upload, err

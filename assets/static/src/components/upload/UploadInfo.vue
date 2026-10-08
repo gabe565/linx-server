@@ -54,6 +54,10 @@
           />
         </TableCell>
       </TableRow>
+      <TableRow v-if="item.burn_after_read">
+        <TableCell>Burn After Reading</TableCell>
+        <TableCell>Deleted after the first view</TableCell>
+      </TableRow>
       <TableRow v-if="item.uploaded">
         <TableCell>Uploaded</TableCell>
         <TableCell>{{ new Date(item.uploaded).toLocaleString() }}</TableCell>
