@@ -79,13 +79,13 @@ importers:
         version: 1.0.0(patch_hash=734003d014ba38bcb0578b0b98a61e49909c88a116bca19c52e3bda24f5c15b1)
       marked:
         specifier: ^18.0.9
-        version: 18.0.9
+        version: 18.1.0
       marked-alert:
         specifier: ^2.1.2
-        version: 2.1.2(marked@18.0.9)
+        version: 2.1.2(marked@18.1.0)
       marked-highlight:
         specifier: ^2.2.4
-        version: 2.2.4(marked@18.0.9)
+        version: 2.2.4(marked@18.1.0)
       papaparse:
         specifier: ^5.6.0
         version: 5.6.0
@@ -1853,8 +1853,8 @@ packages:
     peerDependencies:
       marked: '>=4 <19'
 
-  marked@18.0.9:
-    resolution: {integrity: sha512-/Sa4qiiHZxf0/FQdBBowr9q4r10krCwMvpK48FUBdXdUXScDxiQGR9zCPrFgRVR5LU3iySOiIjy09ZQvADir1w==}
+  marked@18.1.0:
+    resolution: {integrity: sha512-PamYXWWWg2nboG3oX5Ffzpy3EFZROqZJK9hSlMmUnekp7TxPs5DcT95vwd46m73/exfKCRVMtgXoPMI4FEJL6w==}
     engines: {node: '>= 20'}
     hasBin: true
 
@@ -3944,15 +3944,15 @@ snapshots:
     dependencies:
       '@jridgewell/sourcemap-codec': 1.5.5
 
-  marked-alert@2.1.2(marked@18.0.9):
+  marked-alert@2.1.2(marked@18.1.0):
     dependencies:
-      marked: 18.0.9
+      marked: 18.1.0
 
-  marked-highlight@2.2.4(marked@18.0.9):
+  marked-highlight@2.2.4(marked@18.1.0):
     dependencies:
-      marked: 18.0.9
+      marked: 18.1.0
 
-  marked@18.0.9: {}
+  marked@18.1.0: {}
 
   math-intrinsics@1.1.0: {}
 
