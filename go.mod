@@ -8,7 +8,7 @@ require (
 	github.com/dustin/go-humanize v1.1.0
 	github.com/gabriel-vasile/mimetype v1.4.15
 	github.com/go-chi/chi/v5 v5.3.2
-	github.com/go-chi/httprate v0.16.0
+	github.com/go-chi/httprate v0.16.1
 	github.com/gosimple/slug v1.15.0
 	github.com/knadh/koanf/providers/env/v2 v2.0.1
 	github.com/knadh/koanf/providers/posflag v1.0.2
