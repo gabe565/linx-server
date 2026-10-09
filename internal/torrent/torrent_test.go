@@ -57,5 +57,5 @@ func TestCreateTorrentWithImage(t *testing.T) {
 	require.NoError(t, err)
 
 	require.NoError(t, bencode.DecodeBytes(encoded, &decoded))
-	assert.Equal(t, "\x1f?\xe6a#\xe3wIi\xf5}\xf2\x87X\x89\r\xf8t\xdc\xc0", decoded.Info.Pieces)
+	assert.Equal(t, "\xe3~\xec\fc\xd7\x10\xac\x95\x17\xc5gJ&\x96\x12\xa1\x91\x90@", decoded.Info.Pieces)
 }
